@@ -3,8 +3,9 @@ import fs from 'fs';
 import { marked } from 'marked'; // Add this import
 
 async function generateReport() {
-  const template = fs.readFileSync('html.docx');
-
+  const templatePath = path.join('templates', 'html.docx');
+  const template = fs.readFileSync(templatePath);
+  
   const buffer = await createReport({
     template,
     // cmdDelimiter: ['{{', '}}'],

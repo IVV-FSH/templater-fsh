@@ -7,8 +7,43 @@
 </head>
 <body>
   <h1>Document Generator</h1>
-  <form action="/doc" method="post">
-    <button type="submit">Generate Document</button>
-  </form>
+  <a href="#" onclick="sendData('default')">Default</a>
+  <br>
+  <a href="#" onclick="sendData('john')">John</a>
+
+  <script>
+    function sendData(type) {
+      let data = {};
+
+      if (type === 'john') {
+        data = {
+          Titre: 'Boy oh !!!!',
+          film: {
+            title: 'Ta mère',
+            releaseDate: '2010-07-16',
+            feature1: 'Mind-bending plot',
+            feature2: 'Stunning visuals',
+            feature3: 'Yes tho',
+            description: '# A thief who steals STUFF\n\n* Mind-bending plot\n* Stunning visuals\n* Great soundtrack'
+          }
+        };
+      }
+
+      fetch('/doc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ data })
+      })
+      .then(response => response.json())
+      .then(result => {
+        console.log('Success:', result);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    }
+  </script>
 </body>
 </html>
