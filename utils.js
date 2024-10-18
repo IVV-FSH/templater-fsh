@@ -66,7 +66,7 @@ export const getAirtableData = async (table, recordId = null, formula = null) =>
 };
 
 export function processMarkdownFields(data, fieldsToProcess) {
-	data['html'] = {};
+	// data['html'] = {};
 	Object.entries(data).forEach(([key, record]) => {
 		// if is a string and delimited by '"' then remove the quotes
 		if (typeof data[key] === 'string' && data[key].startsWith('"') && data[key].endsWith('"')) {

@@ -22,21 +22,20 @@ app.get('/programme', async (req, res) => {
   }
   try {
     const data = await getAirtableData(table, recordId);
-    console.log(data);
+    if (data) {
+      console.log('Data successfully retrieved:', data);
+    } else {
+      console.log('Failed to retrieve data.');
+    }
+
     // Process specified fields with marked
     const fieldsToProcess = ['objectifs_fromprog', 'notes']; // Example fields
     const processedData = processMarkdownFields(data, fieldsToProcess);
 
-    res.json(processedData);
+    // Generate and send the report
+    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', processedData, res);
   } catch (error) {
-    console.error('Error retrieving data:', error);
-    return res.status(500).json({ success: false, error: error.message });
-  }
-
-  try {
-    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', data, res);
-  } catch (error) {
-    console.error('Error generating report:', error);
+    console.error('Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 
