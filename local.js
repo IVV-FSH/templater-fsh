@@ -1,28 +1,32 @@
-import {createReport} from 'docx-templates';
+import { createReport } from 'docx-templates';
 import fs from 'fs';
-import { marked } from 'marked'; // Add this import
+import path from 'path';
+import { getAirtableData, processMarkdownFields, getFrenchFormattedDate } from './utils.js';
 
 async function generateReport() {
-  const templatePath = path.join('templates', 'html.docx');
+  const templatePath = path.join('templates', 'programme.docx');
   const template = fs.readFileSync(templatePath);
-  
+
+  const data = await getAirtableData("Sessions", "recAzC50Q7sCNzkcf");
+
+  // Process specified fields with marked
+  const fieldsToProcess = [
+    'objectifs_fromprog', 
+    'contenu_fromprog', 
+    'methodespedago_fromprog', 
+    'modaliteseval_fromprog', 
+  ]; // Example fields
+  const processedData = processMarkdownFields(data, fieldsToProcess);
+
   const buffer = await createReport({
     template,
-    // cmdDelimiter: ['{{', '}}'],
-    data: {
-      Titre: 'John',
-      film: {
-        title: 'Inception',
-        releaseDate: '2010-07-16',
-        feature1: 'Mind-bending plot',
-        feature2: 'Stunning visuals',
-        feature3: 'Great soundtrack',
-        description: marked('# A thief who steals corporate secrets\n\n* Mind-bending plot\n* Stunning visuals\n* Great soundtrack') // Example Markdown
-      }
-    },
+    data: processedData
   });
 
-  fs.writeFileSync('report.docx', buffer);
+  fs.writeFileSync(`reports/${getFrenchFormattedDate()} report.docx`, buffer);
+
+  // Close the reading of programme.docx
+  fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
 generateReport().catch(console.error);

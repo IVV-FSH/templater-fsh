@@ -4,12 +4,13 @@ import { createReport } from 'docx-templates';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import axios from 'axios';
+import { marked } from 'marked';
 
 dotenv.config();
 const AIRTABLE_API_KEY = process.env.AIRTABLE_TOKEN; // Get API key from environment variable
 const AIRTABLE_BASE_ID = 'appK5MDuerTOMig1H'; // Replace with your Airtable Base ID
 const AUTH_HEADERS = {
-    Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+	Authorization: `Bearer ${AIRTABLE_API_KEY}`,
 };
 
 /**
@@ -41,68 +42,90 @@ const AUTH_HEADERS = {
 * console.log(formulaFilter(formula4)); // Output: "OR(%7BStatus%7D%3D'Active'%2C%20%7BAge%7D%3C25)"
 */
 function formulaFilter(formula) {
-    return encodeURIComponent(formula);
+	return encodeURIComponent(formula);
 }
 
 export const getAirtableData = async (table, recordId = null, formula = null) => {
-    try {
-        let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
-        if (recordId) {
-            url += `/${recordId}`;
-        } else if (formula) {
-            url += `?filterByFormula=${formulaFilter(formula)}`;
-        }
-        
-        const response = await axios.get(url, {
-            headers: AUTH_HEADERS,
-        });
-        
-        return recordId ? response.data.fields : response.data.records; // Return fields if specific record, otherwise return records
-    } catch (error) {
-        console.error(error);
-        throw new Error('Error retrieving data from Airtable.');
-    }
+	try {
+		let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
+		if (recordId) {
+			url += `/${recordId}`;
+		} else if (formula) {
+			url += `?filterByFormula=${formulaFilter(formula)}`;
+		}
+		
+		const response = await axios.get(url, {
+			headers: AUTH_HEADERS,
+		});
+		
+		return recordId ? response.data.fields : response.data.records; // Return fields if specific record, otherwise return records
+	} catch (error) {
+		console.error(error);
+		throw new Error('Error retrieving data from Airtable.');
+	}
 };
 
+export function processMarkdownFields(data, fieldsToProcess) {
+	data['html'] = {};
+	Object.entries(data).forEach(([key, record]) => {
+		// if is a string and delimited by '"' then remove the quotes
+		if (typeof data[key] === 'string' && data[key].startsWith('"') && data[key].endsWith('"')) {
+			data[key] = data[key].slice(1, -1);
+		}
+	});
+	fieldsToProcess.forEach(field => {
+		if (data[field]) {
+			if (Array.isArray(data[field])) {
+				data[field] = marked(data[field].join('\n'));
+			} else {
+				data[field] = marked(data[field]);
+			}
+		}
+	});
+	console.log(data);
+	return data;
+}
+
+
 export function getFrenchFormattedDate() {
-    const options = {
-        year: '2-digit',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Europe/Paris',
-        hour12: false,
-    };
-    
-    const formatter = new Intl.DateTimeFormat('fr-FR', options);
-    const parts = formatter.formatToParts(new Date());
-    
-    const dateParts = {};
-    parts.forEach(({ type, value }) => {
-        dateParts[type] = value;
-    });
-    
-    return `${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}`;
+	const options = {
+		year: '2-digit',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'Europe/Paris',
+		hour12: false,
+	};
+	
+	const formatter = new Intl.DateTimeFormat('fr-FR', options);
+	const parts = formatter.formatToParts(new Date());
+	
+	const dateParts = {};
+	parts.forEach(({ type, value }) => {
+		dateParts[type] = value;
+	});
+	
+	return `${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}`;
 }
 
 export async function fetchTemplate(url) {
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+	const response = await fetch(url);
+	const arrayBuffer = await response.arrayBuffer();
+	return Buffer.from(arrayBuffer);
 }
 
 export async function generateReport(template, data) {
-    return await createReport({
-        template,
-		failFast: false,
-        //   cmdDelimiter: ['{{', '}}'],
-        data,
-    });
+	return await createReport({
+		template,
+		// cmdDelimiter: ['{{', '}}'],
+		data,
+		// failFast: false,
+	});
 }
 
 export function ensureDirectoryExists(dir) {
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
-    }
+	if (!fs.existsSync(dir)) {
+		fs.mkdirSync(dir);
+	}
 }
