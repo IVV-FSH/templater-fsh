@@ -34,7 +34,7 @@ export async function fetchTemplate(url) {
   export async function generateReport(template, data) {
     return await createReport({
       template,
-      cmdDelimiter: ['{{', '}}'],
+    //   cmdDelimiter: ['{{', '}}'],
       data,
     });
   }

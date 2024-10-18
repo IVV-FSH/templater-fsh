@@ -2,21 +2,33 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists } from './utils.js';
+import { marked } from 'marked'; // Add this import
 
 const app = express();
 app.use(express.json()); // For parsing application/json
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'index.html'));
+});
 
 app.post('/doc', async (req, res) => {
   let { url, data } = req.body;
 
   // Set default values if not provided
   if (!url) {
-    url = 'https://ivv-fsh.github.io/templates/test.docx';
+    url = 'https://ivv-fsh.github.io/templates/html.docx';
   }
   if (!data) {
     data = {
       Titre: 'John',
-      Objectifs: 'Appleseed',
+      film: {
+        title: 'Inception',
+        releaseDate: '2010-07-16',
+        feature1: 'Mind-bending plot',
+        feature2: 'Stunning visuals',
+        feature3: 'Great soundtrack',
+        description: marked('# A thief who steals corporate secrets\n\n* Mind-bending plot\n* Stunning visuals\n* Great soundtrack') // Example Markdown
+      }
     };
   }
 
