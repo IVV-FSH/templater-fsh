@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4c6aaf;
+      --background-color: #1e1e1e;
+      --font-color: #eaeaea;
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: var(--background-color);
+      color: var(--font-color);
+      margin: 20px;
+      padding: 0;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #logs {
+      white-space: pre-wrap;
+      background-color: var(--background-color);
+      padding: 10px;
+      border: 1px solid #ddd;
+      height: 400px;
+      overflow-y: scroll;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background-color: #456ba0;
+    }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+    }
+    /* body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    } */
+    #logs {
+      white-space: pre-wrap;
+      background-color: var(--background-color);
+      padding: 10px;
+      border: 1px solid #ddd;
+      height: 80vh;
+      overflow-y: scroll;
+    }
+  </style>
+</head>
+<body>
+  <h1><%= heading %></h1>
+  <div id="logs"></div>
+
+  <script>
+    const logsDiv = document.getElementById('logs');
+    const ws = new WebSocket(`ws://${window.location.host}`);
+
+    ws.onmessage = (event) => {
+      logsDiv.textContent += event.data + '\n';
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    };
+
+    ws.onopen = () => {
+      logsDiv.textContent += 'Connected to server\n';
+    };
+
+    ws.onclose = () => {
+      logsDiv.textContent += 'Disconnected from server\n';
+    };
+  </script>
+</body>
+</html>

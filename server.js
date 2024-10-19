@@ -8,6 +8,10 @@ const app = express();
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
+// Set EJS as the templating engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(process.cwd(), 'views'));
+
 const wss = new WebSocketServer({ noServer: true });
 
 wss.on('connection', (ws) => {
@@ -55,10 +59,12 @@ app.get('/schemas', async (req, res) => {
 });
 
 app.get('/catalogue', async (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'index.html'));
-
+  // res.sendFile(path.join(process.cwd(), 'index.html'));
+  const table = "Sessions";
+  const view = "Catalogue";
+  res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   try {
-    const data = await getAirtableRecords("Sessions", "Catalogue");
+    const data = await getAirtableRecords(table, view);
     if (data) {
       console.log('Data successfully retrieved:', data.records.length, "records");
       broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
@@ -78,7 +84,8 @@ app.get('/catalogue', async (req, res) => {
 });
 
 app.get('/programme', async (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'index.html'));
+  // res.sendFile(path.join(process.cwd(), 'index.html'));
+
   const table="Sessions";
   // const recordId="recAzC50Q7sCNzkcf";
   const { recordId } = req.query;
@@ -86,6 +93,7 @@ app.get('/programme', async (req, res) => {
   if (!recordId) {
     return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
   }
+  res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   try {
     const data = await getAirtableData(table, recordId);
     if (data) {
