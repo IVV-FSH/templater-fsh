@@ -62,7 +62,6 @@ app.get('/catalogue', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table = "Sessions";
   const view = "Catalogue";
-  res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   try {
     const data = await getAirtableRecords(table, view);
     if (data) {
@@ -75,6 +74,7 @@ app.get('/catalogue', async (req, res) => {
 
     // Generate and send the report
     await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', data, res);
+    res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
     console.error('Error:', error);
     broadcastLog(`Error: ${error.message}`);
@@ -85,7 +85,6 @@ app.get('/catalogue', async (req, res) => {
 
 app.get('/programme', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
-
   const table="Sessions";
   // const recordId="recAzC50Q7sCNzkcf";
   const { recordId } = req.query;
@@ -93,7 +92,6 @@ app.get('/programme', async (req, res) => {
   if (!recordId) {
     return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
   }
-  res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   try {
     const data = await getAirtableData(table, recordId);
     if (data) {
@@ -110,6 +108,7 @@ app.get('/programme', async (req, res) => {
 
     // Generate and send the report
     await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', data, res);
+    res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
     console.error('Error:', error);
     broadcastLog(`Error: ${error.message}`);
