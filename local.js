@@ -1,13 +1,13 @@
 import { createReport } from 'docx-templates';
 import fs from 'fs';
 import path from 'path';
-import { getAirtableData, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords } from './utils.js';
+import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords } from './utils.js';
 
 async function generateProg() {
   const templatePath = path.join('templates', 'cat2.docx');
   const template = fs.readFileSync(templatePath);
 
-  const data = await getAirtableData("Sessions", "recAzC50Q7sCNzkcf");
+  const data = await getAirtableRecord("Sessions", "recAzC50Q7sCNzkcf");
 
   // const processedData = processFieldsForDocx(data, fieldsToProcess);
 
@@ -26,7 +26,7 @@ async function generateCatalogue() {
   const templatePath = path.join('templates', 'catalogue.docx');
   const template = fs.readFileSync(templatePath);
 
-  // const data = await getAirtableData("Sessions", null, "viwcgKhUjiPDkE0bs");
+  // const data = await getAirtableRecord("Sessions", null, "viwcgKhUjiPDkE0bs");
   const data = await getAirtableRecords("Sessions", "viwcgKhUjiPDkE0bs");
   // console.log(data["records"][0]);
   console.log(data["records"].length);
@@ -56,7 +56,7 @@ async function tests() {
   const templatePath = path.join('templates', 'cat2.docx');
   const template = fs.readFileSync(templatePath);
 
-  // const data = await getAirtableData("Sessions", null, "Catalogue");
+  // const data = await getAirtableRecord("Sessions", null, "Catalogue");
   const data = {
     "records": [
       {
