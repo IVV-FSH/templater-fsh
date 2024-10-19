@@ -5,6 +5,7 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { marked } from 'marked';
+import { broadcastLog } from './server.js';
 
 dotenv.config();
 const AIRTABLE_API_KEY = process.env.AIRTABLE_TOKEN; // Get API key from environment variable
@@ -45,35 +46,148 @@ function formulaFilter(formula) {
 	return encodeURIComponent(formula);
 }
 
-export const getAirtableData = async (table, recordId = null, formula = null) => {
+export const airtableMarkdownFields = [
+	"modalitesacces_fromprog",
+	"modaliteseval_fromprog",
+	"methodespedago_fromprog",
+	"contenu_fromprog",
+	"objectifs_fromprog",
+	"introcontexte_fromprog",
+	"Intro/Contexte",
+	"Contenu",
+	"Objectifs",
+	"Méthodes pédagogiques",
+	"Modalités d’évaluation",
+	"Modalités d'accès",
+	"Modalités de certification",
+	"markdownField",
+	"markdownArrayField",
+]
+
+export const getAirtableSchema = async (table) => {
+	let url = `https://api.airtable.com/v0/meta/bases/${AIRTABLE_BASE_ID}/tables`;
+	
+	const response = await axios.get(url, {
+		headers: AUTH_HEADERS,
+	});
+
+	const tables = response.data.tables;
+
+	return tables;
+
+}
+
+export const getAirtableData = async (table, recordId = null, view = null, formula = null) => {
 	try {
 		let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
-		if (recordId) {
-			url += `/${recordId}`;
-		} else if (formula) {
-			url += `?filterByFormula=${formulaFilter(formula)}`;
+		if (recordId && formula) {
+			throw new Error('Cannot specify both recordId and formula.');
 		}
-		
 		const response = await axios.get(url, {
 			headers: AUTH_HEADERS,
 		});
-		
-		return recordId ? response.data.fields : response.data.records; // Return fields if specific record, otherwise return records
+
+		let processedData = recordId ? response.data.fields : response.data.records;
+
+		if (recordId) {
+			url += `/${recordId}`;
+
+			processedData = processFieldsForDocx(
+				processedData,
+				airtableMarkdownFields
+			);
+			return processedData;  
+		} else {
+			const params = [];
+			if (formula) {
+				params.push(`filterByFormula=${formulaFilter(formula)}`);
+			}
+			if (view) {
+				params.push(`view=${formulaFilter(view)}`);
+			}
+			if (params.length > 0) {
+				url += `?${params.join('&')}`;
+			}
+			console.log(url);
+
+			processedData = response.data.records.map(record => record.fields);
+
+			// processedData = processedData.map(record => {
+			// if (Array.isArray(record)) {
+			// 	return record.join(', ');
+			// }
+			// return record;
+			// });
+			
+			processedData = processedData.map(record => processFieldsForDocx(
+				record,
+				airtableMarkdownFields
+			));
+			
+			return { records: processedData };
+			
+
+		}
+
 	} catch (error) {
 		console.error(error);
 		throw new Error('Error retrieving data from Airtable.');
 	}
 };
 
-export function processMarkdownFields(data, fieldsToProcess) {
+export const getAirtableRecords = async (table, view = null, formula = null) => {
+	try {
+	  let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
+	  const params = [];
+	  if (formula) {
+		params.push(`filterByFormula=${formulaFilter(formula)}`);
+	  }
+	  if (view) {
+		params.push(`view=${encodeURIComponent(view)}`);
+	  }
+	  if (params.length > 0) {
+		url += `?${params.join('&')}`;
+	  }
+	  console.log(`Fetching records from URL: ${url}`);
+	//   broadcastLog(`Fetching records from URL: ${url}`); // FIXME:
+	
+	  const response = await axios.get(url, {
+		headers: AUTH_HEADERS,
+	  });
+  
+	  let processedData = response.data.records.map(record => record.fields);
+	//   processedData = processedData.map(record => {
+	// 	if (Array.isArray(record)) {
+	// 	  return record.join(', ');
+	// 	}
+	// 	return record;
+	//   });
+  
+	processedData = processedData.map(record => processFieldsForDocx(
+		record,
+		airtableMarkdownFields
+	));
+	
+	return { records: processedData };
+	} catch (error) {
+	  console.error(error);
+	  throw new Error('Error retrieving data from Airtable.');
+	}
+  };
+
+export function processFieldsForDocx(data, markdownFields) {
 	// data['html'] = {};
 	Object.entries(data).forEach(([key, record]) => {
+		// if is an array, join the elements
+		// if (Array.isArray(record) && record.length == 1) {
+		// 	data[key] = record.join(', ');
+		// }
 		// if is a string and delimited by '"' then remove the quotes
 		if (typeof data[key] === 'string' && data[key].startsWith('"') && data[key].endsWith('"')) {
 			data[key] = data[key].slice(1, -1);
 		}
 	});
-	fieldsToProcess.forEach(field => {
+	markdownFields.forEach(field => {
 		if (data[field]) {
 			if (Array.isArray(data[field])) {
 				data[field] = marked(data[field].join('\n'));
@@ -82,9 +196,21 @@ export function processMarkdownFields(data, fieldsToProcess) {
 			}
 		}
 	});
-	console.log(data);
+	// console.log(data);
 	return data;
 }
+
+
+// +++IF $prog.lieuxdemij_cumul.includes("Siège")+++
+// La salle de formation répond aux exigences de l’accessibilité aux personnes à mobilité réduite.
+// +++END-IF+++
+
+// +++IF $prog.lieuxdemij_cumul.includes("intra")+++
+// En intra : tarif sur devis
+// +++END-IF+++
+// +++IF $prog.ouvertepersaccomp_fromprog != null+++
+// Personne accompagnée : moitié prix
+// +++END-IF+++
 
 
 export function getFrenchFormattedDate() {

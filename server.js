@@ -1,18 +1,84 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableData, processMarkdownFields } from './utils.js';
-import { marked } from 'marked';
+import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableData, getAirtableSchema, processFieldsForDocx, getAirtableRecords } from './utils.js';
+import { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
+const wss = new WebSocketServer({ noServer: true });
+
+wss.on('connection', (ws) => {
+  ws.send('Server is running on port 3000');
+});
+
+export function broadcastLog(message) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(message);
+    }
+  });
+}
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
+app.get('/schemas', async (req, res) => {
+  try {
+    const schema = await getAirtableSchema();
+    if (!schema) {
+      console.log('Failed to retrieve schema.');
+      return res.status(500).json({ success: false, error: 'Failed to retrieve schema.' });
+    }
+    // Extract only the names of the fields
+    let mdFieldsSession = schema.find(table => table.name === 'Sessions').fields
+    // let mdFieldsSession = schema.find(table => table.name === 'Sessions').fields
+      .filter(field => {
+        if (field.type === 'richText') {
+          return field.name;
+        } else if (field.type === 'multipleLookupValues') {
+          if (field.options.result.type === 'richText') return field.name;
+        } else {
+          return null;
+        }
+      })
+      .map(field => field.name); // Map to only field names
+
+    res.json({champsMarkdown: mdFieldsSession});
+  } catch (error) {
+    console.error('Error fetching schema:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/catalogue', async (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'index.html'));
+
+  try {
+    const data = await getAirtableRecords("Sessions", "Catalogue");
+    if (data) {
+      console.log('Data successfully retrieved:', data.records.length, "records");
+      broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
+    } else {
+      console.log('Failed to retrieve data.');
+      broadcastLog('Failed to retrieve data.');
+    }
+
+    // Generate and send the report
+    // await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', data, res);
+  } catch (error) {
+    console.error('Error:', error);
+    broadcastLog(`Error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+  
+});
+
 app.get('/programme', async (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'index.html'));
   const table="Sessions";
   // const recordId="recAzC50Q7sCNzkcf";
   const { recordId } = req.query;
@@ -23,19 +89,22 @@ app.get('/programme', async (req, res) => {
   try {
     const data = await getAirtableData(table, recordId);
     if (data) {
-      console.log('Data successfully retrieved:', data);
+      console.log('Data successfully retrieved:', data.length);
+      broadcastLog(`Data successfully retrieved: ${data.length} records`);
     } else {
       console.log('Failed to retrieve data.');
+      broadcastLog('Failed to retrieve data.');
     }
 
-    // Process specified fields with marked
-    const fieldsToProcess = ['objectifs_fromprog', 'notes']; // Example fields
-    const processedData = processMarkdownFields(data, fieldsToProcess);
+    // // Process specified fields with marked
+    // const fieldsToProcess = ['objectifs_fromprog', 'notes']; // Example fields
+    // const processedData = processFieldsForDocx(data, fieldsToProcess);
 
     // Generate and send the report
-    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', processedData, res);
+    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', data, res);
   } catch (error) {
     console.error('Error:', error);
+    broadcastLog(`Error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
 
@@ -45,7 +114,8 @@ app.get('/programme', async (req, res) => {
 // Reusable function to generate and send report
 async function generateAndSendReport(url, data, res) {
   try {
-    console.log('Generating report...', data);
+    console.log('Generating report...');
+    broadcastLog('Generating report...');
     const template = await fetchTemplate(url);
     const buffer = await generateReport(template, data);
 
@@ -60,27 +130,34 @@ async function generateAndSendReport(url, data, res) {
     fs.writeFileSync(filePath, buffer);
 
     console.log(`Report generated: ${filePath}`);
+    broadcastLog(`Report generated: ${filePath}`);
 
     // Send the file as a download
     res.download(filePath, newFileName, (err) => {
       if (err) {
         console.error('Error sending file:', err);
+        broadcastLog('Error sending file.');
         res.status(500).send('Could not download the file.');
       }
     });
 
   } catch (error) {
     console.error('Error generating report:', error);
+    broadcastLog(`Error generating report: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
 }
 
 // Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const server = app.listen(process.env.PORT || 3000, () => {
+  console.log(`Server is running on port ${process.env.PORT || 3000}`);
 });
 
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
+});
 
 
 

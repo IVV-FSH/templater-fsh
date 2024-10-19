@@ -3,47 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document Generator</title>
+  <title>Server Logs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #logs {
+      white-space: pre-wrap;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ddd;
+      height: 400px;
+      overflow-y: scroll;
+    }
+  </style>
 </head>
 <body>
-  <h1>Document Generator</h1>
-  <a href="#" onclick="sendData('default')">Default</a>
-  <br>
-  <a href="#" onclick="sendData('john')">John</a>
+  <h1>Server Logs</h1>
+  <div id="logs"></div>
 
   <script>
-    function sendData(type) {
-      let data = {};
+    const logsDiv = document.getElementById('logs');
+    const ws = new WebSocket(`ws://${window.location.host}`);
 
-      if (type === 'john') {
-        data = {
-          Titre: 'Boy oh !!!!',
-          film: {
-            title: 'Ta mère',
-            releaseDate: '2010-07-16',
-            feature1: 'Mind-bending plot',
-            feature2: 'Stunning visuals',
-            feature3: 'Yes tho',
-            description: '# A thief who steals STUFF\n\n* Mind-bending plot\n* Stunning visuals\n* Great soundtrack'
-          }
-        };
-      }
+    ws.onmessage = (event) => {
+      logsDiv.textContent += event.data + '\n';
+      logsDiv.scrollTop = logsDiv.scrollHeight;
+    };
 
-      fetch('/doc', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ data })
-      })
-      .then(response => response.json())
-      .then(result => {
-        console.log('Success:', result);
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    }
+    ws.onopen = () => {
+      logsDiv.textContent += 'Connected to server\n';
+    };
+
+    ws.onclose = () => {
+      logsDiv.textContent += 'Disconnected from server\n';
+    };
   </script>
 </body>
 </html>
