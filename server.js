@@ -9,22 +9,22 @@ app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
 // Set EJS as the templating engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(process.cwd(), 'views'));
+// app.set('view engine', 'ejs');
+// app.set('views', path.join(process.cwd(), 'views'));
 
-const wss = new WebSocketServer({ noServer: true });
+// const wss = new WebSocketServer({ noServer: true });
 
-wss.on('connection', (ws) => {
-  ws.send('Server is running on port 3000');
-});
+// wss.on('connection', (ws) => {
+//   ws.send('Server is running on port 3000');
+// });
 
-export function broadcastLog(message) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === client.OPEN) {
-      client.send(message);
-    }
-  });
-}
+//export function broadcastLog(message) {
+//   wss.clients.forEach((client) => {
+//     if (client.readyState === client.OPEN) {
+//       client.send(message);
+//     }
+//   });
+// }
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
@@ -66,18 +66,18 @@ app.get('/catalogue', async (req, res) => {
     const data = await getAirtableRecords(table, view);
     if (data) {
       console.log('Data successfully retrieved:', data.records.length, "records");
-      broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
+//      broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
     } else {
       console.log('Failed to retrieve data.');
-      broadcastLog('Failed to retrieve data.');
+//      broadcastLog('Failed to retrieve data.');
     }
 
     // Generate and send the report
     await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', data, res);
-    res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
+  // res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
     console.error('Error:', error);
-    broadcastLog(`Error: ${error.message}`);
+//    broadcastLog(`Error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
   
@@ -96,10 +96,10 @@ app.get('/programme', async (req, res) => {
     const data = await getAirtableData(table, recordId);
     if (data) {
       console.log('Data successfully retrieved:', data.length);
-      broadcastLog(`Data successfully retrieved: ${data.length} records`);
+//      broadcastLog(`Data successfully retrieved: ${data.length} records`);
     } else {
       console.log('Failed to retrieve data.');
-      broadcastLog('Failed to retrieve data.');
+//      broadcastLog('Failed to retrieve data.');
     }
 
     // // Process specified fields with marked
@@ -108,10 +108,10 @@ app.get('/programme', async (req, res) => {
 
     // Generate and send the report
     await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', data, res);
-    res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
+    // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
     console.error('Error:', error);
-    broadcastLog(`Error: ${error.message}`);
+//    broadcastLog(`Error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
 
@@ -122,7 +122,7 @@ app.get('/programme', async (req, res) => {
 async function generateAndSendReport(url, data, res) {
   try {
     console.log('Generating report...');
-    broadcastLog('Generating report...');
+//    broadcastLog('Generating report...');
     const template = await fetchTemplate(url);
     const buffer = await generateReport(template, data);
 
@@ -137,27 +137,27 @@ async function generateAndSendReport(url, data, res) {
     fs.writeFileSync(filePath, buffer);
 
     console.log(`Report generated: ${filePath}`);
-    broadcastLog(`Report generated: ${filePath}`);
+//    broadcastLog(`Report generated: ${filePath}`);
 
     // Send the file as a download
     res.download(filePath, newFileName, (err) => {
       if (err) {
         console.error('Error sending file:', err);
-        broadcastLog('Error sending file.');
+//        broadcastLog('Error sending file.');
         res.status(500).send('Could not download the file.');
       }
     });
 
   } catch (error) {
     console.error('Error generating report:', error);
-    broadcastLog(`Error generating report: ${error.message}`);
+//    broadcastLog(`Error generating report: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
 }
 
 // Start the server
 const server = app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server is running on port ${process.env.PORT || 3000}`);
+  console.log(`Server is running on port http://localhost:${process.env.PORT || 3000}/`);
 });
 
 server.on('upgrade', (request, socket, head) => {

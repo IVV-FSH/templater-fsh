@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { marked } from 'marked';
-import { broadcastLog } from './server.js';
+// import { broadcastLog } from './server.js';
 
 dotenv.config();
 const AIRTABLE_API_KEY = process.env.AIRTABLE_TOKEN; // Get API key from environment variable
