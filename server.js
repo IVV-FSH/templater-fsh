@@ -74,7 +74,7 @@ app.get('/catalogue', async (req, res) => {
     }
 
     // Generate and send the report
-    // await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', data, res);
+    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', data, res);
   } catch (error) {
     console.error('Error:', error);
     broadcastLog(`Error: ${error.message}`);
