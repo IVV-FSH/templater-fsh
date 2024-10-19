@@ -148,7 +148,7 @@ async function generateAndSendReport(url, data, res) {
       } else {
         console.log('File generated successfully.');
         // broadcastLog('File sent successfully.');
-        res.status(200).json({ success: true, message: 'File generated successfully.' });
+        // res.status(200).json({ success: true, message: 'File generated successfully.' });
       }
     });
     
