@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord } from './utils.js';
-import { WebSocketServer } from 'ws';
+// import { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(express.json()); // For parsing application/json
@@ -174,9 +174,9 @@ const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port http://localhost:${process.env.PORT || 3000}/`);
 });
 
-server.on('upgrade', (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
-  });
-});
+// server.on('upgrade', (request, socket, head) => {
+//   wss.handleUpgrade(request, socket, head, (ws) => {
+//     wss.emit('connection', ws, request);
+//   });
+// });
 
