@@ -26,11 +26,18 @@ async function generateCatalogue() {
   const templatePath = path.join('templates', 'catalogue.docx');
   const template = fs.readFileSync(templatePath);
 
-  // const data = await getAirtableRecord("Sessions", null, "viwcgKhUjiPDkE0bs");
-  const data = await getAirtableRecords("Sessions", "viwcgKhUjiPDkE0bs");
+  const table = "Sessions";
+  const view = "Catalogue";
+  const data = await getAirtableRecords(table, view);
   // console.log(data["records"][0]);
-  console.log(data["records"].length);
-
+  if (data) {
+    console.log('Data successfully retrieved:', data.records.length, "records");
+    // broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
+  } else {
+    console.log('Failed to retrieve data.');
+    // broadcastLog('Failed to retrieve data.');
+  }
+  
   // console.log(data);
   // let processedData = data.records.map(record => record.fields);
   // console.log(processedData);
