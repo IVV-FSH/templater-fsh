@@ -181,6 +181,7 @@ export const getAirtableRecord = async (table, recordId) => {
             withAllFields,
             airtableMarkdownFields,
         );
+		processedData['today'] = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
         return processedData;
     } catch (error) {
         console.error(error);
@@ -219,7 +220,8 @@ export const getAirtableRecords = async (table, view = null, formula = null) => 
 		record,
 		airtableMarkdownFields
 	));
-	
+	processedData['today'] = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+
 	return { records: processedData };
 	} catch (error) {
 	  console.error(error);
