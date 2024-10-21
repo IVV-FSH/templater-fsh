@@ -278,7 +278,7 @@ export function processFieldsForDocx(data, markdownFields) {
 // +++END-IF+++
 
 
-export function getFrenchFormattedDate() {
+export function getFrenchFormattedDate(withTime = true) {
 	const options = {
 		year: '2-digit',
 		month: '2-digit',
@@ -296,8 +296,12 @@ export function getFrenchFormattedDate() {
 	parts.forEach(({ type, value }) => {
 		dateParts[type] = value;
 	});
-	
-	return `${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}`;
+	if(withTime) {
+		return `${dateParts.day}/${dateParts.month}/${dateParts.year} ${dateParts.hour}:${dateParts.minute}`;
+	} else {
+		return `${dateParts.day}/${dateParts.month}/${dateParts.year}`;
+	}
+	// return `${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}`;
 }
 
 export async function fetchTemplate(url) {
