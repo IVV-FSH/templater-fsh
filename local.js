@@ -53,7 +53,7 @@ async function generateCatalogue() {
     data
   });
 
-  fs.writeFileSync(`reports/${getFrenchFormattedDate()} catalogue-R.docx`, buffer);
+  fs.writeFileSync(`reports/${getFrenchFormattedDate()} Catalogue des Formations FSH 2025.docx`, buffer);
 
   // Close the reading of programme.docx
   fs.closeSync(fs.openSync(templatePath, 'r'));

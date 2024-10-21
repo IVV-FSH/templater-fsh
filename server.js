@@ -130,7 +130,7 @@ async function generateAndSendReport(url, data, res) {
     switch (fileNameWithoutExt) {
       case 'catalogue':
         // newTitle = 'Catalogue des formations FSH' + next year
-        newTitle = 'Catalogue des formations FSH' + (new Date().getFullYear() +1);
+        newTitle = 'Catalogue des formations FSH ' + (new Date().getFullYear() +1);
         break;
       case 'programme':
         newTitle = data.titre_fromprog || "Programme";
