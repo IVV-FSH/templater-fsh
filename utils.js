@@ -5,6 +5,7 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import { marked } from 'marked';
+import moment from 'moment';
 // import { broadcastLog } from './server.js';
 
 dotenv.config();
@@ -286,13 +287,21 @@ export function processFieldsForDocx(data, markdownFields) {
 // +++END-IF+++
 
 export function ymd(date) {
-	// return date.toISOString().split('T')[0];
-	const year = String(date.getFullYear()).slice(-2);  // Get last 2 digits of the year
-	const month = String(date.getMonth() + 1).padStart(2, '0');  // Add 1 to month (0-based) and pad to 2 digits
-	const day = String(date.getDate()).padStart(2, '0');  // Pad day to 2 digits
-	const formattedDate = `${year}${month}${day}`;
 
-	return formattedDate;
+	if(moment(date, "DD/MM/YYYY", true).isValid()) {
+		const year = String(date.getFullYear()).slice(-2);  // Get last 2 digits of the year
+		const month = String(date.getMonth() + 1).padStart(2, '0');  // Add 1 to month (0-based) and pad to 2 digits
+		const day = String(date.getDate()).padStart(2, '0');  // Pad day to 2 digits
+		const formattedDate = `${year}${month}${day}`;
+
+		return formattedDate;
+	} else {
+		// throw new Error(`${date} is not a valid date`)
+		return "";
+	}
+
+	
+	// return date.toISOString().split('T')[0];
 }
 
 export function getFrenchFormattedDate(withTime = true) {

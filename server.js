@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
 
+import { Stream } from 'stream';
+import archiver from 'archiver';
 const app = express();
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
@@ -91,7 +93,6 @@ app.get('/catalogue', async (req, res) => {
 });
 
 app.get('/programme', async (req, res) => {
-  
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table="Sessions";
   // const recordId="recAzC50Q7sCNzkcf";
@@ -109,13 +110,16 @@ app.get('/programme', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
+
+    let newTitle = data["titre_fromprog"]
+    if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
     
     // Generate and send the report
     await generateAndSendReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
       data, 
       res,
-      `${data["titre_fromprog"]} ${ymd(data["du"])}-${ymd(data["au"])}` || "err titre prog"
+      newTitle || "err titre prog"
     );
     // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
@@ -160,6 +164,54 @@ app.get('/facture', async (req, res) => {
   }
   
 });  
+
+
+app.get('/factures', async (req, res) => {
+  const table = "Inscriptions";
+  const { sessionId } = req.query
+  // const { recordIds } = req.query; // Assuming recordIds is an array of Airtable IDs
+
+
+  console.log(sessionId)
+  const session = await getAirtableRecord("Sessions", sessionId)
+  // console.log(session)
+
+  // if (!recordIds || !Array.isArray(recordIds)) {
+  //   return res.status(400).json({ success: false, error: 'Paramètre recordIds manquant ou invalide.' });
+  // }
+
+  // try {
+  //   // Create a zip archive in memory
+  //   const zip = archiver('zip', { zlib: { level: 9 } });
+  //   const zipStream = new Stream.PassThrough();
+    
+  //   res.attachment('factures.zip');
+  //   zip.pipe(zipStream);
+  //   zipStream.pipe(res);
+
+  //   // Loop through recordIds and generate documents
+  //   for (const recordId of recordIds) {
+  //     const data = await getAirtableRecord(table, recordId);
+  //     if (data) {
+  //       const templateUrl = 'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx';
+  //       const buffer = await generateReport(await fetchTemplate(templateUrl), data);
+        
+  //       const fileName = `${getFrenchFormattedDate(false)} ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
+        
+  //       // Add the generated document to the ZIP archive
+  //       zip.append(buffer, { name: fileName });
+  //     }
+  //   }
+
+  //   // Finalize the zip file
+  //   await zip.finalize();
+
+  // } catch (error) {
+  //   console.error('Error generating factures:', error);
+  //   res.status(500).json({ success: false, error: error.message });
+  // }
+});
+
 
 
 // Reusable function to generate and send report
