@@ -2,29 +2,11 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
-// import { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
-// Set EJS as the templating engine
-// app.set('view engine', 'ejs');
-// app.set('views', path.join(process.cwd(), 'views'));
-
-// const wss = new WebSocketServer({ noServer: true });
-
-// wss.on('connection', (ws) => {
-  // ws.send('Server is running on port 3000');
-// });
-
-//export function broadcastLog(message) {
-// wss.clients.forEach((client) => {
-  // if (client.readyState === client.OPEN) {
-// client.send(message);
-// }
-// });
-// }
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
@@ -237,10 +219,4 @@ async function generateAndSendReport(url, data, res, fileName = "") {
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port http://localhost:${process.env.PORT || 3000}/`);
 });
-
-// server.on('upgrade', (request, socket, head) => {
-//   wss.handleUpgrade(request, socket, head, (ws) => {
-//     wss.emit('connection', ws, request);
-//   });
-// });
 
