@@ -22,6 +22,28 @@ async function generateProg() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
+async function facture() {
+  const recordId = "recdVx9WSFFeX5GP7"; // payée
+  const templatePath = path.join('templates', 'facture.docx');
+  const template = fs.readFileSync(templatePath);
+
+  const data = await getAirtableRecord("Inscriptions", recordId);
+
+  // const processedData = processFieldsForDocx(data, fieldsToProcess);
+
+  const buffer = await createReport({
+    template,
+    data
+  });
+
+  const factId = `${data["id"]} ${data["nom"]}` || "err nom fact";
+
+  fs.writeFileSync(`reports/${getFrenchFormattedDate()} Facture ${factId}.docx`, buffer);
+
+  // Close the reading of programme.docx
+  fs.closeSync(fs.openSync(templatePath, 'r'));
+}
+
 async function generateCatalogue() {
   const templatePath = path.join('templates', 'catalogue.docx');
   const template = fs.readFileSync(templatePath);
@@ -129,4 +151,4 @@ async function tests() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-generateCatalogue().catch(console.error);
+facture().catch(console.error);

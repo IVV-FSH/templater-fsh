@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord } from './utils.js';
+import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
 // import { WebSocketServer } from 'ws';
 
 const app = express();
@@ -63,9 +63,27 @@ app.get('/schemas', async (req, res) => {
 app.get('/catalogue', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table = "Sessions";
-  const view = "Catalogue";
+  const view = "Grid view";
+  // const view = "Catalogue";
+  var { annee } = req.query;
+
+  if(!annee) { annee = new Date().getFullYear() + 1; }
+
+  // const formula = `AND(OR({année}=${annee},{année}=""), OR(FIND(lieuxdemij_cumul,"iège"),FIND(lieuxdemij_cumul,"visio")))`; 
+  const formula = `
+  OR(
+    AND(
+        {année}="", 
+        FIND(lieuxdemij_cumul,"intra")
+    ),
+    AND(
+        {année}=2025, 
+        FIND(lieuxdemij_cumul,"intra")=0
+    )
+  )`
+
   try {
-    const data = await getAirtableRecords(table, view);
+    const data = await getAirtableRecords(table, view, formula, "du", "asc");
     if (data) {
       console.log('Data successfully retrieved:', data.records.length, "records");
       // broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
@@ -75,7 +93,12 @@ app.get('/catalogue', async (req, res) => {
     }
     
     // Generate and send the report
-    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', data, res);
+    await generateAndSendReport(
+      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', 
+      data, 
+      res,
+      'Catalogue des formations FSH ' + annee
+    );
     // res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
     console.error('Error:', error);
@@ -86,6 +109,7 @@ app.get('/catalogue', async (req, res) => {
 });
 
 app.get('/programme', async (req, res) => {
+  
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table="Sessions";
   // const recordId="recAzC50Q7sCNzkcf";
@@ -105,7 +129,47 @@ app.get('/programme', async (req, res) => {
     }
     
     // Generate and send the report
-    await generateAndSendReport('https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', data, res);
+    await generateAndSendReport(
+      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
+      data, 
+      res,
+      `${data["titre_fromprog"]} ${ymd(data["du"])}-${ymd(data["au"])}` || "err titre prog"
+    );
+    // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
+  } catch (error) {
+    console.error('Error:', error);
+    // broadcastLog(`Error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+  
+});  
+
+app.get('/facture', async (req, res) => {
+  // res.sendFile(path.join(process.cwd(), 'index.html'));
+  const table="Inscriptions";
+  // const recordId="recAzC50Q7sCNzkcf";
+  const { recordId } = req.query;
+  
+  if (!recordId) {
+    return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+  }
+  try {
+    const data = await getAirtableRecord(table, recordId);
+    if (data) {
+      console.log('Data successfully retrieved:', data.length);
+      // broadcastLog(`Data successfully retrieved: ${data.length} records`);
+    } else {
+      console.log('Failed to retrieve data.');
+      // broadcastLog('Failed to retrieve data.');
+    }
+    
+    // Generate and send the report
+    await generateAndSendReport(
+      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
+      data, 
+      res,
+      `${data["id"]} ${data["nom"]} ${data["prenom"]}`
+    );
     // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
     console.error('Error:', error);
@@ -117,7 +181,7 @@ app.get('/programme', async (req, res) => {
 
 
 // Reusable function to generate and send report
-async function generateAndSendReport(url, data, res) {
+async function generateAndSendReport(url, data, res, fileName = "") {
   try {
     console.log('Generating report...');
     // broadcastLog('Generating report...');
@@ -126,19 +190,19 @@ async function generateAndSendReport(url, data, res) {
     
     const originalFileName = path.basename(url);
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
-    let newTitle =fileNameWithoutExt
-    switch (fileNameWithoutExt) {
-      case 'catalogue':
-        // newTitle = 'Catalogue des formations FSH' + next year
-        newTitle = 'Catalogue des formations FSH ' + (new Date().getFullYear() +1);
-        break;
-      case 'programme':
-        newTitle = data.titre_fromprog || "Programme";
-        break;
-      default:
-        break;
-    }
-    const newFileName = `${getFrenchFormattedDate()}-${newTitle}.docx`;
+    let newTitle = fileName || fileNameWithoutExt
+    // switch (fileNameWithoutExt) {
+    //   case 'catalogue':
+    //     // newTitle = 'Catalogue des formations FSH' + next year
+    //     newTitle = 'Catalogue des formations FSH ' + (new Date().getFullYear() +1);
+    //     break;
+    //   case 'programme':
+    //     newTitle = data.titre_fromprog || "Programme";
+    //     break;
+    //   default:
+    //     break;
+    // }
+    const newFileName = `${getFrenchFormattedDate(false)} ${newTitle}.docx`;
     
     const reportsDir = path.join(process.cwd(), 'reports');
     ensureDirectoryExists(reportsDir);

@@ -72,6 +72,7 @@ export const getAirtableSchema = async (table) => {
 	});
 
 	const tables = response.data.tables;
+	console.log("Retrieved tables from Airtable:", tables.map(t => t.name));
 
 	return tables;
 
@@ -167,7 +168,7 @@ export const getAirtableRecord = async (table, recordId) => {
         });
 
         const sch = await getAirtableSchema(table);
-        const allFields = sch.fieldNames;
+        const allFields = sch.filter(t => t.name == table)[0].fields.map(t => t.name);
 
         // console.log(response.data.fields);
         const withAllFields = await addMissingFields(allFields, response.data.fields);
@@ -188,7 +189,7 @@ export const getAirtableRecord = async (table, recordId) => {
         throw new Error("Error retrieving data from Airtable.");
     }
 };
-export const getAirtableRecords = async (table, view = null, formula = null) => {
+export const getAirtableRecords = async (table, view = null, formula = null, sortField = null, sortDir = null) => {
 	try {
 	  let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
 	  const params = [];
@@ -197,6 +198,13 @@ export const getAirtableRecords = async (table, view = null, formula = null) => 
 	  }
 	  if (view) {
 		params.push(`view=${encodeURIComponent(view)}`);
+	  }
+	  if (sortField) {
+		let sortParam = `sort%5B0%5D%5Bfield%5D=${sortField}`;
+		if (sortDir && ['asc', 'desc'].includes(sortDir)) {
+			sortParam += `&sort%5B0%5D%5Bdirection%5D=${sortDir}`;
+		}
+		params.push(sortParam);
 	  }
 	  if (params.length > 0) {
 		url += `?${params.join('&')}`;
@@ -277,6 +285,15 @@ export function processFieldsForDocx(data, markdownFields) {
 // Personne accompagnée : moitié prix
 // +++END-IF+++
 
+export function ymd(date) {
+	// return date.toISOString().split('T')[0];
+	const year = String(date.getFullYear()).slice(-2);  // Get last 2 digits of the year
+	const month = String(date.getMonth() + 1).padStart(2, '0');  // Add 1 to month (0-based) and pad to 2 digits
+	const day = String(date.getDate()).padStart(2, '0');  // Pad day to 2 digits
+	const formattedDate = `${year}${month}${day}`;
+
+	return formattedDate;
+}
 
 export function getFrenchFormattedDate(withTime = true) {
 	const options = {
@@ -297,11 +314,12 @@ export function getFrenchFormattedDate(withTime = true) {
 		dateParts[type] = value;
 	});
 	if(withTime) {
-		return `${dateParts.day}/${dateParts.month}/${dateParts.year} ${dateParts.hour}:${dateParts.minute}`;
+		return `${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}`;
+		// return `${dateParts.day}/${dateParts.month}/${dateParts.year} ${dateParts.hour}${dateParts.minute}`;
 	} else {
-		return `${dateParts.day}/${dateParts.month}/${dateParts.year}`;
+		return `${dateParts.year}${dateParts.month}${dateParts.day}`;
+		// return `${dateParts.day}/${dateParts.month}/${dateParts.year}`;
 	}
-	// return `${dateParts.year}${dateParts.month}${dateParts.day}-${dateParts.hour}${dateParts.minute}`;
 }
 
 export async function fetchTemplate(url) {
