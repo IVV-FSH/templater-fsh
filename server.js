@@ -130,6 +130,46 @@ app.get('/programme', async (req, res) => {
   
 });  
 
+
+app.get('/devis', async (req, res) => {
+  // res.sendFile(path.join(process.cwd(), 'index.html'));
+  const table="Devis";
+  // const recordId="recAzC50Q7sCNzkcf";
+  const { recordId } = req.query;
+  
+  if (!recordId) {
+    return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+  }
+  try {
+    const data = await getAirtableRecord(table, recordId);
+    if (data) {
+      console.log('Data successfully retrieved:', data.length);
+      // broadcastLog(`Data successfully retrieved: ${data.length} records`);
+    } else {
+      console.log('Failed to retrieve data.');
+      // broadcastLog('Failed to retrieve data.');
+    }
+
+    let newTitle = `DEVIS FSH ${data["id"]} `
+    // if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
+    
+    // Generate and send the report
+    await generateAndSendReport(
+      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/devis.docx', 
+      data, 
+      res,
+      newTitle
+    );
+    // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
+  } catch (error) {
+    console.error('Error:', error);
+    // broadcastLog(`Error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+  
+});  
+
+
 app.get('/facture', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table="Inscriptions";
