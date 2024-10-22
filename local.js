@@ -44,6 +44,29 @@ async function facture() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
+async function devis() {
+  const recordId = "recGb3crKcmXQ2caL"; // payée
+  const templatePath = path.join('templates', 'devis.docx');
+  const template = fs.readFileSync(templatePath);
+
+  const data = await getAirtableRecord("Devis", recordId);
+
+  // const processedData = processFieldsForDocx(data, fieldsToProcess);
+
+  const buffer = await createReport({
+    template,
+    data
+  });
+  let newTitle = `DEVIS FSH ${data["id"]} `
+
+  // const factId = `${data["id"]} ${data["nom"]}` || "err nom fact";
+
+  fs.writeFileSync(`reports/${getFrenchFormattedDate()} ${newTitle}.docx`, buffer);
+
+  // Close the reading of programme.docx
+  fs.closeSync(fs.openSync(templatePath, 'r'));
+}
+
 async function generateCatalogue() {
   const templatePath = path.join('templates', 'catalogue.docx');
   const template = fs.readFileSync(templatePath);
@@ -151,4 +174,4 @@ async function tests() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-facture().catch(console.error);
+devis().catch(console.error);
