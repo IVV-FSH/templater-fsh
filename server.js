@@ -258,47 +258,34 @@ app.get('/factures', async (req, res) => {
 async function generateAndSendReport(url, data, res, fileName = "") {
   try {
     console.log('Generating report...');
-    // broadcastLog('Generating report...');
     
-    // Fetch the template and generate the report
+    // Fetch the template and generate the report buffer
     const template = await fetchTemplate(url);
-    const buffer = await generateReport(template, data); // Buffer is the file content
-    
+    const buffer = await generateReport(template, data); // This should return the correct binary buffer
+
     // Determine the file name
     const originalFileName = path.basename(url);
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
     let newTitle = fileName || fileNameWithoutExt;
 
-    // Optional logic for file naming
-    // switch (fileNameWithoutExt) {
-    //   case 'catalogue':
-    //     newTitle = 'Catalogue des formations FSH ' + (new Date().getFullYear() + 1);
-    //     break;
-    //   case 'programme':
-    //     newTitle = data.titre_fromprog || "Programme";
-    //     break;
-    //   default:
-    //     break;
-    // }
-
     const newFileName = `${getFrenchFormattedDate(false)} ${newTitle}.docx`;
 
-    // Send the file as a download from memory
-    res.setHeader('Content-Disposition', `attachment; filename=${newFileName}`);
+    // Set the correct headers for file download and content type for .docx
+    res.setHeader('Content-Disposition', `attachment; filename="${newFileName}"`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    
-    // Send the buffer directly as the file content
-    res.send(buffer);
+    res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
+
+    // Send the buffer as a binary response
+    res.end(buffer, 'binary');
     
     console.log('Report generated and sent as a download.');
-    // broadcastLog('File sent successfully.');
-    
+
   } catch (error) {
     console.error('Error generating report:', error);
-    // broadcastLog(`Error generating report: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
   }
 }
+
 
 
 // Start the server
