@@ -286,6 +286,80 @@ async function generateAndSendReport(url, data, res, fileName = "") {
   }
 }
 
+/**
+ * Fetches the template from the provided URL and generates a report buffer using the given data.
+ * 
+ * @async
+ * @function generateReportBuffer
+ * 
+ * @param {string} url - The URL from which to fetch the document template (e.g., a .docx template).
+ * @param {object} data - The data used to fill the template (e.g., dynamic content that will be inserted into the template).
+ * 
+ * @returns {Promise<Buffer>} - Returns a Promise that resolves to a Buffer containing the generated report.
+ * 
+ * @throws {Error} - Throws an error if fetching the template or generating the report fails.
+ * 
+ * @example
+ * const buffer = await generateReportBuffer('https://example.com/template.docx', { title: 'Report 1' });
+ */
+async function generateReportBuffer(url, data) {
+  try {
+    const template = await fetchTemplate(url);
+    const buffer = await generateReport(template, data);
+    return buffer;
+  } catch (error) {
+    throw new Error(`Error generating report buffer: ${error.message}`);
+  }
+}
+/**
+ * Creates a zip archive from multiple file buffers and sends the zip to the client for download.
+ * 
+ * @async
+ * @function createZipArchive
+ * 
+ * @param {Array<{ fileName: string, buffer: Buffer }>} files - An array of objects representing the files to be added to the zip archive. Each object should have a `fileName` (string) and a `buffer` (Buffer).
+ * @param {object} res - The Express.js response object used to stream the zip file as a download to the client.
+ * @param {string} [zipFileName="reports.zip"] - The name of the zip file to be sent for download (default: "reports.zip").
+ * 
+ * @returns {Promise<void>} - Returns a Promise that resolves when the zip archive is successfully created and sent.
+ * 
+ * @throws {Error} - Throws an error if creating the zip archive or streaming it to the response fails.
+ * 
+ * @example
+ * const files = [
+ *   { fileName: 'report1.docx', buffer: buffer1 },
+ *   { fileName: 'report2.docx', buffer: buffer2 }
+ * ];
+ * await createZipArchive(files, res, 'all_reports.zip');
+ */
+async function createZipArchive(files, res, zipFileName = "reports.zip") {
+  try {
+    // Create a zip archive in memory
+    const archive = archiver('zip', { zlib: { level: 9 } }); // Maximum compression
+
+    // Prepare the response headers for sending the zip
+    res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
+    res.setHeader('Content-Type', 'application/zip');
+
+    // Pipe the archive's output to the response
+    archive.pipe(res);
+
+    // Add each file buffer to the archive
+    for (const { fileName, buffer } of files) {
+      archive.append(buffer, { name: fileName });
+    }
+
+    // Finalize the archive
+    await archive.finalize();
+
+    console.log('Zip archive created and sent.');
+  } catch (error) {
+    throw new Error(`Error creating zip archive: ${error.message}`);
+  }
+}
+
+
+
 
 
 // Start the server
