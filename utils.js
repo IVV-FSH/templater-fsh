@@ -73,7 +73,7 @@ export const getAirtableSchema = async (table) => {
 	});
 
 	const tables = response.data.tables;
-	console.log("Retrieved tables from Airtable:", tables.map(t => t.name));
+	// console.log("Retrieved tables from Airtable:", tables.map(t => t.name));
 
 	return tables;
 }
@@ -114,7 +114,7 @@ export const getAirtableRecord = async (table, recordId) => {
 
         // console.log(response.data.fields);
         const withAllFields = await addMissingFields(allFields, response.data.fields);
-        console.log(withAllFields);
+        // console.log(withAllFields);
 
         // let processedData = recordId
         //     ? response.data.fields

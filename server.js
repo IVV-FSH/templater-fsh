@@ -209,13 +209,31 @@ app.get('/facture', async (req, res) => {
 
 app.get('/factures', async (req, res) => {
   const table = "Inscriptions";
-  const { sessionId } = req.query
+  const sessionId = "recxEooSpjiO0qbvQ"
+  // const { sessionId } = req.query
   // const { recordIds } = req.query; // Assuming recordIds is an array of Airtable IDs
 
 
-  console.log(sessionId)
+  // console.log(sessionId)
   const session = await getAirtableRecord("Sessions", sessionId)
   // console.log(session)
+  const inscrits = session["Inscrits"];
+  var files = [];
+  await Promise.all(inscrits.map(async id => {
+    const data = await getAirtableRecord("Inscriptions", id);
+    const fileName = `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
+    // console.log("moyen_paiement", data["moyen_paiement"])
+    // console.log(fileName)
+    console.log(data)
+    const buffer = await generateReportBuffer(
+      "https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx",
+      data
+    );
+    files.push({ fileName, buffer });
+  }));
+
+  // Create zip archive after all files are generated
+  await createZipArchive(files, res, 'all_reports.zip');
 
   // if (!recordIds || !Array.isArray(recordIds)) {
   //   return res.status(400).json({ success: false, error: 'Paramètre recordIds manquant ou invalide.' });
