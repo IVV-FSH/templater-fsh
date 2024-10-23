@@ -76,66 +76,7 @@ export const getAirtableSchema = async (table) => {
 	console.log("Retrieved tables from Airtable:", tables.map(t => t.name));
 
 	return tables;
-
 }
-
-// export const getAirtableData = async (table, recordId = null, view = null, formula = null) => {
-// 	try {
-// 		let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
-// 		if (recordId && formula) {
-// 			throw new Error('Cannot specify both recordId and formula.');
-// 		}
-// 		const response = await axios.get(url, {
-// 			headers: AUTH_HEADERS,
-// 		});
-
-// 		let processedData = recordId ? response.data.fields : response.data.records;
-
-// 		if (recordId) {
-// 			url += `/${recordId}`;
-
-// 			processedData = processFieldsForDocx(
-// 				processedData,
-// 				airtableMarkdownFields
-// 			);
-// 			return processedData;  
-// 		} else {
-// 			const params = [];
-// 			if (formula) {
-// 				params.push(`filterByFormula=${formulaFilter(formula)}`);
-// 			}
-// 			if (view) {
-// 				params.push(`view=${formulaFilter(view)}`);
-// 			}
-// 			if (params.length > 0) {
-// 				url += `?${params.join('&')}`;
-// 			}
-// 			console.log(url);
-
-// 			processedData = response.data.records.map(record => record.fields);
-
-// 			// processedData = processedData.map(record => {
-// 			// if (Array.isArray(record)) {
-// 			// 	return record.join(', ');
-// 			// }
-// 			// return record;
-// 			// });
-			
-// 			processedData = processedData.map(record => processFieldsForDocx(
-// 				record,
-// 				airtableMarkdownFields
-// 			));
-			
-// 			return { records: processedData };
-			
-
-// 		}
-
-// 	} catch (error) {
-// 		console.error(error);
-// 		throw new Error('Error retrieving data from Airtable.');
-// 	}
-// };
 
 /**
  * Adds missing fields to an object.
@@ -274,20 +215,7 @@ export function processFieldsForDocx(data, markdownFields) {
 	return data;
 }
 
-
-// +++IF $prog.lieuxdemij_cumul.includes("Siège")+++
-// La salle de formation répond aux exigences de l’accessibilité aux personnes à mobilité réduite.
-// +++END-IF+++
-
-// +++IF $prog.lieuxdemij_cumul.includes("intra")+++
-// En intra : tarif sur devis
-// +++END-IF+++
-// +++IF $prog.ouvertepersaccomp_fromprog != null+++
-// Personne accompagnée : moitié prix
-// +++END-IF+++
-
 export function ymd(date) {
-
 	if(moment(date, "DD/MM/YYYY", true).isValid()) {
 		const year = String(date.getFullYear()).slice(-2);  // Get last 2 digits of the year
 		const month = String(date.getMonth() + 1).padStart(2, '0');  // Add 1 to month (0-based) and pad to 2 digits
@@ -299,9 +227,6 @@ export function ymd(date) {
 		// throw new Error(`${date} is not a valid date`)
 		return "";
 	}
-
-	
-	// return date.toISOString().split('T')[0];
 }
 
 export function getFrenchFormattedDate(withTime = true) {

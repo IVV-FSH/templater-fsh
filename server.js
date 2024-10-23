@@ -2,8 +2,9 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
+import { put } from "@vercel/blob";
 
-import { Stream } from 'stream';
+// import { Stream } from 'stream';
 import archiver from 'archiver';
 const app = express();
 app.use(express.json()); // For parsing application/json
@@ -113,7 +114,7 @@ app.get('/programme', async (req, res) => {
 
     let newTitle = data["titre_fromprog"]
     if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
-    
+
     // Generate and send the report
     await generateAndSendReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
@@ -268,9 +269,11 @@ async function generateAndSendReport(url, data, res, fileName = "") {
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
     let newTitle = fileName || fileNameWithoutExt;
 
-    const newFileName = `${getFrenchFormattedDate(false)} ${newTitle}.docx`;
-
+    var newFileName = `${getFrenchFormattedDate()} ${newTitle}.docx`.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
+    var newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
+    // const newFileName = "file.docx"
     // Set the correct headers for file download and content type for .docx
+    console.log("file name", newFileName)
     res.setHeader('Content-Disposition', `attachment; filename="${newFileName}"`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
@@ -360,6 +363,32 @@ async function createZipArchive(files, res, zipFileName = "reports.zip") {
 
 
 
+
+/**
+ * Uploads the generated report to Vercel Blob Storage and returns the download URL.
+ *
+ * @async
+ * @function uploadReportToBlobStorage
+ * 
+ * @param {string} fileName - The name of the file (including the extension) that will be stored in Blob Storage.
+ * @param {Buffer} buffer - The generated report buffer that will be uploaded.
+ * 
+ * @returns {Promise<string>} - Returns the URL of the uploaded file.
+ * 
+ * @throws {Error} - Throws an error if uploading the file to Blob Storage fails.
+ * 
+ * @example
+ * const downloadUrl = await uploadReportToBlobStorage('report.docx', reportBuffer);
+ */
+async function uploadReportToBlobStorage(fileName, buffer) {
+  try {
+    const { url } = await put(fileName, buffer, { access: 'public' });
+    console.log(`File uploaded to Blob Storage: ${url}`);
+    return url;
+  } catch (error) {
+    throw new Error(`Error uploading report to Blob Storage: ${error.message}`);
+  }
+}
 
 
 // Start the server
