@@ -259,16 +259,20 @@ async function generateAndSendReport(url, data, res, fileName = "") {
   try {
     console.log('Generating report...');
     // broadcastLog('Generating report...');
-    const template = await fetchTemplate(url);
-    const buffer = await generateReport(template, data);
     
+    // Fetch the template and generate the report
+    const template = await fetchTemplate(url);
+    const buffer = await generateReport(template, data); // Buffer is the file content
+    
+    // Determine the file name
     const originalFileName = path.basename(url);
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
-    let newTitle = fileName || fileNameWithoutExt
+    let newTitle = fileName || fileNameWithoutExt;
+
+    // Optional logic for file naming
     // switch (fileNameWithoutExt) {
     //   case 'catalogue':
-    //     // newTitle = 'Catalogue des formations FSH' + next year
-    //     newTitle = 'Catalogue des formations FSH ' + (new Date().getFullYear() +1);
+    //     newTitle = 'Catalogue des formations FSH ' + (new Date().getFullYear() + 1);
     //     break;
     //   case 'programme':
     //     newTitle = data.titre_fromprog || "Programme";
@@ -276,29 +280,18 @@ async function generateAndSendReport(url, data, res, fileName = "") {
     //   default:
     //     break;
     // }
+
     const newFileName = `${getFrenchFormattedDate(false)} ${newTitle}.docx`;
+
+    // Send the file as a download from memory
+    res.setHeader('Content-Disposition', `attachment; filename=${newFileName}`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     
-    const reportsDir = path.join(process.cwd(), 'reports');
-    ensureDirectoryExists(reportsDir);
+    // Send the buffer directly as the file content
+    res.send(buffer);
     
-    const filePath = path.join(reportsDir, newFileName);
-    fs.writeFileSync(filePath, buffer);
-    
-    console.log(`Report generated: ${filePath}`);
-    // broadcastLog(`Report generated: ${filePath}`);
-    
-    // Send the file as a download
-    res.download(filePath, newFileName, (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
-        // broadcastLog('Error sending file.');
-        res.status(500).send('Could not download the file.');
-      } else {
-        console.log('File generated successfully.');
-        // broadcastLog('File sent successfully.');
-        // res.status(200).json({ success: true, message: 'File generated successfully.' });
-      }
-    });
+    console.log('Report generated and sent as a download.');
+    // broadcastLog('File sent successfully.');
     
   } catch (error) {
     console.error('Error generating report:', error);
@@ -306,6 +299,7 @@ async function generateAndSendReport(url, data, res, fileName = "") {
     res.status(500).json({ success: false, error: error.message });
   }
 }
+
 
 // Start the server
 const server = app.listen(process.env.PORT || 3000, () => {
