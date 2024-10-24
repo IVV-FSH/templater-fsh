@@ -196,7 +196,43 @@ app.get('/facture', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
+    function calculateCost(data) {
+      let cost;
     
+      if (data["tarif_special"]) {
+        // If "tarif_special" is available, use it
+        cost = data["tarif_special"];
+      } else {
+        // Calculate the base cost, considering whether the person is accompanied
+        let baseCost;
+        if (data["accomp"]) {
+          baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
+        } else {
+          if (data["Adhérent? (from Participant.e)"]) {
+            baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
+          } else {
+            baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
+          }
+        }
+    
+        // Apply "rabais" if available
+        if (data["rabais"]) {
+          cost = baseCost * (1 - data["rabais"]);
+        } else {
+          cost = baseCost;
+        }
+      }
+    
+      return cost;
+    }
+
+    data["Montant"] = calculateCost(data)
+    console.log("Montant calc", data["Montant"])
+    data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+      parseFloat(data["Montant"]),
+    );  
+    console.log("montant", data["montant"])
+
     // Generate and send the report
     await generateAndSendReport(
     // await generateAndSendZipReport(
@@ -205,17 +241,20 @@ app.get('/facture', async (req, res) => {
       res,
       `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`
     );
-
+    var updatedData = { 
+        total: data['Montant'].toString()
+      }
     // TODO: update the record with the facture date
     if(!updatedInvoiceDate) {
-      const updatedRecord = await updateAirtableRecord(table, recordId, { date_facture: new Date().toLocaleDateString('fr-CA') });
-      if (updatedRecord) {
-        console.log('Facture date updated successfully:', updatedRecord.id);
-        // broadcastLog(`Facture date updated successfully: ${updatedRecord.id}`);
-      } else {
-        console.log('Failed to update facture date.');
-        // broadcastLog('Failed to update facture date.');
-      }
+      updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
+    }
+    const updatedRecord = await updateAirtableRecord(table, recordId, updatedData);
+    if (updatedRecord) {
+      console.log('Facture date updated successfully:', updatedRecord.id);
+      // broadcastLog(`Facture date updated successfully: ${updatedRecord.id}`);
+    } else {
+      console.log('Failed to update facture date.');
+      // broadcastLog('Failed to update facture date.');
     }
     // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
@@ -243,6 +282,13 @@ app.get('/realisation', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
+    
+    // date de l'attestation au dernier jour de la formation
+    data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    data['apaye'] = data.moyen_paiement && data.date_paiement;
+    data['acquit'] = data.moyen_paiement && data.date_paiement
+    ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+    : "";
     const newName = `Attestation de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
     // console.log('Data retrieved in /realisation:', data);
     // console.log('Code from prog:', data["code_fromprog"]);
@@ -481,6 +527,10 @@ async function uploadReportToBlobStorage(fileName, buffer) {
 // Start the server
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port http://localhost:${process.env.PORT || 3000}/`);
-  console.log(`Test facture : http://localhost:${process.env.PORT || 3000}/facture?recordId=rechdhSdMTxoB8J1P`);
+  console.log("TESTS FACTURE")
+  console.log(`Impayée : http://localhost:${process.env.PORT || 3000}/facture?recordId=rechdhSdMTxoB8J1P`);
+  console.log(`Rabais : http://localhost:${process.env.PORT || 3000}/facture?recordId=recFYDogCDybfujfd`);
+  console.log(`Accomp : http://localhost:${process.env.PORT || 3000}/facture?recordId=recvrbZmRuUCgHrFK`);
+  console.log(`Payée : http://localhost:${process.env.PORT || 3000}/facture?recordId=recLM3WRAiRYNPZ52`);
 });
 

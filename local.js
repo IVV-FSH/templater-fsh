@@ -23,12 +23,52 @@ async function generateProg() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-async function facture() {
-  const recordId = "recdVx9WSFFeX5GP7"; // payée
+async function facture(recordId = "recdVx9WSFFeX5GP7") {
+  // const recordId = "recdVx9WSFFeX5GP7"; // payée
   const templatePath = path.join('templates', 'facture.docx');
   const template = fs.readFileSync(templatePath);
-
-  const data = await getAirtableRecord("tblxLakvfLieKsRyH", recordId);
+  function calculateCost(data) {
+    let cost;
+  
+    if (data["tarif_special"]) {
+      // If "tarif_special" is available, use it
+      cost = data["tarif_special"];
+    } else {
+      // Calculate the base cost, considering whether the person is accompanied
+      let baseCost;
+      if (data["accomp"]) {
+        baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
+      } else {
+        if (data["Adhérent? (from Participant.e)"]) {
+          baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
+        } else {
+          baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
+        }
+      }
+  
+      // Apply "rabais" if available
+      if (data["rabais"]) {
+        cost = baseCost * (1 - data["rabais"]);
+      } else {
+        cost = baseCost;
+      }
+    }
+  
+    return cost;
+  }
+  
+  const data = await getAirtableRecord("Inscriptions", recordId);
+  // console.log(data)
+  data['apaye'] = data.moyen_paiement && data.date_paiement;
+  data['acquit'] = data.moyen_paiement && data.date_paiement
+  ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+  : "";
+  data["Montant"] = calculateCost(data)
+  console.log("Montant calc", data["Montant"])
+  data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+    parseFloat(data["Montant"]),
+  );  
+  console.log("montant", data["montant"])
 
   // const processedData = processFieldsForDocx(data, fieldsToProcess);
 
@@ -44,6 +84,10 @@ async function facture() {
   // Close the reading of programme.docx
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
+
+facture().catch(console.error); // payée
+facture("recpy3eggrFMnAXT4").catch(console.error); // impayée
+
 
 async function updateARec() {
   const table = "Inscriptions";
