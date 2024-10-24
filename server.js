@@ -203,7 +203,7 @@ app.get('/facture', async (req, res) => {
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx', 
       data, 
       res,
-      `${data["id"]} ${data["nom"]} ${data["prenom"]}`
+      `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`
     );
 
     // TODO: update the record with the facture date
