@@ -45,6 +45,28 @@ async function facture() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
+async function real() {
+  const recordId = "recdVx9WSFFeX5GP7"; // payée
+  const templatePath = path.join('templates', 'realisation.docx');
+  const template = fs.readFileSync(templatePath);
+
+  const data = await getAirtableRecord("Inscriptions", recordId);
+
+  // const processedData = processFieldsForDocx(data, fieldsToProcess);
+
+  const buffer = await createReport({
+    template,
+    data
+  });
+
+  const newName = `Attestation de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]} ` || "err nom fact";
+
+  fs.writeFileSync(`reports/${getFrenchFormattedDate()} ${newName}.docx`, buffer);
+
+  // Close the reading of programme.docx
+  fs.closeSync(fs.openSync(templatePath, 'r'));
+}
+real().catch(console.error);
 async function devis() {
   const recordId = "recGb3crKcmXQ2caL"; // payée
   const templatePath = path.join('templates', 'devis.docx');
@@ -330,4 +352,4 @@ async function generateAndZipFile() {
 
 
 // Test the function
-generateAndZipFile().catch(err => console.error(err));
+// generateAndZipFile().catch(err => console.error(err));

@@ -227,7 +227,8 @@ app.get('/facture', async (req, res) => {
 });  
 app.get('/realisation', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
-  const table="tblxLakvfLieKsRyH"; // Inscriptions
+  const table="Inscriptions"; // Inscriptions
+  // const table="tblxLakvfLieKsRyH"; // Inscriptions
   // const recordId="recdVx9WSFFeX5GP7";
   const { recordId } = req.query;
   
@@ -243,14 +244,15 @@ app.get('/realisation', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
-    
+    const newName = `Attestation de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]} ` || "err nom fact";
+
     // Generate and send the report
     await generateAndSendReport(
     // await generateAndSendZipReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/realisation.docx', 
       data, 
       res,
-      `${data["id"]} ${data["nom"]} ${data["prenom"]}`
+      newName
     );
     // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
