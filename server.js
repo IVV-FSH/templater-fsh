@@ -319,8 +319,10 @@ async function generateAndSendReport(url, data, res, fileName = "") {
     var newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
     // const newFileName = "file.docx"
     // Set the correct headers for file download and content type for .docx
+    const encodedFileName = encodeURIComponent(newFileName);
+
     console.log("file name", newFileName)
-    res.setHeader('Content-Disposition', `attachment; filename="${newFileName}.docx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodedFileName}.docx"`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
 
