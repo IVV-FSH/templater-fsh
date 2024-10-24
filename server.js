@@ -174,7 +174,7 @@ app.get('/devis', async (req, res) => {
 
 app.get('/facture', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
-  const table="tblxLakvfLieKsRyH"; // Inscriptions
+  const table="Inscriptions"; // Inscriptions
   // const recordId="recdVx9WSFFeX5GP7";
   const { recordId } = req.query;
 
@@ -225,18 +225,18 @@ app.get('/facture', async (req, res) => {
   } 
   
 });  
+
+
 app.get('/realisation', async (req, res) => {
-  // res.sendFile(path.join(process.cwd(), 'index.html'));
-  const table="Inscriptions"; // Inscriptions
-  // const table="tblxLakvfLieKsRyH"; // Inscriptions
-  // const recordId="recdVx9WSFFeX5GP7";
+  const table = "Inscriptions";
   const { recordId } = req.query;
-  
+
   if (!recordId) {
     return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
   }
+
   try {
-    const data = await getAirtableRecord(table, recordId);
+    var data = await getAirtableRecord(table, recordId);
     if (data) {
       console.log('Data successfully retrieved:', data.length);
       // broadcastLog(`Data successfully retrieved: ${data.length} records`);
@@ -254,18 +254,17 @@ app.get('/realisation', async (req, res) => {
       res,
       newName
     );
+
     // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
     console.error('Error:', error);
     // broadcastLog(`Error: ${error.message}`);
     res.status(500).json({ success: false, error: error.message });
-  }
-  
-});  
-
+  } 
+});
 
 app.get('/factures', async (req, res) => {
-  const table = "tblxLakvfLieKsRyH";
+  const table = "Sessions";
   const sessionId = "recxEooSpjiO0qbvQ";
   // const { sessionId } = req.query
 
@@ -312,12 +311,12 @@ async function generateAndSendReport(url, data, res, fileName = "") {
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
     let newTitle = fileName || fileNameWithoutExt;
 
-    var newFileName = `${getFrenchFormattedDate()} ${newTitle}.docx`.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
+    var newFileName = `${getFrenchFormattedDate()} ${newTitle}`.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
     var newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
     // const newFileName = "file.docx"
     // Set the correct headers for file download and content type for .docx
     console.log("file name", newFileName)
-    res.setHeader('Content-Disposition', `attachment; filename="${newFileName}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${newFileName}.docx"`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
 

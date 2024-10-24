@@ -1,7 +1,7 @@
 import { createReport } from 'docx-templates';
 import fs from 'fs';
 import path from 'path';
-import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords } from './utils.js';
+import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate } from './utils.js';
 import archiver from 'archiver';
 
 async function generateProg() {
@@ -48,7 +48,8 @@ async function facture() {
 async function real() {
   const recordId = "recdVx9WSFFeX5GP7"; // payée
   const templatePath = path.join('templates', 'realisation.docx');
-  const template = fs.readFileSync(templatePath);
+  // const template = fs.readFileSync(templatePath);
+  const template = await fetchTemplate("https://github.com/isadoravv/templater/raw/refs/heads/main/templates/realisation.docx")
 
   const data = await getAirtableRecord("Inscriptions", recordId);
 
@@ -64,7 +65,7 @@ async function real() {
   fs.writeFileSync(`reports/${getFrenchFormattedDate()} ${newName}.docx`, buffer);
 
   // Close the reading of programme.docx
-  fs.closeSync(fs.openSync(templatePath, 'r'));
+  // fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 real().catch(console.error);
 async function devis() {
