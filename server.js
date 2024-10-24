@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
+import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, updateAirtableRecords, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
 import { put } from "@vercel/blob";
 import { PassThrough } from 'stream';
 
@@ -298,6 +298,10 @@ app.get('/factures', async (req, res) => {
   } else {
     res.status(500).json({ success: false, error: 'No valid files to archive.' });
   }
+
+  // TODO: update all records with the facture date
+  // const updateAirtableRecords = async (table, recordIds, data) => {
+  
 });
 
 

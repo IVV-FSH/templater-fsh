@@ -133,6 +133,36 @@ export const updateAirtableRecord = async (table, recordId, data) => {
 	}
 };
 
+/**
+ * Updates multiple records in an Airtable table.
+ *
+ * This function sends a PATCH request to the Airtable API to update multiple records in the specified table.
+ *
+ * @param {string} table - The name of the Airtable table.
+ * @param {Array<Object>} records - An array of objects, each containing the record ID and the data to update.
+ * @returns {Promise<Object>} A promise that resolves to the updated records data.
+ */
+export const updateAirtableRecords = async (table, records) => {
+	try {
+		let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
+		console.log(`Updating records at URL: ${url}`);
+		console.log(`Data being sent: ${JSON.stringify(records)}`);
+
+		const response = await axios.patch(url, { records }, {
+			headers: {
+				...AUTH_HEADERS,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		// console.log(`Response from Airtable: ${JSON.stringify(response.data)}`);
+		return response.data;
+	} catch (error) {
+		console.error(`Error updating records in Airtable: ${error.message}`);
+		throw new Error("Error updating records in Airtable.", error);
+	}
+};
+
 export const getAirtableRecord = async (table, recordId) => {
     try {
         let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}/${recordId}`;
