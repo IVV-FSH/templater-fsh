@@ -245,18 +245,17 @@ app.get('/realisation', async (req, res) => {
     }
     const newName = `Attestation de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]} ` || "err nom fact";
     // console.log('Data retrieved in /realisation:', data);
-    console.log('Code from prog:', data["code_fromprog"]);
-    console.log('Date from session:', data["au (from Session)"]);
-    console.log('New report name:', newName);
+    // console.log('Code from prog:', data["code_fromprog"]);
+    // console.log('Date from session:', data["au (from Session)"]);
+    // console.log('New report name:', newName);
     
     // Generate and send the report
     await generateAndSendReport(
     // await generateAndSendZipReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/attestation.docx', 
+      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/attestation.docx', 
       data, 
       res,
-      // newName
-      "attestation -from facture"
+      newName
     );
     // http://localhost:3000/realisation?recordId=rec9ZMibFvLaRuTm7
 
