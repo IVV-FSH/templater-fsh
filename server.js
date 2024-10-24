@@ -189,7 +189,7 @@ app.get('/facture', async (req, res) => {
       console.log('Data successfully retrieved:', data.length);
       // broadcastLog(`Data successfully retrieved: ${data.length} records`);
       if(data["date_facture"]) {
-        data["today"] = data["date_facture"];
+        data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
         updatedInvoiceDate = true;
       }
     } else {
