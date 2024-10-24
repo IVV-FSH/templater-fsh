@@ -28,7 +28,7 @@ async function facture() {
   const templatePath = path.join('templates', 'facture.docx');
   const template = fs.readFileSync(templatePath);
 
-  const data = await getAirtableRecord("Inscriptions", recordId);
+  const data = await getAirtableRecord("tblxLakvfLieKsRyH", recordId);
 
   // const processedData = processFieldsForDocx(data, fieldsToProcess);
 

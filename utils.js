@@ -102,6 +102,34 @@ const addMissingFields = async (allFieldsFromTable, fieldsWithMissing) => {
     return res;
 };
 
+/**
+ * Updates a record in an Airtable table.
+ *
+ * This function sends a PATCH request to the Airtable API to update a specific record in the specified table.
+ *
+ * @param {string} table - The name of the Airtable table.
+ * @param {string} recordId - The ID of the record to update.
+ * @param {Object} data - The data to update in the record.
+ * @returns {Promise<Object>} A promise that resolves to the updated record data.
+ */
+export const updateAirtableRecord = async (table, recordId, data) => {
+	try {
+		let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}/${recordId}`;
+
+		const response = await axios.patch(url, { fields: data }, {
+			headers: {
+				...AUTH_HEADERS,
+				'Content-Type': 'application/json'
+			}
+		});
+
+		return response.data;
+	} catch (error) {
+		console.error(error);
+		throw new Error("Error updating record in Airtable.");
+	}
+};
+
 export const getAirtableRecord = async (table, recordId) => {
     try {
         let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}/${recordId}`;
