@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, ensureDirectoryExists, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
 import { put } from "@vercel/blob";
+import { PassThrough } from 'stream';
 
 // import { Stream } from 'stream';
 import archiver from 'archiver';
@@ -174,7 +175,7 @@ app.get('/devis', async (req, res) => {
 app.get('/facture', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table="Inscriptions";
-  // const recordId="recAzC50Q7sCNzkcf";
+  // const recordId="recdVx9WSFFeX5GP7";
   const { recordId } = req.query;
   
   if (!recordId) {
@@ -192,7 +193,8 @@ app.get('/facture', async (req, res) => {
     
     // Generate and send the report
     await generateAndSendReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
+    // await generateAndSendZipReport(
+      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx', 
       data, 
       res,
       `${data["id"]} ${data["nom"]} ${data["prenom"]}`
@@ -209,68 +211,36 @@ app.get('/facture', async (req, res) => {
 
 app.get('/factures', async (req, res) => {
   const table = "Inscriptions";
-  const sessionId = "recxEooSpjiO0qbvQ"
+  const sessionId = "recxEooSpjiO0qbvQ";
   // const { sessionId } = req.query
-  // const { recordIds } = req.query; // Assuming recordIds is an array of Airtable IDs
 
-
-  // console.log(sessionId)
-  const session = await getAirtableRecord("Sessions", sessionId)
-  // console.log(session)
+  const session = await getAirtableRecord("Sessions", sessionId);
   const inscrits = session["Inscrits"];
+
   var files = [];
+
   await Promise.all(inscrits.map(async id => {
     const data = await getAirtableRecord("Inscriptions", id);
     const fileName = `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
-    // console.log("moyen_paiement", data["moyen_paiement"])
-    // console.log(fileName)
-    console.log(data)
+    console.log(data);
     const buffer = await generateReportBuffer(
       "https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx",
       data
     );
-    files.push({ fileName, buffer });
+
+    if (buffer) {
+      files.push({ fileName, buffer });
+    } else {
+      console.error(`Invalid buffer for file: ${fileName}`);
+    }
   }));
 
-  // Create zip archive after all files are generated
-  await createZipArchive(files, res, 'all_reports.zip');
-
-  // if (!recordIds || !Array.isArray(recordIds)) {
-  //   return res.status(400).json({ success: false, error: 'Paramètre recordIds manquant ou invalide.' });
-  // }
-
-  // try {
-  //   // Create a zip archive in memory
-  //   const zip = archiver('zip', { zlib: { level: 9 } });
-  //   const zipStream = new Stream.PassThrough();
-    
-  //   res.attachment('factures.zip');
-  //   zip.pipe(zipStream);
-  //   zipStream.pipe(res);
-
-  //   // Loop through recordIds and generate documents
-  //   for (const recordId of recordIds) {
-  //     const data = await getAirtableRecord(table, recordId);
-  //     if (data) {
-  //       const templateUrl = 'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx';
-  //       const buffer = await generateReport(await fetchTemplate(templateUrl), data);
-        
-  //       const fileName = `${getFrenchFormattedDate(false)} ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
-        
-  //       // Add the generated document to the ZIP archive
-  //       zip.append(buffer, { name: fileName });
-  //     }
-  //   }
-
-  //   // Finalize the zip file
-  //   await zip.finalize();
-
-  // } catch (error) {
-  //   console.error('Error generating factures:', error);
-  //   res.status(500).json({ success: false, error: error.message });
-  // }
+  if (files.length > 0) {
+    await createZipArchive(files, res, 'all_reports.zip');
+  } else {
+    res.status(500).json({ success: false, error: 'No valid files to archive.' });
+  }
 });
-
 
 
 // Reusable function to generate and send report
@@ -332,6 +302,7 @@ async function generateReportBuffer(url, data) {
     throw new Error(`Error generating report buffer: ${error.message}`);
   }
 }
+
 /**
  * Creates a zip archive from multiple file buffers and sends the zip to the client for download.
  * 
@@ -345,13 +316,6 @@ async function generateReportBuffer(url, data) {
  * @returns {Promise<void>} - Returns a Promise that resolves when the zip archive is successfully created and sent.
  * 
  * @throws {Error} - Throws an error if creating the zip archive or streaming it to the response fails.
- * 
- * @example
- * const files = [
- *   { fileName: 'report1.docx', buffer: buffer1 },
- *   { fileName: 'report2.docx', buffer: buffer2 }
- * ];
- * await createZipArchive(files, res, 'all_reports.zip');
  */
 async function createZipArchive(files, res, zipFileName = "reports.zip") {
   try {
@@ -367,6 +331,12 @@ async function createZipArchive(files, res, zipFileName = "reports.zip") {
 
     // Add each file buffer to the archive
     for (const { fileName, buffer } of files) {
+      // Log the buffer to check its content
+      if (!buffer || !(buffer instanceof Buffer)) {
+        throw new Error(`Invalid buffer for file: ${fileName}`);
+      }
+
+      // Append the buffer to the zip archive
       archive.append(buffer, { name: fileName });
     }
 
@@ -375,12 +345,47 @@ async function createZipArchive(files, res, zipFileName = "reports.zip") {
 
     console.log('Zip archive created and sent.');
   } catch (error) {
+    console.error(`Error creating zip archive: ${error.message}`);
     throw new Error(`Error creating zip archive: ${error.message}`);
   }
 }
 
 
 
+async function generateAndSendZipReport(url, data, res, fileName = "") {
+  try {
+    console.log('Generating report...');
+    
+    // Fetch the template and generate the report buffer
+    const template = await fetchTemplate(url);
+    const buffer = await generateReport({output: 'buffer', template, data});
+
+    if (!Buffer.isBuffer(buffer)) {
+      throw new Error('Generated document is not a valid Buffer.');
+    }
+
+    // Create a zip stream
+    const zipStream = new PassThrough();
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    // Set the appropriate headers for downloading the zip file
+    res.setHeader('Content-Disposition', `attachment; filename="${getFrenchFormattedDate()} ${fileName || 'report'}.zip"`);
+    res.setHeader('Content-Type', 'application/zip');
+
+    // Pipe the archive to the response
+    archive.pipe(zipStream);
+    archive.append(buffer, { name: `${fileName || 'report'}.docx` });
+    archive.finalize();
+
+    // Pipe the zip stream to the response
+    zipStream.pipe(res);
+
+    console.log('Zip report generated and sent as a download.');
+  } catch (error) {
+    console.error('Error generating zip report:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
 
 /**
  * Uploads the generated report to Vercel Blob Storage and returns the download URL.

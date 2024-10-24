@@ -2,6 +2,7 @@ import { createReport } from 'docx-templates';
 import fs from 'fs';
 import path from 'path';
 import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords } from './utils.js';
+import archiver from 'archiver';
 
 async function generateProg() {
   const templatePath = path.join('templates', 'cat2.docx');
@@ -174,4 +175,159 @@ async function tests() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-devis().catch(console.error);
+/**
+ * Zips several files from the file system into a single .zip file.
+ */
+function zipLocalFiles() {
+  const output = fs.createWriteStream('reports/test-files.zip');
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  output.on('close', function () {
+    console.log(`Zipped ${archive.pointer()} total bytes`);
+  });
+
+  archive.on('error', function (err) {
+    throw err;
+  });
+
+  archive.pipe(output);
+
+  // Add multiple local files to the zip
+  const files = ['test1.docx', 'test2.docx'].map(file => path.join('reports', file));
+  files.forEach(file => archive.file(file, { name: path.basename(file) }));
+
+  archive.finalize();
+}
+
+// Call this function to test local zipping of files
+// zipLocalFiles();
+
+/**
+ * Zips several dynamically created files (from Buffers) into a single .zip file.
+ */
+async function zipFilesFromBuffers() {
+  const output = fs.createWriteStream('reports/test-buffers.zip');
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  output.on('close', function () {
+    console.log(`Zipped ${archive.pointer()} total bytes`);
+  });
+
+  archive.on('error', function (err) {
+    throw err;
+  });
+
+  archive.pipe(output);
+
+  // Data for filling the template
+  const files = [
+    { data: { Titre: "abc" }, title: "abc.docx" },
+    { data: { Titre: "xyz" }, title: "xyz.docx" }
+  ];
+
+  // Template path
+  const templatePath = path.join('templates', 'test.docx');
+  const template = fs.readFileSync(templatePath);
+
+  // Generate report buffers for each file and add to zip
+  for (const file of files) {
+    const buffer = await createReport({
+      template,
+      data: file.data
+    });
+    archive.append(buffer, { name: file.title });
+  }
+
+  await archive.finalize();
+}
+
+// Call this function to test zipping of files from Buffers
+// zipFilesFromBuffers();
+
+function zipTwoFiles() { // this works.
+  const output = fs.createWriteStream(path.join('reports', 'test-archive.zip'));
+  const archive = archiver('zip', { zlib: { level: 9 } }); // Set compression level
+
+  output.on('close', function() {
+    console.log(`Archive created successfully! Total size: ${archive.pointer()} bytes.`);
+  });
+
+  archive.on('error', function(err) {
+    throw new Error(`Error creating zip archive: ${err.message}`);
+  });
+
+  // Pipe the archive to the output file
+  archive.pipe(output);
+
+  // Append both files to the zip
+  archive.file(path.join('templates', 'test.docx'), { name: 'test.docx' });
+  archive.file(path.join('templates', 'html.docx'), { name: 'html.docx' });
+
+  // Finalize the archive (this will actually create the zip)
+  archive.finalize();
+}
+
+// Test the zipping function
+// zipTwoFiles();
+
+// devis().catch(console.error);
+
+
+
+
+// Function to generate a .docx on the fly and zip it
+async function generateAndZipFile() {
+  const dateFormatted = getFrenchFormattedDate();
+  const output = fs.createWriteStream(path.join('reports', `${dateFormatted} archive.zip`));
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  output.on('close', function() {
+    console.log(`Archive created successfully! Total size: ${archive.pointer()} bytes.`);
+  });
+
+  archive.on('error', function(err) {
+    throw new Error(`Error creating zip archive: ${err.message}`);
+  });
+
+  archive.pipe(output);
+
+  const templatePath = path.join('templates', 'test.docx');
+  const template = fs.readFileSync(templatePath);
+
+  if (!Buffer.isBuffer(template)) {
+    throw new Error('Template is not a valid Buffer.');
+  }
+  console.log('Template read successfully.');
+
+  const data = { 'Titre': 'Dynamic Title' };
+
+  try {
+    // Generate the .docx buffer directly
+    const docxBuffer = await createReport({
+      output: 'buffer',
+      template,
+      data
+    });
+
+    // Log the size and type of the generated buffer
+    console.log(`Generated document buffer size: ${docxBuffer.length} bytes`);
+    console.log(`Generated document type: ${typeof docxBuffer}`);
+
+    // Check if docxBuffer is valid
+    if (!Buffer.isBuffer(docxBuffer)) {
+      throw new Error('Generated document is not a valid Buffer.');
+    }
+
+    // Append the generated file to the zip
+    archive.append(docxBuffer, { name: 'generated-file.docx' });
+
+    // Finalize the archive (this will actually create the zip)
+    await archive.finalize();
+  } catch (error) {
+    throw new Error(`Error creating zip archive: ${error.message}`);
+  }
+}
+
+
+// Test the function
+generateAndZipFile().catch(err => console.error(err));

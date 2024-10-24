@@ -83,7 +83,7 @@ export const getAirtableSchema = async (table) => {
  *
  * This function takes an array of field names and an object containing fields with missing values.
  * It returns a new object where each field from the array is present. If a field is missing in the
- * input object, it will be set to `null` in the result.
+ * input object, it will be set to empty string in the result.
  *
  * @param {string[]} allFieldsFromTable - An array of field names to be included in the result.
  * @param {Object} fieldsWithMissing - An object containing fields with their values. Missing fields will be set to `null`.
@@ -95,7 +95,8 @@ const addMissingFields = async (allFieldsFromTable, fieldsWithMissing) => {
         if (fieldsWithMissing[fn]) {
             res[fn] = fieldsWithMissing[fn];
         } else {
-            res[fn] = null;
+			// TODO: if an array, if empty, set to empty array
+            res[fn] = "";
         }
     });
     return res;
@@ -254,6 +255,8 @@ export function getFrenchFormattedDate(withTime = true) {
 		return `${dateParts.year}${dateParts.month}${dateParts.day}`;
 		// return `${dateParts.day}/${dateParts.month}/${dateParts.year}`;
 	}
+	// const now = new Date();
+	// return now.toLocaleDateString('fr-FR').replace(/\//g, '-'); // Format as DD-MM-YYYY
 }
 
 export async function fetchTemplate(url) {
