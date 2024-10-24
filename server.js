@@ -208,7 +208,7 @@ app.get('/facture', async (req, res) => {
 
     // TODO: update the record with the facture date
     if(!updatedInvoiceDate) {
-      const updatedRecord = await updateAirtableRecord(table, recordId, { date_facture: new Date().toISOString() });
+      const updatedRecord = await updateAirtableRecord(table, recordId, { date_facture: new Date().toLocaleDateString('fr-CA') });
       if (updatedRecord) {
         console.log('Facture date updated successfully:', updatedRecord.id);
         // broadcastLog(`Facture date updated successfully: ${updatedRecord.id}`);
@@ -477,5 +477,6 @@ async function uploadReportToBlobStorage(fileName, buffer) {
 // Start the server
 const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port http://localhost:${process.env.PORT || 3000}/`);
+  console.log(`Test facture : http://localhost:${process.env.PORT || 3000}/facture?recordId=rechdhSdMTxoB8J1P`);
 });
 

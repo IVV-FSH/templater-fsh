@@ -115,6 +115,8 @@ const addMissingFields = async (allFieldsFromTable, fieldsWithMissing) => {
 export const updateAirtableRecord = async (table, recordId, data) => {
 	try {
 		let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}/${recordId}`;
+		console.log(`Updating record at URL: ${url}`);
+		console.log(`Data being sent: ${JSON.stringify(data)}`);
 
 		const response = await axios.patch(url, { fields: data }, {
 			headers: {
@@ -123,10 +125,11 @@ export const updateAirtableRecord = async (table, recordId, data) => {
 			}
 		});
 
+		// console.log(`Response from Airtable: ${JSON.stringify(response.data)}`);
 		return response.data;
 	} catch (error) {
-		console.error(error);
-		throw new Error("Error updating record in Airtable.");
+		console.error(`Error updating record in Airtable: ${error.message}`);
+		throw new Error("Error updating record in Airtable.", error);
 	}
 };
 

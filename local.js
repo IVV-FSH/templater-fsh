@@ -1,7 +1,7 @@
 import { createReport } from 'docx-templates';
 import fs from 'fs';
 import path from 'path';
-import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate } from './utils.js';
+import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord } from './utils.js';
 import archiver from 'archiver';
 
 async function generateProg() {
@@ -45,6 +45,14 @@ async function facture() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
+async function updateARec() {
+  const table = "Inscriptions";
+  const recordId = "rechdhSdMTxoB8J1P"; // payée
+  await updateAirtableRecord(table, recordId, { "date_facture": "2024-10-24" });
+}
+
+// updateARec().catch(console.error);
+
 async function real() {
   const recordId = "recdVx9WSFFeX5GP7"; // payée
   const templatePath = path.join('templates', 'realisation.docx');
@@ -67,7 +75,7 @@ async function real() {
   // Close the reading of programme.docx
   // fs.closeSync(fs.openSync(templatePath, 'r'));
 }
-real().catch(console.error);
+
 async function devis() {
   const recordId = "recGb3crKcmXQ2caL"; // payée
   const templatePath = path.join('templates', 'devis.docx');
