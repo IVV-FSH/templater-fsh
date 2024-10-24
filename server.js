@@ -224,60 +224,7 @@ app.get('/facture', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   } 
   
-});  app.get('/raclure', async (req, res) => {
-  // res.sendFile(path.join(process.cwd(), 'index.html'));
-  const table="Inscriptions"; // Inscriptions
-  // const recordId="recdVx9WSFFeX5GP7";
-  const { recordId } = req.query;
-
-  var updatedInvoiceDate = false;
-  
-  if (!recordId) {
-    return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
-  }
-  try {
-    var data = await getAirtableRecord(table, recordId);
-    if (data) {
-      console.log('Data successfully retrieved:', data.length);
-      // broadcastLog(`Data successfully retrieved: ${data.length} records`);
-      if(data["date_facture"]) {
-        data["today"] = data["date_facture"];
-        updatedInvoiceDate = true;
-      }
-    } else {
-      console.log('Failed to retrieve data.');
-      // broadcastLog('Failed to retrieve data.');
-    }
-    
-    // Generate and send the report
-    await generateAndSendReport(
-    // await generateAndSendZipReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/realisation.docx', 
-      data, 
-      res,
-      `${data["id"]} ${data["nom"]} ${data["prenom"]}`
-    );
-
-    // TODO: update the record with the facture date
-    if(!updatedInvoiceDate) {
-      const updatedRecord = await updateAirtableRecord(table, recordId, { date_facture: new Date().toISOString() });
-      if (updatedRecord) {
-        console.log('Facture date updated successfully:', updatedRecord.id);
-        // broadcastLog(`Facture date updated successfully: ${updatedRecord.id}`);
-      } else {
-        console.log('Failed to update facture date.');
-        // broadcastLog('Failed to update facture date.');
-      }
-    }
-    // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
-  } catch (error) {
-    console.error('Error:', error);
-    // broadcastLog(`Error: ${error.message}`);
-    res.status(500).json({ success: false, error: error.message });
-  } 
-  
 });  
-
 
 app.get('/realisation', async (req, res) => {
   const table = "Inscriptions";
@@ -305,12 +252,13 @@ app.get('/realisation', async (req, res) => {
     // Generate and send the report
     await generateAndSendReport(
     // await generateAndSendZipReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/realisation.docx', 
+      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx', 
       data, 
       res,
       // newName
       "attestation"
     );
+    // http://localhost:3000/realisation?recordId=rec9ZMibFvLaRuTm7
 
     // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
   } catch (error) {
