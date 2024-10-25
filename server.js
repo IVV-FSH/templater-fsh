@@ -520,9 +520,9 @@ app.get('/realisation', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
-    
+    console.log("data:NOM", data.nom)
     // date de l'attestation au dernier jour de la formation
-    data['nom'] = data["nom"].toUpperCase();
+    data['nom'] = data["nom"][0].toUpperCase();
     data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     data['apaye'] = data.moyen_paiement && data.date_paiement;
     data['acquit'] = data["paye"].includes("Payé")
