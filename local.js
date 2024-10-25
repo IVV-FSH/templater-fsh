@@ -4,6 +4,27 @@ import path from 'path';
 import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord } from './utils.js';
 import archiver from 'archiver';
 
+async function testTemplate(templateName, data={
+  "trueDat": true,
+  "falseDat": false,
+  "paye": "Retard !",
+}) {
+  const templatePath = path.join('templates', templateName);
+  const template = fs.readFileSync(templatePath);
+
+  const buffer = await createReport({
+    template,
+    data
+  });
+
+  fs.writeFileSync(`reports/${getFrenchFormattedDate()} ${templateName}.docx`, buffer);
+
+  // Close the reading of programme.docx
+  // fs.closeSync(fs.openSync(templatePath, 'r'));
+}
+
+testTemplate("testifs.docx").catch(console.error);
+
 async function generateProg() {
   const templatePath = path.join('templates', 'cat2.docx');
   const template = fs.readFileSync(templatePath);
@@ -85,8 +106,8 @@ async function facture(recordId = "recdVx9WSFFeX5GP7") {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-facture().catch(console.error); // payée
-facture("recpy3eggrFMnAXT4").catch(console.error); // impayée
+// facture().catch(console.error); // payée
+// facture("recpy3eggrFMnAXT4").catch(console.error); // impayée
 
 
 async function updateARec() {
