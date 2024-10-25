@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord } from './utils.js';
 import archiver from 'archiver';
+import { githubTemplatesLink } from './server.js';
 
 async function testTemplate(templateName, data={
   "trueDat": true,
@@ -123,7 +124,7 @@ async function real() {
   const recordId = "recdVx9WSFFeX5GP7"; // payée
   const templatePath = path.join('templates', 'realisation.docx');
   // const template = fs.readFileSync(templatePath);
-  const template = await fetchTemplate("https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/realisation.docx")
+  const template = await fetchTemplate(githubTemplatesLink + "realisation.docx")
 
   const data = await getAirtableRecord("Inscriptions", recordId);
 

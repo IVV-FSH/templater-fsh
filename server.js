@@ -4,10 +4,14 @@ import fs from 'fs';
 import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, updateAirtableRecords, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
 import { put } from "@vercel/blob";
 import { PassThrough } from 'stream';
-
-// import { Stream } from 'stream';
 import archiver from 'archiver';
+// import { Stream } from 'stream';
+
+const githubRepo = "https://github.com/IVV-FSH/templater-fsh/";
+export const githubTemplatesLink = `${githubRepo}raw/refs/heads/main/templates/`;
+
 const app = express();
+
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
@@ -15,6 +19,7 @@ app.use(express.urlencoded({ extended: true })); // For parsing application/x-ww
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });
+
 
 const documents = [
   {
@@ -168,7 +173,7 @@ const handleReportGeneration = async (req, res, document) => {
     // Generate and send the report
     console.log(`Generating report using template: ${document.template}`);
     await generateAndDownloadReport(
-      `https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/${document.template}`,
+      `${githubTemplatesLink}${document.template}`,
       data,
       res,
       document.titleForming(data)
@@ -260,7 +265,7 @@ app.get('/catalogue', async (req, res) => {
     
     // Generate and send the report
     await generateAndDownloadReport(
-      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/catalogue.docx', 
+      githubTemplatesLink + 'catalogue.docx', 
       data, 
       res,
       'Catalogue des formations FSH ' + annee
@@ -298,7 +303,7 @@ app.get('/programme', async (req, res) => {
 
     // Generate and send the report
     await generateAndDownloadReport(
-      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/programme.docx', 
+      githubTemplatesLink + 'programme.docx', 
       data, 
       res,
       newTitle || "err titre prog"
@@ -337,7 +342,7 @@ app.get('/devis', async (req, res) => {
     
     // Generate and send the report
     await generateAndDownloadReport(
-      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/devis.docx', 
+      githubTemplatesLink + 'devis.docx', 
       data, 
       res,
       newTitle
@@ -416,7 +421,7 @@ app.get('/facture', async (req, res) => {
     // Generate and send the report
     await generateAndDownloadReport(
     // await generateAndSendZipReport(
-      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/facture.docx', 
+      githubTemplatesLink + 'facture.docx', 
       data, 
       res,
       `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`
@@ -478,7 +483,7 @@ app.get('/realisation', async (req, res) => {
     // Generate and send the report
     await generateAndDownloadReport(
     // await generateAndSendZipReport(
-      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/attestation.docx', 
+      githubTemplatesLink + 'attestation.docx', 
       data, 
       res,
       newName
@@ -508,7 +513,7 @@ app.get('/factures', async (req, res) => {
     const fileName = `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
     console.log(data);
     const buffer = await generateReportBuffer(
-      "https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/facture.docx",
+      githubTemplatesLink+"facture.docx",
       data
     );
 
