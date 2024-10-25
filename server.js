@@ -473,7 +473,7 @@ app.get('/attestformation', async (req, res) => {
     }
     
     // date de l'attestation au dernier jour de la formation
-    data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     data['apaye'] = data.moyen_paiement && data.date_paiement;
     data['acquit'] = data["paye"].includes("Payé")
     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
@@ -527,7 +527,7 @@ app.get('/realisation', async (req, res) => {
     data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
     data["assiduite"] = data["assiduite"] * 100;
     data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
-    data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     data['apaye'] = data.moyen_paiement && data.date_paiement;
     data['acquit'] = data["paye"].includes("Payé")
     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
