@@ -123,7 +123,7 @@ async function real() {
   const recordId = "recdVx9WSFFeX5GP7"; // payée
   const templatePath = path.join('templates', 'realisation.docx');
   // const template = fs.readFileSync(templatePath);
-  const template = await fetchTemplate("https://github.com/isadoravv/templater/raw/refs/heads/main/templates/realisation.docx")
+  const template = await fetchTemplate("https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/realisation.docx")
 
   const data = await getAirtableRecord("Inscriptions", recordId);
 

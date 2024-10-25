@@ -168,7 +168,7 @@ const handleReportGeneration = async (req, res, document) => {
     // Generate and send the report
     console.log(`Generating report using template: ${document.template}`);
     await generateAndDownloadReport(
-      `https://github.com/isadoravv/templater/raw/refs/heads/main/templates/${document.template}`,
+      `https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/${document.template}`,
       data,
       res,
       document.titleForming(data)
@@ -260,7 +260,7 @@ app.get('/catalogue', async (req, res) => {
     
     // Generate and send the report
     await generateAndDownloadReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', 
+      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/catalogue.docx', 
       data, 
       res,
       'Catalogue des formations FSH ' + annee
@@ -298,7 +298,7 @@ app.get('/programme', async (req, res) => {
 
     // Generate and send the report
     await generateAndDownloadReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
+      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/programme.docx', 
       data, 
       res,
       newTitle || "err titre prog"
@@ -337,7 +337,7 @@ app.get('/devis', async (req, res) => {
     
     // Generate and send the report
     await generateAndDownloadReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/devis.docx', 
+      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/devis.docx', 
       data, 
       res,
       newTitle
@@ -416,7 +416,7 @@ app.get('/facture', async (req, res) => {
     // Generate and send the report
     await generateAndDownloadReport(
     // await generateAndSendZipReport(
-      'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx', 
+      'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/facture.docx', 
       data, 
       res,
       `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`
@@ -508,7 +508,7 @@ app.get('/factures', async (req, res) => {
     const fileName = `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
     console.log(data);
     const buffer = await generateReportBuffer(
-      "https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx",
+      "https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/facture.docx",
       data
     );
 
