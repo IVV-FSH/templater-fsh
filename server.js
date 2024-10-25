@@ -379,6 +379,12 @@ app.get('/facture', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
+
+    // data['apaye'] = data.moyen_paiement && data.date_paiement;
+    data['acquit'] = data["paye"].includes("Payé")
+    ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+    : "";
+
     function calculateCost(data) {
       let cost;
     
@@ -469,7 +475,7 @@ app.get('/realisation', async (req, res) => {
     // date de l'attestation au dernier jour de la formation
     data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     data['apaye'] = data.moyen_paiement && data.date_paiement;
-    data['acquit'] = data.moyen_paiement && data.date_paiement
+    data['acquit'] = data["paye"].includes("Payé")
     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
     : "";
     const newName = `Attestation de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
