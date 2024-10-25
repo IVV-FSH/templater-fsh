@@ -478,7 +478,7 @@ app.get('/attestformation', async (req, res) => {
     data['acquit'] = data["paye"].includes("Payé")
     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
     : "";
-    const newName = `Attestation de formation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
+    const newName = `Attestation de formation ${data["code_fromprog"]} ${new Date(data["au"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
     // console.log('Data retrieved in /realisation:', data);
     // console.log('Code from prog:', data["code_fromprog"]);
     // console.log('Date from session:', data["au (from Session)"]);
@@ -532,7 +532,7 @@ app.get('/realisation', async (req, res) => {
     data['acquit'] = data["paye"].includes("Payé")
     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
     : "";
-    const newName = `Certificat de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
+    const newName = `Certificat de réalisation ${data["code_fromprog"]} ${new Date(data["au"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
     // console.log('Data retrieved in /realisation:', data);
     // console.log('Code from prog:', data["code_fromprog"]);
     // console.log('Date from session:', data["au (from Session)"]);
