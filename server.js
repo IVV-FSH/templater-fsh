@@ -6,9 +6,7 @@ import { put } from "@vercel/blob";
 import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
-
-const githubRepo = "https://github.com/IVV-FSH/templater-fsh/";
-export const githubTemplatesLink = `${githubRepo}raw/refs/heads/main/templates/`;
+import { GITHUBTEMPLATES } from './constants.js';
 
 const app = express();
 
@@ -173,7 +171,7 @@ const handleReportGeneration = async (req, res, document) => {
     // Generate and send the report
     console.log(`Generating report using template: ${document.template}`);
     await generateAndDownloadReport(
-      `${githubTemplatesLink}${document.template}`,
+      `${GITHUBTEMPLATES}${document.template}`,
       data,
       res,
       document.titleForming(data)
@@ -265,7 +263,7 @@ app.get('/catalogue', async (req, res) => {
     
     // Generate and send the report
     await generateAndDownloadReport(
-      githubTemplatesLink + 'catalogue.docx', 
+      GITHUBTEMPLATES + 'catalogue.docx', 
       data, 
       res,
       'Catalogue des formations FSH ' + annee
@@ -303,7 +301,7 @@ app.get('/programme', async (req, res) => {
 
     // Generate and send the report
     await generateAndDownloadReport(
-      githubTemplatesLink + 'programme.docx', 
+      GITHUBTEMPLATES + 'programme.docx', 
       data, 
       res,
       newTitle || "err titre prog"
@@ -342,7 +340,7 @@ app.get('/devis', async (req, res) => {
     
     // Generate and send the report
     await generateAndDownloadReport(
-      githubTemplatesLink + 'devis.docx', 
+      GITHUBTEMPLATES + 'devis.docx', 
       data, 
       res,
       newTitle
@@ -421,7 +419,7 @@ app.get('/facture', async (req, res) => {
     // Generate and send the report
     await generateAndDownloadReport(
     // await generateAndSendZipReport(
-      githubTemplatesLink + 'facture.docx', 
+      GITHUBTEMPLATES + 'facture.docx', 
       data, 
       res,
       `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`
@@ -483,7 +481,7 @@ app.get('/realisation', async (req, res) => {
     // Generate and send the report
     await generateAndDownloadReport(
     // await generateAndSendZipReport(
-      githubTemplatesLink + 'attestation.docx', 
+      GITHUBTEMPLATES + 'attestation.docx', 
       data, 
       res,
       newName
@@ -513,7 +511,7 @@ app.get('/factures', async (req, res) => {
     const fileName = `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}.docx`;
     console.log(data);
     const buffer = await generateReportBuffer(
-      githubTemplatesLink+"facture.docx",
+      GITHUBTEMPLATES+"facture.docx",
       data
     );
 
