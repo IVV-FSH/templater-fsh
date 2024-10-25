@@ -23,7 +23,7 @@ async function testTemplate(templateName, data={
   // fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-testTemplate("testifs.docx").catch(console.error);
+// testTemplate("testifs.docx").catch(console.error);
 
 async function generateProg() {
   const templatePath = path.join('templates', 'cat2.docx');
@@ -44,8 +44,8 @@ async function generateProg() {
   fs.closeSync(fs.openSync(templatePath, 'r'));
 }
 
-async function facture(recordId = "recdVx9WSFFeX5GP7") {
-  // const recordId = "recdVx9WSFFeX5GP7"; // payée
+async function facture(recordId = "rechdhSdMTxoB8J1P") {
+  // const recordId = "recvrbZmRuUCgHrFK"; // payée
   const templatePath = path.join('templates', 'facture.docx');
   const template = fs.readFileSync(templatePath);
   function calculateCost(data) {
@@ -108,6 +108,7 @@ async function facture(recordId = "recdVx9WSFFeX5GP7") {
 
 // facture().catch(console.error); // payée
 // facture("recpy3eggrFMnAXT4").catch(console.error); // impayée
+facture("recvrbZmRuUCgHrFK").catch(console.error); // impayée
 
 
 async function updateARec() {

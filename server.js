@@ -16,6 +16,186 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
+const documents = [
+  {
+    name: 'catalogue',
+    multipleRecords: true,
+    formula: `AND(OR({année}=2025,{année}=""), OR(FIND(lieuxdemij_cumul,"iège"),FIND(lieuxdemij_cumul,"visio")))`,
+    titleForming: function(data) {
+      return `Catalogue des formations FSH ${data["année"]}`;
+    },
+    template: 'catalogue.docx',
+    view: 'Grid view',
+    table: 'Sessions',
+    sortField: 'du',
+    sortOrder: 'asc',
+    // queriedField: null,
+  },
+  {
+    name: 'programme',
+    multipleRecords: false,
+    titleForming: function(data) {
+      let newTitle = data["titre_fromprog"]
+      if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
+      return newTitle;
+      // return `${data["titre_fromprog"]} ${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`;
+    },
+    template: 'programme.docx',
+    table: 'Sessions',
+    queriedField: 'recordId',
+  },
+  {
+    name: 'devis',
+    multipleRecords: false,
+    titleForming: function(data) {
+      return `DEVIS FSH ${data["id"]}`;
+    },
+    template: 'devis.docx',
+    table: 'Devis',
+    queriedField: 'recordId',
+  },
+  {
+    name: 'facture',
+    multipleRecords: false,
+    titleForming: function(data) {
+      return `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`;
+    },
+    template: 'facture.docx',
+    table: 'Inscriptions',
+    queriedField: 'recordId',
+    dataPreprocessing: function(data) {
+      if(data["date_facture"]) {
+        data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+      function calculateCost(data) {
+        let cost;
+      
+        if (data["tarif_special"]) {
+          // If "tarif_special" is available, use it
+          cost = data["tarif_special"];
+        } else {
+          // Calculate the base cost, considering whether the person is accompanied
+          let baseCost;
+          if (data["accomp"]) {
+            baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
+          } else {
+            if (data["Adhérent? (from Participant.e)"]) {
+              baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
+            } else {
+              baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
+            }
+          }
+      
+          // Apply "rabais" if available
+          if (data["rabais"]) {
+            cost = baseCost * (1 - data["rabais"]);
+          } else {
+            cost = baseCost;
+          }
+        }
+      
+        return cost;
+      }
+  
+      data["Montant"] = calculateCost(data)
+      console.log("Montant calc", data["Montant"])
+      data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+        parseFloat(data["Montant"]),
+      );  
+  
+    },
+    airtableUpdatedData: function(data) {
+      var updatedInvoiceDate = false;
+      if(data["date_facture"]) { updatedInvoiceDate = true; }
+      var updatedData = { 
+        total: data['Montant'].toString()
+      }
+      if(!updatedInvoiceDate) {
+        updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
+      }
+      return updatedData;
+    }
+  },
+  {
+    name: 'realisation',
+    multipleRecords: false,
+    titleForming: function(data) {
+      return `Attestation de réalisation ${data["code_fromprog"]} ${ymd(data["au (from Session)"])} - ${data["nom"]} ${data["prenom"]}`;
+    },
+    template: 'attestation.docx',
+    table: 'Inscriptions',
+    queriedField: 'recordId',
+  },
+  {
+    name: 'factures',
+    multipleRecords: true,
+    titleForming: function(data) {
+      return `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`;
+    },
+    template: 'facture.docx',
+    table: 'Inscriptions',
+    queriedField: 'recordId',
+  }
+]
+
+const handleReportGeneration = async (req, res, document) => {
+  try {
+    let data;
+    if(document.multipleRecords) {
+      console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
+      data = await getAirtableRecords(document.table, document.view, document.formula, document.sortField, document.sortOrder);
+    } else {
+      const { recordId } = req.query;
+      if (document.queriedField && !recordId) {
+        console.error('Paramètre recordId manquant.');
+        return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+      }
+      console.log(`Fetching single record from table: ${document.table}, recordId: ${recordId}`);
+      data = await getAirtableRecord(document.table, recordId);
+    }
+
+    if (data) {
+      console.log('Data successfully retrieved:', `${data.length} records`);
+    } else {
+      console.error('Failed to retrieve data.');
+    }
+
+    if(document.dataPreprocessing) {
+      console.log('Preprocessing data...');
+      document.dataPreprocessing(data);
+    }
+
+    // Generate and send the report
+    console.log(`Generating report using template: ${document.template}`);
+    await generateAndDownloadReport(
+      `https://github.com/isadoravv/templater/raw/refs/heads/main/templates/${document.template}`,
+      data,
+      res,
+      document.titleForming(data)
+    );
+
+    if(document.airtableUpdatedData) {
+      console.log('Updating Airtable record...');
+      const updatedRecord = await updateAirtableRecord(document.table, recordId, document.airtableUpdatedData(data));
+      if (updatedRecord) {
+        console.log('Facture date updated successfully:', updatedRecord.id);
+      } else {
+        console.error('Failed to update facture date.');
+      }
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+// // Iterate over the documents array and create routes dynamically
+// documents.forEach(doc => {
+//   app.get(`/${doc.name}`, (req, res) => {
+//     handleReportGeneration(req, res, doc.templateUrl, doc.processData, doc.generateFileName);
+//   });
+// });
+
 app.get('/schemas', async (req, res) => {
   try {
     const schema = await getAirtableSchema();
@@ -79,7 +259,7 @@ app.get('/catalogue', async (req, res) => {
     }
     
     // Generate and send the report
-    await generateAndSendReport(
+    await generateAndDownloadReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/catalogue.docx', 
       data, 
       res,
@@ -117,7 +297,7 @@ app.get('/programme', async (req, res) => {
     if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
 
     // Generate and send the report
-    await generateAndSendReport(
+    await generateAndDownloadReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/programme.docx', 
       data, 
       res,
@@ -156,7 +336,7 @@ app.get('/devis', async (req, res) => {
     // if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
     
     // Generate and send the report
-    await generateAndSendReport(
+    await generateAndDownloadReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/devis.docx', 
       data, 
       res,
@@ -234,7 +414,7 @@ app.get('/facture', async (req, res) => {
     console.log("montant", data["montant"])
 
     // Generate and send the report
-    await generateAndSendReport(
+    await generateAndDownloadReport(
     // await generateAndSendZipReport(
       'https://github.com/isadoravv/templater/raw/refs/heads/main/templates/facture.docx', 
       data, 
@@ -296,7 +476,7 @@ app.get('/realisation', async (req, res) => {
     // console.log('New report name:', newName);
     
     // Generate and send the report
-    await generateAndSendReport(
+    await generateAndDownloadReport(
     // await generateAndSendZipReport(
       'https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/templates/attestation.docx', 
       data, 
@@ -352,7 +532,7 @@ app.get('/factures', async (req, res) => {
 
 
 // Reusable function to generate and send report
-async function generateAndSendReport(url, data, res, fileName = "") {
+async function generateAndDownloadReport(url, data, res, fileName = "") {
   try {
     console.log('Generating report...');
     
