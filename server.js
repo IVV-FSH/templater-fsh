@@ -522,6 +522,10 @@ app.get('/realisation', async (req, res) => {
     }
     console.log("data:NOM", data.nom)
     // date de l'attestation au dernier jour de la formation
+    data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
+    data["assiduite"] = data["assiduite"] * 100;
     data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
     data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
     data['apaye'] = data.moyen_paiement && data.date_paiement;
