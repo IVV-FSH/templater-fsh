@@ -454,7 +454,7 @@ app.get('/facture', async (req, res) => {
   
 });  
 
-app.get('/realisation', async (req, res) => {
+app.get('/attestformation', async (req, res) => {
   const table = "Inscriptions";
   const { recordId } = req.query;
 
@@ -488,6 +488,55 @@ app.get('/realisation', async (req, res) => {
     await generateAndDownloadReport(
     // await generateAndSendZipReport(
       GITHUBTEMPLATES + 'attestation.docx', 
+      data, 
+      res,
+      newName
+    );
+    // http://localhost:3000/realisation?recordId=rec9ZMibFvLaRuTm7
+
+    // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
+  } catch (error) {
+    console.error('Error:', error);
+    // broadcastLog(`Error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  } 
+});
+
+
+app.get('/realisation', async (req, res) => {
+  const table = "Inscriptions";
+  const { recordId } = req.query;
+
+  if (!recordId) {
+    return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+  }
+
+  try {
+    var data = await getAirtableRecord(table, recordId);
+    if (data) {
+      console.log('Data successfully retrieved:', data.length);
+      // broadcastLog(`Data successfully retrieved: ${data.length} records`);
+    } else {
+      console.log('Failed to retrieve data.');
+      // broadcastLog('Failed to retrieve data.');
+    }
+    
+    // date de l'attestation au dernier jour de la formation
+    data['today'] = new Date(data["au (from Session)"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    data['apaye'] = data.moyen_paiement && data.date_paiement;
+    data['acquit'] = data["paye"].includes("Payé")
+    ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+    : "";
+    const newName = `Attestation de réalisation ${data["code_fromprog"]} ${new Date(data["au (from Session)"]).toLocaleDateString('fr-FR').replace(/\//g, '-')} - ${data["nom"]} ${data["prenom"]}` || "err nom fact";
+    // console.log('Data retrieved in /realisation:', data);
+    // console.log('Code from prog:', data["code_fromprog"]);
+    // console.log('Date from session:', data["au (from Session)"]);
+    // console.log('New report name:', newName);
+    
+    // Generate and send the report
+    await generateAndDownloadReport(
+    // await generateAndSendZipReport(
+      GITHUBTEMPLATES + 'certif_realisation.docx', 
       data, 
       res,
       newName
