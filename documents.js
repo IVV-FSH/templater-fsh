@@ -14,6 +14,37 @@ const bufferToStream = (buffer) => {
     return stream;
 };
 
+export function calculTotalPrixInscription(data) {
+    let cost;
+    
+    if (data["tarif_special"]) {
+        // If "tarif_special" is available, use it
+        cost = data["tarif_special"];
+    } else {
+        // Calculate the base cost, considering whether the person is accompanied
+        let baseCost;
+        if (data["accomp"]) {
+            baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
+        } else {
+            if (data["Adhérent? (from Participant.e)"]) {
+                baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
+            } else {
+                baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
+            }
+        }
+        
+        // Apply "rabais" if available
+        if (data["rabais"]) {
+            cost = baseCost * (1 - data["rabais"]);
+        } else {
+            cost = baseCost;
+        }
+    }
+    
+    return cost;
+}
+
+
 export const sanitizeFileName = (fileName) => {
     var newFileName = fileName.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
     newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
@@ -79,40 +110,11 @@ export const documents = [
             if(data["date_facture"]) {
                 data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
             }
-            function calculateCost(data) {
-                let cost;
-                
-                if (data["tarif_special"]) {
-                    // If "tarif_special" is available, use it
-                    cost = data["tarif_special"];
-                } else {
-                    // Calculate the base cost, considering whether the person is accompanied
-                    let baseCost;
-                    if (data["accomp"]) {
-                        baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
-                    } else {
-                        if (data["Adhérent? (from Participant.e)"]) {
-                            baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
-                        } else {
-                            baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
-                        }
-                    }
-                    
-                    // Apply "rabais" if available
-                    if (data["rabais"]) {
-                        cost = baseCost * (1 - data["rabais"]);
-                    } else {
-                        cost = baseCost;
-                    }
-                }
-                
-                return cost;
-            }
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
 
-            data["Montant"] = calculateCost(data)
+            data["Montant"] = calculTotalPrixInscription(data)
             console.log("Montant calc", data["Montant"])
             data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(data["Montant"]),
@@ -130,6 +132,16 @@ export const documents = [
             }
             return updatedData;
         }
+    },
+    {
+        name: 'facture_grp',
+        multipleRecords: false,
+        titleForming: function(data) {
+            return `${data["Name"]}`;
+        },
+        template: 'facture_grp.docx',
+        table: 'Factures',
+
     },
     {
         name: 'certif_realisation',
@@ -308,6 +320,89 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
 }
 
 
+
+export const makeGroupFacture = async (res, factureId) => {
+    const factureGrpParams = documents.find(doc => doc.name === 'facture_grp');
+    console.log(`Fetching facture: ${factureId}`);
+    let data = await getAirtableRecord(factureGrpParams.table, factureId);
+    // console.log("inscrits", inscrits)
+    if(!data) {
+        console.error('Failed to fetch facture');
+        return;
+    }
+    if(data.unicite != "ok") {
+        throw new Error(`Erreur dans le groupe pour la facture ${factureId}, l'entité ET la session concernée doivent être uniques`);
+    }
+    const inscrits = await getAirtableRecords(
+        'Inscriptions', 'Grid view', 
+        `AND({factGroupId}="${factureId}",{Statut}="Enregistrée")`,
+        'nom',
+        'asc'
+    );
+    if(!inscrits || inscrits.length === 0) {
+        console.error('Failed to fetch inscrits');
+        return;
+    }
+    // const session = await getAirtableRecord('Sessions', data.sessId);
+    // merge data and inscrits, but if there are conflicts, data wins
+    // console.log('inscr0', inscrits.records[0])
+    data = {...inscrits.records[0], ...data};
+    // console.log("data", data)
+
+    var total = 0.0;
+
+    var stagiaires = inscrits.records.map(inscrit => {
+        let stagiaire = {
+            nom: inscrit.nom[0],
+            prenom: inscrit.prenom[0],
+            poste: (inscrit.poste && ", "+inscrit.poste[0]) || "",
+            // nom_poste: `${inscrit.prenom[0]} ${inscrit.nom[0] && inscrit.nom[0].toUpperCase()} ${inscrit.poste && ", "+inscrit.poste[0]}`,
+            paye: inscrit.paye.includes("✅"),
+        }
+        const montant = calculTotalPrixInscription(inscrit);
+        // total += stagiaire.paye?parseFloat(montant):0;
+        if(!stagiaire.paye) {
+            total += parseFloat(montant);
+        }
+
+        stagiaire.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+            parseFloat(montant),
+        );
+        // console.log("stagiaire", stagiaire)
+        return stagiaire;
+    });
+
+    // console.log("montant total", total)
+
+    data.stagiaires = stagiaires;
+    data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+        parseFloat(total),
+    );
+
+    // if (factureGrpParams.dataPreprocessing) {
+    //     factureGrpParams.dataPreprocessing(data);
+    // }
+    
+    const buffer = await generateReportBuffer(factureGrpParams.template, data);
+    const filename = sanitizeFileName(getFrenchFormattedDate()+" "+factureGrpParams.titleForming(data)+".docx");
+    console.log(`Generated report for: ${filename}`);
+    // downloadDocxBuffer(res, filename, buffer);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}.docx"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
+
+    // Send the buffer as a binary response
+    res.end(buffer, 'binary');
+
+};
+
+export const downloadDocxBuffer = async (res, filename, buffer) => {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
+    res.send(buffer);
+}
+
 export const makeSessionDocuments = async (res, sessionId) => {
     // get schema from table Inscriptions, and list the fields
     const schema = await getAirtableSchema('Inscriptions');
@@ -356,6 +451,8 @@ export const makeSessionDocuments = async (res, sessionId) => {
 
         // const filename = `file${i + 1}.docx`;
         console.log(`Generated report for: ${filename}`);
+
+        // TODO: update record in Airtable with facture date
         
         buffers.push({ filename:filename, content: buffer });
         if (attestParams.dataPreprocessing) {

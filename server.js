@@ -7,7 +7,7 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
-import { makeSessionDocuments } from './documents.js';
+import { makeGroupFacture, makeSessionDocuments } from './documents.js';
 
 const app = express();
 
@@ -234,6 +234,12 @@ app.get("/factures_sess", async (req, res) => {
   var { sessionId } = req.query;
   await makeSessionDocuments(res, sessionId);
   // await makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
+});
+
+app.get('/test', async (req, res) => {
+  await makeGroupFacture(res, 'recvu2Muu5y0XAwWY');
+  // var { factureId } = req.query;
+  // await makeGroupFacture(res, factureId);
 });
 
 app.get('/catalogue', async (req, res) => {
