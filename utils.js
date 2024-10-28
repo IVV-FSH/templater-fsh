@@ -86,20 +86,27 @@ export const getAirtableSchema = async (table) => {
  * input object, it will be set to empty string in the result.
  *
  * @param {string[]} allFieldsFromTable - An array of field names to be included in the result.
- * @param {Object} fieldsWithMissing - An object containing fields with their values. Missing fields will be set to `null`.
- * @returns {Promise<Object>} A promise that resolves to an object with all fields from the array, with missing fields set to `null`.
+ * @param {Object} fieldsWithMissing - An object containing fields with their values. Missing fields will be set to empty string.
+ * @returns {Promise<Object>} A promise that resolves to an object with all fields from the array, with missing fields set to empty string.
  */
-const addMissingFields = async (allFieldsFromTable, fieldsWithMissing) => {
+export const addMissingFields = (allFieldsFromTable, fieldsWithMissing) => {
     let res = {};
-    allFieldsFromTable.forEach((fn) => {
-        if (fieldsWithMissing[fn]) {
-            res[fn] = fieldsWithMissing[fn];
-        } else {
-			// TODO: if an array, if empty, set to empty array
-            res[fn] = "";
-        }
-    });
-    return res;
+	try {
+
+		allFieldsFromTable.forEach((fn) => {
+			if (fieldsWithMissing[fn]) {
+				res[fn] = fieldsWithMissing[fn];
+				// TODO: if an array, if empty, set to empty array
+			} else {
+				res[fn] = "";
+			}
+		});
+		return res;
+	} catch (error) {
+		console.error(error);
+		return fieldsWithMissing;
+		throw new Error("Error adding missing fields to object.");
+	}
 };
 
 /**
@@ -222,7 +229,7 @@ export const getAirtableRecords = async (table, view = null, formula = null, sor
   
 	//   if lenth of records is 0, return empty array
 	  if(response.data.records.length == 0) {
-		  return [];
+		return [];
 	  }
 	  let processedData = response.data.records.map(record => record.fields);
 	//   console.log(`Fetched records: ${JSON.stringify(processedData)}`);
@@ -326,9 +333,12 @@ export function getFrenchFormattedDate(withTime = true) {
 }
 
 export async function fetchTemplate(url) {
+	console.log(`Fetching template from URL: ${url}`);
 	const response = await fetch(url);
 	const arrayBuffer = await response.arrayBuffer();
-	return Buffer.from(arrayBuffer);
+	const buffer = Buffer.from(arrayBuffer);
+	console.log(`Fetched template of size: ${buffer.length} bytes`);
+	return buffer;
 }
 
 export async function generateReport(template, data) {

@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, updateAirtableRecords, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
+import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, updateAirtableRecords, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd, addMissingFields } from './utils.js';
 import { Readable } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
@@ -103,7 +103,10 @@ export const documents = [
                 
                 return cost;
             }
-            
+            data['acquit'] = data["paye"].includes("Payé")
+            ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+            : "";
+
             data["Montant"] = calculateCost(data)
             console.log("Montant calc", data["Montant"])
             data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
@@ -239,18 +242,25 @@ export const getDataAndProcess = async (req, res, document) => {
 
 export const generateReportBuffer = async (templateName, data) => {
     try {
-        console.log('Creating buffer file...');
-        const buffer = await generateReport({
-            output: 'buffer',
-            template: await fetchTemplate(GITHUBTEMPLATES+templateName),
-            data: data,
-        });
+        console.log(`Creating buffer file from ${templateName}...`);
+        // const template = await fetchTemplate(GITHUBTEMPLATES + templateName);
+        const template = fs.readFileSync(path.join('templates', templateName));
+        const buffer = await generateReport(
+            template,
+            data,
+        );
+        // const buffer = await generateReport({
+        //     output: 'buffer',
+        //     template,
+        //     data,
+        // });
         return buffer;
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error generating report buffer:', error.message);
+        console.error('Stack trace:', error.stack);
+        throw new Error('Failed to generate report buffer', error);
     }
 }
-
 
 /**
  * Generates a ZIP archive from provided buffers and sends it as a response (= instant download).
@@ -262,10 +272,13 @@ export const generateReportBuffer = async (templateName, data) => {
  */
 export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
     console.log('Setting response headers for ZIP file download...');
-    console.log('buffers', buffers)
+    // console.log('buffers', buffers)
+
     if(buffers.length === 0) {
         console.error('No buffers to append to ZIP archive');
         return;
+    } else {
+        console.log(`Appending ${buffers.length} files to ZIP archive...`);
     }
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
@@ -291,6 +304,13 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
 
 
 export const makeSessionFactures = async (res, sessionId) => {
+    // get schema from table Inscriptions, and list the fields
+    const schema = await getAirtableSchema('Inscriptions');
+    const inscTables = schema.filter(s => s.name === 'Inscriptions');
+    const fields = inscTables[0].fields.map(f => f.name);
+    console.log("fields", fields)
+
+
     console.log(`Fetching inscriptions for session: ${sessionId}`);
     const inscriptions = await getAirtableRecords('Inscriptions', 'Grid view', 
         `AND(sessId='${sessionId}',{Statut}="Enregistrée")`
@@ -304,28 +324,83 @@ export const makeSessionFactures = async (res, sessionId) => {
     // console.log(inscriptions[0])
 
     const document = documents.find(doc => doc.name === 'facture');
-    console.log(document.dataPreprocessing)
+    // console.log(document.dataPreprocessing)
+    console.log(document)
+
+    const idSession = inscriptions.records[0].sessDate;
 
     let buffers = [];
     for (let i = 0; i < inscriptions.records.length; i++) {
         const inscription = inscriptions.records[i];
-        console.log(`Processing inscription: ${inscription.id}`);
+        console.log(`Processing inscription: ${inscription.nom}`);
         
-        let data = inscription;
-        
+        let data = {...inscription};
+        data = addMissingFields(fields, data);
+        // console.log("data", data)
+        console.log("keys", Object.keys(data))
         if (document.dataPreprocessing) {
             console.log('Preprocessing data...');
-            data = document.dataPreprocessing(data);
+            // const originalData = { ...data }; // Make a shallow copy of the original data
+            document.dataPreprocessing(data);
+            // console.log("Original data:", originalData);
+            // if(data["date_facture"]) {
+            //     data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            //   }
+            //   function calculateCost(data) {
+            //     let cost;
+              
+            //     if (data["tarif_special"]) {
+            //       // If "tarif_special" is available, use it
+            //       cost = data["tarif_special"];
+            //     } else {
+            //       // Calculate the base cost, considering whether the person is accompanied
+            //       let baseCost;
+            //       if (data["accomp"]) {
+            //         baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
+            //       } else {
+            //         if (data["Adhérent? (from Participant.e)"]) {
+            //           baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
+            //         } else {
+            //           baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
+            //         }
+            //       }
+              
+            //       // Apply "rabais" if available
+            //       if (data["rabais"]) {
+            //         cost = baseCost * (1 - data["rabais"]);
+            //       } else {
+            //         cost = baseCost;
+            //       }
+            //     }
+              
+            //     return cost;
+            //   }
+            //   data['acquit'] = data["paye"].includes("Payé")
+            //     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+            //     : "";
+
+
+            //   data["Montant"] = calculateCost(data)
+            //   console.log("Montant calc AT", data["Montant"])
+            //   data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+            //     parseFloat(data["Montant"]),
+            //   );  
+        
+            console.log("Processed data:", data);
         }
+        // console.log("keys", Object.keys(data))
         
         const buffer = await generateReportBuffer('facture.docx', data);
-        const filename = document.titleForming(data);
+        // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
+        const filename =  sanitizeFileName(document.titleForming(data));
+
+        // const filename = `file${i + 1}.docx`;
         console.log(`Generated report for: ${filename}`);
         
         buffers.push({ filename, content: buffer });
     }
 
-    const zipFileName = `factures_${sessionId}.zip`;
+    const zipFileName = sanitizeFileName(`${idSession} Factures.zip`);
     console.log(`Generating ZIP file: ${zipFileName}`);
     await generateAndSendZipReport(res, buffers, zipFileName);
     console.log('ZIP file generated and sent successfully');

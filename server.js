@@ -228,10 +228,12 @@ app.get('/schemas', async (req, res) => {
   }
 });
 
-app.get("/test", async (req, res) => {
+app.get("/factures_sess", async (req, res) => {
   // const template = await fetchTemplate(GITHUBTEMPLATES + 'test.docx');
   // await makeSessionFactures(res, '2410CVS7CE');
-  await makeSessionFactures(res, 'recxEooSpjiO0qbvQ');
+  var { sessionId } = req.query;
+  // await makeSessionFactures(res, 'recxEooSpjiO0qbvQ');
+  await makeSessionFactures(res, sessionId);
 });
 
 app.get('/catalogue', async (req, res) => {
