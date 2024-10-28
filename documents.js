@@ -21,6 +21,7 @@ export const sanitizeFileName = (fileName) => {
     var ext = path.extname(newFileName);
     // if extension duplicated, remove it
     newFileName = newFileName.replace(ext+ext, ext);
+    return newFileName;
 }
 
 export const documents = [
@@ -243,8 +244,8 @@ export const getDataAndProcess = async (req, res, document) => {
 export const generateReportBuffer = async (templateName, data) => {
     try {
         console.log(`Creating buffer file from ${templateName}...`);
-        // const template = await fetchTemplate(GITHUBTEMPLATES + templateName);
-        const template = fs.readFileSync(path.join('templates', templateName));
+        const template = await fetchTemplate(GITHUBTEMPLATES + templateName);
+        // const template = fs.readFileSync(path.join('templates', templateName));
         const buffer = await generateReport(
             template,
             data,
@@ -327,7 +328,7 @@ export const makeSessionFactures = async (res, sessionId) => {
     // console.log(document.dataPreprocessing)
     console.log(document)
 
-    const idSession = inscriptions.records[0].sessDate;
+    const idSession = inscriptions.records[0].id;
 
     let buffers = [];
     for (let i = 0; i < inscriptions.records.length; i++) {
@@ -337,62 +338,18 @@ export const makeSessionFactures = async (res, sessionId) => {
         let data = {...inscription};
         data = addMissingFields(fields, data);
         // console.log("data", data)
-        console.log("keys", Object.keys(data))
-        if (document.dataPreprocessing) {
-            console.log('Preprocessing data...');
-            // const originalData = { ...data }; // Make a shallow copy of the original data
-            document.dataPreprocessing(data);
-            // console.log("Original data:", originalData);
-            // if(data["date_facture"]) {
-            //     data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-            //   }
-            //   function calculateCost(data) {
-            //     let cost;
-              
-            //     if (data["tarif_special"]) {
-            //       // If "tarif_special" is available, use it
-            //       cost = data["tarif_special"];
-            //     } else {
-            //       // Calculate the base cost, considering whether the person is accompanied
-            //       let baseCost;
-            //       if (data["accomp"]) {
-            //         baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
-            //       } else {
-            //         if (data["Adhérent? (from Participant.e)"]) {
-            //           baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
-            //         } else {
-            //           baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
-            //         }
-            //       }
-              
-            //       // Apply "rabais" if available
-            //       if (data["rabais"]) {
-            //         cost = baseCost * (1 - data["rabais"]);
-            //       } else {
-            //         cost = baseCost;
-            //       }
-            //     }
-              
-            //     return cost;
-            //   }
-            //   data['acquit'] = data["paye"].includes("Payé")
-            //     ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
-            //     : "";
-
-
-            //   data["Montant"] = calculateCost(data)
-            //   console.log("Montant calc AT", data["Montant"])
-            //   data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-            //     parseFloat(data["Montant"]),
-            //   );  
-        
-            console.log("Processed data:", data);
-        }
         // console.log("keys", Object.keys(data))
+        if (document.dataPreprocessing) {
+            // console.log('Preprocessing data...');
+
+            document.dataPreprocessing(data);
+        
+            // console.log("Processed data:", data);
+        }
         
         const buffer = await generateReportBuffer('facture.docx', data);
         // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
-        const filename =  sanitizeFileName(document.titleForming(data));
+        const filename =  sanitizeFileName(document.titleForming(data)+".docx");
 
         // const filename = `file${i + 1}.docx`;
         console.log(`Generated report for: ${filename}`);
