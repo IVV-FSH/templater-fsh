@@ -21,6 +21,10 @@ export const sanitizeFileName = (fileName) => {
     var ext = path.extname(newFileName);
     // if extension duplicated, remove it
     newFileName = newFileName.replace(ext+ext, ext);
+    if(newFileName.length > 150) {
+        newFileName = newFileName.slice(0, 150);
+    }
+
     return newFileName;
 }
 
@@ -304,7 +308,7 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
 }
 
 
-export const makeSessionFactures = async (res, sessionId) => {
+export const makeSessionDocuments = async (res, sessionId) => {
     // get schema from table Inscriptions, and list the fields
     const schema = await getAirtableSchema('Inscriptions');
     const inscTables = schema.filter(s => s.name === 'Inscriptions');
@@ -324,9 +328,11 @@ export const makeSessionFactures = async (res, sessionId) => {
     console.log(`Fetched ${inscriptions.records.length} inscriptions`);
     // console.log(inscriptions[0])
 
-    const document = documents.find(doc => doc.name === 'facture');
-    // console.log(document.dataPreprocessing)
-    console.log(document)
+    const factureParams = documents.find(doc => doc.name === 'facture');
+    const attestParams = documents.find(doc => doc.name === 'attestation');
+    const certifParams = documents.find(doc => doc.name === 'certif_realisation');
+    // console.log(factureParams.dataPreprocessing)
+    console.log(factureParams)
 
     const idSession = inscriptions.records[0].id;
 
@@ -339,25 +345,49 @@ export const makeSessionFactures = async (res, sessionId) => {
         data = addMissingFields(fields, data);
         // console.log("data", data)
         // console.log("keys", Object.keys(data))
-        if (document.dataPreprocessing) {
+        if (factureParams.dataPreprocessing) {
             // console.log('Preprocessing data...');
-
-            document.dataPreprocessing(data);
-        
-            // console.log("Processed data:", data);
+            factureParams.dataPreprocessing(data);
         }
         
-        const buffer = await generateReportBuffer('facture.docx', data);
+        const buffer = await generateReportBuffer(factureParams.template, data);
         // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
-        const filename =  sanitizeFileName(document.titleForming(data)+".docx");
+        const filename =  sanitizeFileName(factureParams.titleForming(data)+".docx");
 
         // const filename = `file${i + 1}.docx`;
         console.log(`Generated report for: ${filename}`);
         
-        buffers.push({ filename, content: buffer });
+        buffers.push({ filename:filename, content: buffer });
+        if (attestParams.dataPreprocessing) {
+            attestParams.dataPreprocessing(data);
+        }
+        const buffer2 = await generateReportBuffer(attestParams.template, data);
+        // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
+        let attestFilename =  sanitizeFileName(attestParams.titleForming(data)+".docx");
+        // if(!attestFilename) {
+        //     attestFilename = `attestation ${data["nom"]}.docx`;
+        // }
+
+        // const filename = `file${i + 1}.docx`;
+        console.log(`Generated report for: ${attestFilename}`);
+        
+        buffers.push({ filename:attestFilename, content: buffer2 });
+
+        if (certifParams.dataPreprocessing) {
+            certifParams.dataPreprocessing(data);
+        }
+
+        const buffer3 = await generateReportBuffer(certifParams.template, data);
+        let certifFileName =  sanitizeFileName(certifParams.titleForming(data)+".docx");
+        // if(!certifFileName) {
+        //     certifFileName = `certification ${data["nom"]}.docx`;
+        // }
+        console.log(`Generated report for: ${filename3}`);
+        buffers.push({ filename:certifFileName, content: buffer3 });
     }
 
-    const zipFileName = sanitizeFileName(`${idSession} Factures.zip`);
+    // TODO: add programme?
+    const zipFileName = sanitizeFileName(`${idSession} Factures Attestations Certificats.zip`);
     console.log(`Generating ZIP file: ${zipFileName}`);
     await generateAndSendZipReport(res, buffers, zipFileName);
     console.log('ZIP file generated and sent successfully');

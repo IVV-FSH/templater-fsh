@@ -7,7 +7,7 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
-import { makeSessionFactures } from './documents.js';
+import { makeSessionDocuments } from './documents.js';
 
 const app = express();
 
@@ -230,10 +230,10 @@ app.get('/schemas', async (req, res) => {
 
 app.get("/factures_sess", async (req, res) => {
   // const template = await fetchTemplate(GITHUBTEMPLATES + 'test.docx');
-  // await makeSessionFactures(res, '2410CVS7CE');
-  // var { sessionId } = req.query;
-  await makeSessionFactures(res, 'recxEooSpjiO0qbvQ');
-  // await makeSessionFactures(res, sessionId);
+  // await makeSessionDocuments(res, '2410CVS7CE');
+  var { sessionId } = req.query;
+  await makeSessionDocuments(res, sessionId);
+  // await makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
 });
 
 app.get('/catalogue', async (req, res) => {
