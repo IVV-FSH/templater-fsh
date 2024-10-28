@@ -14,6 +14,15 @@ const bufferToStream = (buffer) => {
     return stream;
 };
 
+export const sanitizeFileName = (fileName) => {
+    var newFileName = fileName.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
+    newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
+    // get extension
+    var ext = path.extname(newFileName);
+    // if extension duplicated, remove it
+    newFileName = newFileName.replace(ext+ext, ext);
+}
+
 export const documents = [
     {
         name: 'catalogue',
@@ -170,6 +179,26 @@ export const documents = [
     }
 ]
 
+/**
+ * Fetches and processes data from Airtable based on the provided document configuration.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} req.query - The query parameters from the request.
+ * @param {string} req.query.recordId - The record ID to fetch when multipleRecords is false.
+ * @param {Object} res - The response object.
+ * @param {Object} document - The document configuration object.
+ * @param {boolean} document.multipleRecords - Flag indicating whether to fetch multiple records.
+ * @param {string} document.table - The Airtable table name.
+ * @param {string} document.view - The Airtable view name.
+ * @param {string} document.formula - The Airtable formula for filtering records.
+ * @param {string} document.sortField - The field to sort records by.
+ * @param {string} document.sortOrder - The order to sort records (e.g., "asc" or "desc").
+ * @param {Function} [document.dataPreprocessing] - Optional function to preprocess the data.
+ * 
+ * @returns {Promise<Object|Object[]>} The fetched data from Airtable.
+ * 
+ * @throws {Error} If there is an error during data fetching or processing.
+ */
 export const getDataAndProcess = async (req, res, document) => {
     try {
         // only fetch the recordId from the query if document.multipleRecords is false
@@ -221,3 +250,53 @@ export const generateReportBuffer = async (templateName, data) => {
         console.error('Error:', error);
     }
 }
+
+
+/**
+ * Generates a ZIP archive from provided buffers and sends it as a response (= instant download).
+ *
+ * @param {Object} res - The HTTP response object.
+ * @param {Array} buffers - An array of objects containing filename and content to be included in the ZIP archive.
+ * @param {string} zipFileName - The name of the resulting ZIP file.
+ * @returns {Promise<void>} - A promise that resolves when the ZIP archive is successfully created and sent.
+ */
+export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(res);
+    try {
+        for (let i = 0; i < buffers.length; i++) {
+            const { filename, content } = buffers[i];
+            const stream = bufferToStream(content);
+            archive.append(stream, { name: filename });
+        }
+        await archive.finalize();
+    } catch (error) {
+        console.error('Error creating zip archive:', error);
+        res.status(500).send('Error creating zip archive');
+    }
+}
+
+
+export const makeSessionFactures = async (res, sessionId) => {
+    const inscriptions = await getAirtableRecords('Inscriptions', 'Grid view', 
+        `AND({Session}='${sessionId}', {Statut}='Enregistrée')`
+    );
+    let buffers = [];
+    for (let i = 0; i < inscriptions.length; i++) {
+        const inscription = inscriptions[i];
+        const document = documents.find(doc => doc.name === 'facture');
+        let data = { ...inscription };
+        data = document.dataPreprocessing(data);
+        const buffer = await generateReportBuffer('facture.docx', data);
+        const filename = document.titleForming(data);
+        buffers.push({ filename, content: buffer });
+    }
+
+    const zipFileName = `factures_${sessionId}.zip`;
+    await generateAndSendZipReport(res, buffers, zipFileName);
+}
+

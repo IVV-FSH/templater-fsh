@@ -7,6 +7,7 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
+import { makeSessionFactures } from './documents.js';
 
 const app = express();
 
@@ -225,6 +226,12 @@ app.get('/schemas', async (req, res) => {
     console.error('Error fetching schema:', error);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+app.get("/test", async (req, res) => {
+  // const template = await fetchTemplate(GITHUBTEMPLATES + 'test.docx');
+  await makeSessionFactures(res, 'recycWbTXkEDvPx5E');
+
 });
 
 
