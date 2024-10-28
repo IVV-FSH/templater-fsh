@@ -174,6 +174,43 @@ const documents = [
   }
 ]
 
+const getDataAndProcess = async (req, res, document) => {
+  try {
+    // only fetch the recordId from the query if document.multipleRecords is false
+    if(document.multipleRecords) {
+      console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
+      const data = await getAirtableRecords(document.table, document.view, document.formula, document.sortField, document.sortOrder);
+      if (data) {
+        console.log('Data successfully retrieved:', `${data.length} records`);
+      } else {
+        console.error('Failed to retrieve data.');
+      }
+      if(document.dataPreprocessing) {
+        console.log('Preprocessing data...');
+        document.dataPreprocessing(data);
+      }
+      return data;
+    }
+
+    const { recordId } = req.query;
+    console.log(`Fetching single record from table: ${document.table}, recordId: ${recordId}`);
+    const data = await getAirtableRecord(document.table, recordId);
+    if (data) {
+      console.log('Data successfully retrieved:', data);
+    } else {
+      console.error('Failed to retrieve data.');
+    }
+    if(document.dataPreprocessing) {
+      console.log('Preprocessing data...');
+      document.dataPreprocessing(data);
+    }
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
+
 
 app.get('/', (req, res) => {
     // res.sendFile(path.join(process.cwd(), 'index.html'), { documents: JSON.stringify(documents) });
