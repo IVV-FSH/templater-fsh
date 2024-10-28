@@ -4,6 +4,8 @@ import archiver from 'archiver';
 import fs from 'fs';
 import path from 'path';
 import { Readable } from 'stream';
+import { fetchTemplate } from './utils';
+import { GITHUBTEMPLATES } from './constants';
 
 const bufferToStream = (buffer) => {
   const stream = new Readable();
@@ -32,8 +34,9 @@ const createBufferFile = async (filename, content, titre) => {
 
 
 app.get('/download', async (req, res) => {
-    const templatePath = 'templates/test.docx'; // Path to your template file
-    const template = await fs.promises.readFile(templatePath);
+    // const templatePath = 'templates/test.docx'; // Path to your template file
+    // const template = await fs.promises.readFile(templatePath);
+    const template = await fetchTemplate(GITHUBTEMPLATES+'test.docx');
 
     const titles = ['Title for 1.docx', 'Title for 2.docx'];
     const zipFileName = 'documents.zip';

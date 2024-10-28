@@ -7,7 +7,14 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
+import { Readable } from 'stream';
 
+const bufferToStream = (buffer) => {
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null); // Signal the end of the stream
+  return stream;
+};
 const app = express();
 
 app.use(express.json()); // For parsing application/json
@@ -120,14 +127,48 @@ const documents = [
     }
   },
   {
-    name: 'realisation',
+    name: 'certif_realisation',
     multipleRecords: false,
     titleForming: function(data) {
-      return `Attestation de réalisation ${data["code_fromprog"]} ${ymd(data["au (from Session)"])} - ${data["nom"]} ${data["prenom"]}`;
+      return `Certificat de réalisation ${data["code_fromprog"]} ${ymd(data["au"])} - ${data["nom"]} ${data["prenom"]}`;
+    },
+    template: 'certif_realisation.docx',
+    table: 'Inscriptions',
+    queriedField: 'recordId',
+    dataPreprocessing: function(data) {
+        data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
+        data["assiduite"] = data["assiduite"] * 100;
+        data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
+        data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        data['apaye'] = data.moyen_paiement && data.date_paiement;
+        data['acquit'] = data["paye"].includes("Payé")
+        ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+        : "";
+    }
+  },
+  {
+    name: 'attestation',
+    multipleRecords: false,
+    titleForming: function(data) {
+      return `Attestation de formation ${data["code_fromprog"]} ${ymd(data["au"])} - ${data["nom"]} ${data["prenom"]}`;
     },
     template: 'attestation.docx',
     table: 'Inscriptions',
     queriedField: 'recordId',
+    dataPreprocessing: function(data) {
+        data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
+        data["assiduite"] = data["assiduite"] * 100;
+        data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
+        data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+        data['apaye'] = data.moyen_paiement && data.date_paiement;
+        data['acquit'] = data["paye"].includes("Payé")
+        ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+        : "";
+    }
   },
   {
     name: 'factures',
@@ -140,6 +181,114 @@ const documents = [
     queriedField: 'recordId',
   }
 ]
+
+const getDataAndProcess = async (document) => {
+  try {
+    // only fetch the recordId from the query if document.multipleRecords is false
+    if(document.multipleRecords) {
+      console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
+      const data = await getAirtableRecords(document.table, document.view, document.formula, document.sortField, document.sortOrder);
+      if (data) {
+        console.log('Data successfully retrieved:', `${data.length} records`);
+      } else {
+        console.error('Failed to retrieve data.');
+      }
+      if(document.dataPreprocessing) {
+        console.log('Preprocessing data...');
+        document.dataPreprocessing(data);
+      }
+      return data;
+    } else {
+      const { recordId } = req.query;
+      console.log(`Fetching single record from table: ${document.table}, recordId: ${recordId}`);
+      const data = await getAirtableRecord(document.table, recordId);
+      if (data) {
+        console.log('Data successfully retrieved:', data);
+      } else {
+        console.error('Failed to retrieve data.');
+      }
+      if(document.dataPreprocessing) {
+        console.log('Preprocessing data...');
+        document.dataPreprocessing(data);
+      }
+      return data;
+    }
+      
+  } catch (error) {
+    // console.error('Error:', error);
+    // res.status(500).json({ success: false, error: error.message });
+    throw new Error(error);
+  }
+}
+
+const createStreamReport = async (templateName, data, titleForming) => {
+  const template = await fetchTemplate(`${GITHUBTEMPLATES}${templateName}`);
+  const buffer = await createReport({
+      output: 'buffer',
+      // template: fs.readFileSync(path.join('templates', 'test.docx')),
+      template,
+      data
+  });
+
+  const fileNameWithoutExt = templateName.replace(path.extname(templateName), '');
+  const fileName = titleForming(data);
+  let newTitle = fileName || fileNameWithoutExt;
+
+  var newFileName = `${getFrenchFormattedDate()} ${newTitle}`
+  newFileName = sanitizeFileName(newFileName);
+
+
+  return {
+    filename: encodedFileName,
+    stream: bufferToStream(buffer)
+  }; 
+  // return bufferToStream(buffer) 
+  // return {
+  //     filename: filename,
+  //     content: content // Create a buffer from the string content
+  // };
+};
+
+const downloadBuffer = async (res, buffer) => {
+  res.setHeader('Content-Disposition', `attachment; filename="${encodedFileName}.docx"`);
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
+
+  // Send the buffer as a binary response
+  res.end(buffer, 'binary');
+};
+
+const sanitizeFileName = (fileName) => {
+  let result = fileName.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
+  result = result.replace(/  /g, ' '); 
+  // remove double extension if there is one : find extension and replace if there is a duplicate
+  // find extension
+  const ext = path.extname(result);
+  // remove duplicate extension
+  result = result.replace(ext + ext, ext);
+  return result;
+}
+
+const zipAndDownloadStreams = async (res, streams, zipFileName = "Documents_Formation") => {
+  let zipFileName = `${getFrenchFormattedDate()}_${zipFileName}.zip`;
+  zipFileName = sanitizeFileName(zipFileName);
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename=${getFrenchFormattedDate()}_${zipFileName}`);
+
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  archive.pipe(res);
+  try {
+      for (let i = 0; i < streams.length; i++) {
+          const { filename, stream } = streams[i];
+          archive.append(stream, { name: filename });
+      }
+      await archive.finalize();
+  } catch (error) {
+      console.error('Error creating zip archive:', error);
+      res.status(500).send('Error creating zip archive');
+  }
+}
+
 
 const handleReportGeneration = async (req, res, document) => {
   try {
@@ -708,8 +857,7 @@ async function generateAndDownloadReport(url, data, res, fileName = "") {
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
     let newTitle = fileName || fileNameWithoutExt;
 
-    var newFileName = `${getFrenchFormattedDate()} ${newTitle}`.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
-    var newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
+    var newFileName = sanitizeFileName(`${getFrenchFormattedDate()} ${newTitle}`)
     // const newFileName = "file.docx"
     // Set the correct headers for file download and content type for .docx
     const encodedFileName = encodeURIComponent(newFileName);
