@@ -321,7 +321,7 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
 
 
 
-export const makeGroupFacture = async (res, factureId) => {
+export const makeGroupFacture = async (factureId) => {
     const factureGrpParams = documents.find(doc => doc.name === 'facture_grp');
     console.log(`Fetching facture: ${factureId}`);
     let data = await getAirtableRecord(factureGrpParams.table, factureId);
@@ -387,18 +387,19 @@ export const makeGroupFacture = async (res, factureId) => {
     const filename = sanitizeFileName(getFrenchFormattedDate()+" "+factureGrpParams.titleForming(data)+".docx");
     console.log(`Generated report for: ${filename}`);
     // downloadDocxBuffer(res, filename, buffer);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}.docx"`);
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
+    // res.setHeader('Content-Disposition', `attachment; filename="${filename}.docx"`);
+    // res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    // res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
 
-    // Send the buffer as a binary response
-    res.end(buffer, 'binary');
-
+    // // Send the buffer as a binary response
+    // res.end(buffer, 'binary');
+    return { filename:filename, content: buffer };
 };
 
 export const downloadDocxBuffer = async (res, filename, buffer) => {
+    const encodedFileName = encodeURIComponent(filename);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.setHeader('Content-Disposition', `attachment; filename=${encodedFileName}`);
     res.setHeader('Content-Length', buffer.length); // Ensure the buffer length is correctly sent
     res.send(buffer);
 }

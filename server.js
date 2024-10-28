@@ -7,7 +7,7 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
-import { makeGroupFacture, makeSessionDocuments } from './documents.js';
+import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments } from './documents.js';
 
 const app = express();
 
@@ -469,96 +469,17 @@ app.get('/facture', async (req, res) => {
 
 
 app.get('/facture_grp', async (req, res) => {
-  // res.sendFile(path.join(process.cwd(), 'index.html'));
-  const table="Inscriptions"; // Inscriptions
-  // const recordId="recdVx9WSFFeX5GP7";
-  const { recordId } = req.query;
-
-  var updatedInvoiceDate = false;
-  
-  if (!recordId) {
-    return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
-  }
   try {
-    var data = await getAirtableRecord(table, recordId);
-    if (data) {
-      console.log('Data successfully retrieved:', data.length);
+    var { factureId } = req.query;
+    const facture = await makeGroupFacture(res, factureId);
+    if (facture) {
+      console.log('Document successfully created:', facture.length);
       // broadcastLog(`Data successfully retrieved: ${data.length} records`);
-      if(data["date_facture"]) {
-        data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-        updatedInvoiceDate = true;
-      }
     } else {
-      console.log('Failed to retrieve data.');
+      console.log('Failed to create document.');
       // broadcastLog('Failed to retrieve data.');
     }
-
-    // data['apaye'] = data.moyen_paiement && data.date_paiement;
-    data['acquit'] = data["paye"].includes("Payé")
-    ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
-    : "";
-
-    function calculateCost(data) {
-      let cost;
-    
-      if (data["tarif_special"]) {
-        // If "tarif_special" is available, use it
-        cost = data["tarif_special"];
-      } else {
-        // Calculate the base cost, considering whether the person is accompanied
-        let baseCost;
-        if (data["accomp"]) {
-          baseCost = (data["Coût adhérent TTC (from Programme) (from Session)"] || 0) / 2;
-        } else {
-          if (data["Adhérent? (from Participant.e)"]) {
-            baseCost = data["Coût adhérent TTC (from Programme) (from Session)"] || 0;
-          } else {
-            baseCost = data["Coût non adhérent TTC (from Programme) (from Session)"] || 0;
-          }
-        }
-    
-        // Apply "rabais" if available
-        if (data["rabais"]) {
-          cost = baseCost * (1 - data["rabais"]);
-        } else {
-          cost = baseCost;
-        }
-      }
-    
-      return cost;
-    }
-
-    data["Montant"] = calculateCost(data)
-    console.log("Montant calc", data["Montant"])
-    data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-      parseFloat(data["Montant"]),
-    );  
-    console.log("montant", data["montant"])
-
-    // Generate and send the report
-    await generateAndDownloadReport(
-    // await generateAndSendZipReport(
-      GITHUBTEMPLATES + 'facture.docx', 
-      data, 
-      res,
-      `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`
-    );
-    var updatedData = { 
-        total: data['Montant'].toString()
-      }
-    // TODO: update the record with the facture date
-    if(!updatedInvoiceDate) {
-      updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
-    }
-    const updatedRecord = await updateAirtableRecord(table, recordId, updatedData);
-    if (updatedRecord) {
-      console.log('Facture date updated successfully:', updatedRecord.id);
-      // broadcastLog(`Facture date updated successfully: ${updatedRecord.id}`);
-    } else {
-      console.log('Failed to update facture date.');
-      // broadcastLog('Failed to update facture date.');
-    }
-    // res.render('index', { title: `Générer un Programme pour ${recordId}`, heading: 'Programme' });
+    downloadDocxBuffer(facture.content, res, facture.filename);
   } catch (error) {
     console.error('Error:', error);
     // broadcastLog(`Error: ${error.message}`);
