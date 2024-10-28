@@ -396,7 +396,7 @@ export const makeGroupFacture = async (factureId) => {
     return { filename:filename, content: buffer };
 };
 
-export const downloadDocxBuffer = async (res, filename, buffer) => {
+export const downloadDocxBuffer = (res, filename, buffer) => {
     const encodedFileName = encodeURIComponent(filename);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename=${encodedFileName}`);
