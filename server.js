@@ -230,11 +230,9 @@ app.get('/schemas', async (req, res) => {
 
 app.get("/test", async (req, res) => {
   // const template = await fetchTemplate(GITHUBTEMPLATES + 'test.docx');
-  await makeSessionFactures(res, 'recycWbTXkEDvPx5E');
-
+  // await makeSessionFactures(res, '2410CVS7CE');
+  await makeSessionFactures(res, 'recxEooSpjiO0qbvQ');
 });
-
-
 
 app.get('/catalogue', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));

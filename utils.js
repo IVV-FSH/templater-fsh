@@ -214,13 +214,18 @@ export const getAirtableRecords = async (table, view = null, formula = null, sor
 		url += `?${params.join('&')}`;
 	  }
 	  console.log(`Fetching records from URL: ${url}`);
-	//   broadcastLog(`Fetching records from URL: ${url}`); // FIXME:
+	  // broadcastLog(`Fetching records from URL: ${url}`); // FIXME:
 	
 	  const response = await axios.get(url, {
 		headers: AUTH_HEADERS,
 	  });
   
+	//   if lenth of records is 0, return empty array
+	  if(response.data.records.length == 0) {
+		  return [];
+	  }
 	  let processedData = response.data.records.map(record => record.fields);
+	//   console.log(`Fetched records: ${JSON.stringify(processedData)}`);
 	//   processedData = processedData.map(record => {
 	// 	if (Array.isArray(record)) {
 	// 	  return record.join(', ');

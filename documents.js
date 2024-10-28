@@ -261,19 +261,28 @@ export const generateReportBuffer = async (templateName, data) => {
  * @returns {Promise<void>} - A promise that resolves when the ZIP archive is successfully created and sent.
  */
 export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
-
+    console.log('Setting response headers for ZIP file download...');
+    console.log('buffers', buffers)
+    if(buffers.length === 0) {
+        console.error('No buffers to append to ZIP archive');
+        return;
+    }
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
 
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
     try {
+        console.log('Appending files to ZIP archive...');
         for (let i = 0; i < buffers.length; i++) {
             const { filename, content } = buffers[i];
+            console.log(`Appending file: ${filename}`);
             const stream = bufferToStream(content);
             archive.append(stream, { name: filename });
         }
+        console.log('Finalizing ZIP archive...');
         await archive.finalize();
+        console.log('ZIP archive successfully created and sent.');
     } catch (error) {
         console.error('Error creating zip archive:', error);
         res.status(500).send('Error creating zip archive');
@@ -282,21 +291,43 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
 
 
 export const makeSessionFactures = async (res, sessionId) => {
+    console.log(`Fetching inscriptions for session: ${sessionId}`);
     const inscriptions = await getAirtableRecords('Inscriptions', 'Grid view', 
-        `AND({Session}='${sessionId}', {Statut}='Enregistrée')`
+        `AND(sessId='${sessionId}',{Statut}="Enregistrée")`
     );
+    // console.log("insc", inscriptions)
+    if(!inscriptions || inscriptions.length === 0) {
+        console.error('Failed to fetch inscriptions');
+        return;
+    }
+    console.log(`Fetched ${inscriptions.records.length} inscriptions`);
+    // console.log(inscriptions[0])
+
+    const document = documents.find(doc => doc.name === 'facture');
+    console.log(document.dataPreprocessing)
+
     let buffers = [];
-    for (let i = 0; i < inscriptions.length; i++) {
-        const inscription = inscriptions[i];
-        const document = documents.find(doc => doc.name === 'facture');
-        let data = { ...inscription };
-        data = document.dataPreprocessing(data);
+    for (let i = 0; i < inscriptions.records.length; i++) {
+        const inscription = inscriptions.records[i];
+        console.log(`Processing inscription: ${inscription.id}`);
+        
+        let data = inscription;
+        
+        if (document.dataPreprocessing) {
+            console.log('Preprocessing data...');
+            data = document.dataPreprocessing(data);
+        }
+        
         const buffer = await generateReportBuffer('facture.docx', data);
         const filename = document.titleForming(data);
+        console.log(`Generated report for: ${filename}`);
+        
         buffers.push({ filename, content: buffer });
     }
 
     const zipFileName = `factures_${sessionId}.zip`;
+    console.log(`Generating ZIP file: ${zipFileName}`);
     await generateAndSendZipReport(res, buffers, zipFileName);
+    console.log('ZIP file generated and sent successfully');
 }
 
