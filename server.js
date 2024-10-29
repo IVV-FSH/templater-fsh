@@ -259,11 +259,11 @@ app.get('/emargement', async (req, res) => {
 
   const templatePath = path.join('templates', 'emargement.docx');
   const template = fs.readFileSync(templatePath)
-  const docxBuffer = await createReport({
-    output: 'buffer',
-    template,
-    data:processed
-  });
+  // const docxBuffer = await createReport({
+  //   output: 'buffer',
+  //   template,
+  //   data:processed
+  // });
   // downloadDocxBuffer(res,`Emargement ${session["code_fromprog"]}.docx`, docxBuffer );
   // Generate and send the report
   await generateAndDownloadReport(
