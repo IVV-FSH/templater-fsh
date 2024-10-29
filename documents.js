@@ -239,12 +239,17 @@ export const documents = [
                 }
             });
             data['journees'] = journees;
-            data['stagiaires'] = stagiaires.length > 0 ? stagiaires.records.map(s => {
+            data['stagiaires'] = stagiaires.records.length > 0 ? stagiaires.records.map(s => {
                 return {
                     nom: (s.nom[0]).toUpperCase(),
                     prenom: s.prenom[0],
                 }
+            }).sort((a,b) => {
+                if(a.nom < b.nom) { return -1; }
+                if(a.nom > b.nom) { return 1; }
+                return 0;
             }) : [];
+            // console.log("data", data)
 
             return data;
 
