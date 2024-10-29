@@ -221,11 +221,11 @@ export const documents = [
             const debutDates = new Set(demij.records.map(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })));
             // make an object that has, for each date, matin and apres-midi (if they exist in demij)
             const getTimeOfDay = (dateString) => {
-                console.log("dateString", dateString)
+                // console.log("dateString", dateString)
                 const date = new Date(dateString);
                 const options = { hour: 'numeric', hour12: false, timeZoneName: 'short' };
                 const localHour = new Intl.DateTimeFormat('fr-FR', options).format(date);
-                console.log("localHour", localHour)
+                // console.log("localHour", localHour)
                 return parseInt(localHour);
             };
             data['jrs'] = [...debutDates]
