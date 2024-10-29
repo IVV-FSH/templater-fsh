@@ -480,7 +480,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         // if(!certifFileName) {
         //     certifFileName = `certification ${data["nom"]}.docx`;
         // }
-        console.log(`Generated report for: ${filename3}`);
+        console.log(`Generated report for: ${certifFileName}`);
         buffers.push({ filename:certifFileName, content: buffer3 });
     }
 
