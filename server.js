@@ -8,7 +8,7 @@ import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
 import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents } from './documents.js';
-
+import {createReport} from 'docx-templates';
 const app = express();
 
 app.use(express.json()); // For parsing application/json
@@ -257,9 +257,18 @@ app.get('/emargement', async (req, res) => {
 
   const processed = await documentData.dataPreprocessing(session);
 
+  const templatePath = path.join('templates', 'emargement.docx');
+  const template = fs.readFileSync(templatePath)
+  const docxBuffer = await createReport({
+    output: 'buffer',
+    template,
+    data:processed
+  });
+  // downloadDocxBuffer(res,`Emargement ${session["code_fromprog"]}.docx`, docxBuffer );
   // Generate and send the report
   await generateAndDownloadReport(
     GITHUBTEMPLATES + documentData.template,
+    // template,
     processed,
     res,
     documentData.titleForming(processed)
