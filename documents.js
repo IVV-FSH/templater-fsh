@@ -239,7 +239,7 @@ export const documents = [
                 }
             });
             data['journees'] = journees;
-            data['stagiaires'] = stagiaires.records.length > 0 ? stagiaires.records.map(s => {
+            data['stagiaires'] = stagiaires && stagiaires.records && stagiaires.records.length > 0 ? stagiaires.records.map(s => {
                 return {
                     nom: (s.nom[0]).toUpperCase(),
                     prenom: s.prenom[0],
