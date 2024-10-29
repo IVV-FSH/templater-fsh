@@ -467,6 +467,9 @@ app.get('/facture', async (req, res) => {
   
 });  
 
+app.get('/h', async (req, res) => {
+  makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
+});
 
 app.get('/facture_grp', async (req, res) => {
   try {

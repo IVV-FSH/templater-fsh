@@ -396,6 +396,8 @@ export const makeGroupFacture = async (factureId) => {
     return { filename:filename, content: buffer };
 };
 
+
+
 export const downloadDocxBuffer = (res, filename, buffer) => {
     const encodedFileName = encodeURIComponent(filename);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
@@ -427,6 +429,11 @@ export const makeSessionDocuments = async (res, sessionId) => {
     const factureParams = documents.find(doc => doc.name === 'facture');
     const attestParams = documents.find(doc => doc.name === 'attestation');
     const certifParams = documents.find(doc => doc.name === 'certif_realisation');
+
+    // fetch templates for all ofthe 3
+    const factureTemplate = await fetchTemplate(GITHUBTEMPLATES + factureParams.template);
+    const attestTemplate = await fetchTemplate(GITHUBTEMPLATES + attestParams.template);
+    const certifTemplate = await fetchTemplate(GITHUBTEMPLATES + certifParams.template);
     // console.log(factureParams.dataPreprocessing)
     console.log(factureParams)
 
@@ -446,7 +453,10 @@ export const makeSessionDocuments = async (res, sessionId) => {
             factureParams.dataPreprocessing(data);
         }
         
-        const buffer = await generateReportBuffer(factureParams.template, data);
+        const buffer = await generateReport(
+            factureTemplate,
+            data,
+        );
         // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
         const filename =  sanitizeFileName(factureParams.titleForming(data)+".docx");
 
@@ -459,7 +469,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         if (attestParams.dataPreprocessing) {
             attestParams.dataPreprocessing(data);
         }
-        const buffer2 = await generateReportBuffer(attestParams.template, data);
+        const buffer2 = await generateReport(attestTemplate, data);
         // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
         let attestFilename =  sanitizeFileName(attestParams.titleForming(data)+".docx");
         // if(!attestFilename) {
@@ -475,7 +485,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
             certifParams.dataPreprocessing(data);
         }
 
-        const buffer3 = await generateReportBuffer(certifParams.template, data);
+        const buffer3 = await generateReport(certifTemplate, data);
         let certifFileName =  sanitizeFileName(certifParams.titleForming(data)+".docx");
         // if(!certifFileName) {
         //     certifFileName = `certification ${data["nom"]}.docx`;
