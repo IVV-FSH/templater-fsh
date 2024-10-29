@@ -253,7 +253,7 @@ app.get('/emargement', async (req, res) => {
   }
   const documentData = documents.find(doc => doc.name === "emargement");
   var session = await getAirtableRecord("Sessions", sessId);
-  console.log(`Session: ${session["recordId"]} ${session["code_fromprog"]}`);
+  // console.log(`Session: ${session["recordId"]} ${session["code_fromprog"]}`);
 
   const processed = await documentData.dataPreprocessing(session);
 
