@@ -14,6 +14,12 @@ const bufferToStream = (buffer) => {
     return stream;
 };
 
+export const logIfNotVercel = (message) => {
+    if (process.env.VERCEL !== '1') {
+      console.log(message);
+    }
+  };
+
 export function calculTotalPrixInscription(data) {
     let cost;
     
@@ -115,7 +121,7 @@ export const documents = [
             : "";
 
             data["Montant"] = calculTotalPrixInscription(data)
-            console.log("Montant calc", data["Montant"])
+            logIfNotVercel("Montant calc", data["Montant"])
             data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(data["Montant"]),
             );  
@@ -288,14 +294,14 @@ export const generateReportBuffer = async (templateName, data) => {
  * @returns {Promise<void>} - A promise that resolves when the ZIP archive is successfully created and sent.
  */
 export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
-    console.log('Setting response headers for ZIP file download...');
+    logIfNotVercel('Setting response headers for ZIP file download...');
     // console.log('buffers', buffers)
 
     if(buffers.length === 0) {
         console.error('No buffers to append to ZIP archive');
         return;
     } else {
-        console.log(`Appending ${buffers.length} files to ZIP archive...`);
+        logIfNotVercel(`Appending ${buffers.length} files to ZIP archive...`);
     }
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
@@ -303,14 +309,14 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
     const archive = archiver('zip', { zlib: { level: 9 } });
     archive.pipe(res);
     try {
-        console.log('Appending files to ZIP archive...');
+        logIfNotVercel('Appending files to ZIP archive...');
         for (let i = 0; i < buffers.length; i++) {
             const { filename, content } = buffers[i];
-            console.log(`Appending file: ${filename}`);
+            logIfNotVercel(`Appending file: ${filename}`);
             const stream = bufferToStream(content);
             archive.append(stream, { name: filename });
         }
-        console.log('Finalizing ZIP archive...');
+        logIfNotVercel('Finalizing ZIP archive...');
         await archive.finalize();
         console.log('ZIP archive successfully created and sent.');
     } catch (error) {
@@ -345,9 +351,9 @@ export const makeGroupFacture = async (factureId) => {
     }
     // const session = await getAirtableRecord('Sessions', data.sessId);
     // merge data and inscrits, but if there are conflicts, data wins
-    // console.log('inscr0', inscrits.records[0])
+    // logIfNotVercel('inscr0', inscrits.records[0])
     data = {...inscrits.records[0], ...data};
-    // console.log("data", data)
+    // logIfNotVercel("data", data)
 
     var total = 0.0;
 
@@ -368,11 +374,11 @@ export const makeGroupFacture = async (factureId) => {
         stagiaire.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
             parseFloat(montant),
         );
-        // console.log("stagiaire", stagiaire)
+        // logIfNotVercel("stagiaire", stagiaire)
         return stagiaire;
     });
 
-    // console.log("montant total", total)
+    // logIfNotVercel("montant total", total)
 
     data.stagiaires = stagiaires;
     data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
@@ -411,20 +417,20 @@ export const makeSessionDocuments = async (res, sessionId) => {
     const schema = await getAirtableSchema('Inscriptions');
     const inscTables = schema.filter(s => s.name === 'Inscriptions');
     const fields = inscTables[0].fields.map(f => f.name);
-    console.log("fields", fields)
+    logIfNotVercel("fields", fields)
 
 
     console.log(`Fetching inscriptions for session: ${sessionId}`);
     const inscriptions = await getAirtableRecords('Inscriptions', 'Grid view', 
         `AND(sessId='${sessionId}',{Statut}="Enregistrée")`
     );
-    // console.log("insc", inscriptions)
+    // logIfNotVercel("insc", inscriptions)
     if(!inscriptions || inscriptions.length === 0) {
         console.error('Failed to fetch inscriptions');
         return;
     }
-    console.log(`Fetched ${inscriptions.records.length} inscriptions`);
-    // console.log(inscriptions[0])
+    logIfNotVercel(`Fetched ${inscriptions.records.length} inscriptions`);
+    // logIfNotVercel(inscriptions[0])
 
     const factureParams = documents.find(doc => doc.name === 'facture');
     const attestParams = documents.find(doc => doc.name === 'attestation');
@@ -435,21 +441,21 @@ export const makeSessionDocuments = async (res, sessionId) => {
     const attestTemplate = await fetchTemplate(GITHUBTEMPLATES + attestParams.template);
     const certifTemplate = await fetchTemplate(GITHUBTEMPLATES + certifParams.template);
     // console.log(factureParams.dataPreprocessing)
-    console.log(factureParams)
+    logIfNotVercel(factureParams)
 
     const idSession = inscriptions.records[0].id;
 
     let buffers = [];
     for (let i = 0; i < inscriptions.records.length; i++) {
         const inscription = inscriptions.records[i];
-        console.log(`Processing inscription: ${inscription.nom}`);
+        logIfNotVercel(`Processing inscription: ${inscription.nom}`);
         
         let data = {...inscription};
         data = addMissingFields(fields, data);
-        // console.log("data", data)
-        // console.log("keys", Object.keys(data))
+        // logIfNotVercel("data", data)
+        // logIfNotVercel("keys", Object.keys(data))
         if (factureParams.dataPreprocessing) {
-            // console.log('Preprocessing data...');
+            // logIfNotVercel('Preprocessing data...');
             factureParams.dataPreprocessing(data);
         }
         
@@ -461,7 +467,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         const filename =  sanitizeFileName(factureParams.titleForming(data)+".docx");
 
         // const filename = `file${i + 1}.docx`;
-        console.log(`Generated report for: ${filename}`);
+        logIfNotVercel(`Generated report for: ${filename}`);
 
         // TODO: update record in Airtable with facture date
         
@@ -477,7 +483,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         // }
 
         // const filename = `file${i + 1}.docx`;
-        console.log(`Generated report for: ${attestFilename}`);
+        logIfNotVercel(`Generated report for: ${attestFilename}`);
         
         buffers.push({ filename:attestFilename, content: bufferAttest });
 
@@ -490,13 +496,13 @@ export const makeSessionDocuments = async (res, sessionId) => {
         // if(!certifFileName) {
         //     certifFileName = `certification ${data["nom"]}.docx`;
         // }
-        console.log(`Generated report for: ${certifFileName}`);
+        logIfNotVercel(`Generated report for: ${certifFileName}`);
         buffers.push({ filename:certifFileName, content: bufferCertif });
     }
 
     // TODO: add programme?
     const zipFileName = sanitizeFileName(`${idSession} Factures Attestations Certificats.zip`);
-    console.log(`Generating ZIP file: ${zipFileName}`);
+    logIfNotVercel(`Generating ZIP file: ${zipFileName}`);
     await generateAndSendZipReport(res, buffers, zipFileName);
     console.log('ZIP file generated and sent successfully');
 }
