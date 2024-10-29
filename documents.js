@@ -199,7 +199,7 @@ export const documents = [
         name: 'emargement',
         multipleRecords: false,
         titleForming: function(data) {
-            return `Feuille d'émargement ${data["code_fromprog"]} ${ymd(data["au"])}`;
+            return `Feuille d'émargement ${data["code_fromprog"]} ${ymd(data["du"])}`;
         },
         template: 'emargement.docx',
         table: 'Sessions',
@@ -225,13 +225,13 @@ export const documents = [
                 const date = new Date(dateString);
                 const options = { hour: 'numeric', hour12: false, timeZoneName: 'short' };
                 const localHour = new Intl.DateTimeFormat('fr-FR', options).format(date);
-                // console.log("localHour", localHour)
+                console.log("localHour", localHour)
                 return parseInt(localHour);
             };
             data['jrs'] = [...debutDates]
             const journees = [...debutDates].map(date => {
-                const matin = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) < 12);
-                const apresmidi = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) > 12);
+                const matin = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) < 12);
+                const apresmidi = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) > 12);
                 return {
                     date: date,
                     matin: matin ? `de ${new Date(matin.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')} à ${new Date(matin.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')}` : "",
@@ -382,7 +382,23 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
     }
 }
 
-
+export const makeFeuilleEmargement = async (sessionId) => {
+    const emargementParams = documents.find(doc => doc.name === 'emargement');
+    console.log(`Fetching session: ${sessionId}`);
+    let data = await getAirtableRecord(emargementParams.table, sessionId);
+    if(!data) {
+        console.error('Failed to fetch session');
+        return;
+    }
+    if (emargementParams.dataPreprocessing) {
+        console.log('Preprocessing data...');
+        data = await emargementParams.dataPreprocessing(data);
+    }
+    const buffer = await generateReportBuffer(emargementParams.template, data);
+    const filename = sanitizeFileName(getFrenchFormattedDate()+" "+emargementParams.titleForming(data)+".docx");
+    console.log(`Generated report for: ${filename}`);
+    return { filename:filename, content: buffer };
+}
 
 export const makeGroupFacture = async (factureId) => {
     const factureGrpParams = documents.find(doc => doc.name === 'facture_grp');
