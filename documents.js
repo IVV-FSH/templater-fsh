@@ -159,10 +159,11 @@ export const documents = [
         table: 'Inscriptions',
         queriedField: 'recordId',
         dataPreprocessing: function(data) {
+            data['Formateurice'] = Array.isArray(data["Formateurice"]) ? data["Formateurice"].join(", ").replace(/"/g, '') : data["Formateurice"].replace(/"/g, '');
             data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
             data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-            data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
-            data["assiduite"] = data["assiduite"] * 100;
+            // data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
+            // data["assiduite"] = data["assiduite"] * 100;
             data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
             data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
             data['apaye'] = data.moyen_paiement && data.date_paiement;
@@ -181,10 +182,11 @@ export const documents = [
         table: 'Inscriptions',
         queriedField: 'recordId',
         dataPreprocessing: function(data) {
+            data['Formateurice'] = Array.isArray(data["Formateurice"]) ? data["Formateurice"].join(", ").replace(/"/g, '') : data["Formateurice"].replace(/"/g, '');
             data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
             data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-            data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
-            data["assiduite"] = data["assiduite"] * 100;
+            // data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
+            // data["assiduite"] = data["assiduite"] * 100;
             data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
             data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
             data['apaye'] = data.moyen_paiement && data.date_paiement;
