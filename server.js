@@ -246,13 +246,13 @@ app.get('/devis', async (req, res) => {
 });  
 
 app.get('/emargement', async (req, res) => {
-  // const { sessId } = req.query;
-  const sessId = "recxEooSpjiO0qbvQ"
-  if(!sessId) {
-    return res.status(400).json({ success: false, error: 'Paramètre sessId manquant.' });
+  const { sessionId } = req.query;
+  // const sessionId = "recxEooSpjiO0qbvQ"
+  if(!sessionId) {
+    return res.status(400).json({ success: false, error: 'Paramètre sessionId manquant.' });
   }
   const documentData = documents.find(doc => doc.name === "emargement");
-  var session = await getAirtableRecord("Sessions", sessId);
+  var session = await getAirtableRecord("Sessions", sessionId);
   // console.log(`Session: ${session["recordId"]} ${session["code_fromprog"]}`);
 
   const processed = await documentData.dataPreprocessing(session);
