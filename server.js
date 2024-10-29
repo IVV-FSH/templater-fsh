@@ -257,18 +257,20 @@ app.get('/emargement', async (req, res) => {
 
   const processed = await documentData.dataPreprocessing(session);
 
-  const templatePath = path.join('templates', 'emargement.docx');
-  const template = fs.readFileSync(templatePath)
+  // const templatePath = path.join('templates', 'emargement.docx');
+  // const template = fs.readFileSync(templatePath)
   // const docxBuffer = await createReport({
   //   output: 'buffer',
   //   template,
   //   data:processed
   // });
+
+  // fs.writeFileSync(`reports/${getFrenchFormattedDate()} Emargement ${session["code_fromprog"]}.docx`, docxBuffer);
+
   // downloadDocxBuffer(res,`Emargement ${session["code_fromprog"]}.docx`, docxBuffer );
   // Generate and send the report
   await generateAndDownloadReport(
     GITHUBTEMPLATES + documentData.template,
-    // template,
     processed,
     res,
     documentData.titleForming(processed)
