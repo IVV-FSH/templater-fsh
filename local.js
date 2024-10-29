@@ -4,6 +4,7 @@ import path from 'path';
 import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord } from './utils.js';
 import archiver from 'archiver';
 import { GITHUBTEMPLATES } from './constants.js';
+import { documents } from './documents.js';
 
 async function testTemplate(templateName, data={
   "trueDat": true,
@@ -109,7 +110,7 @@ async function facture(recordId = "rechdhSdMTxoB8J1P") {
 
 // facture().catch(console.error); // payée
 // facture("recpy3eggrFMnAXT4").catch(console.error); // impayée
-facture("recvrbZmRuUCgHrFK").catch(console.error); // impayée
+// facture("recvrbZmRuUCgHrFK").catch(console.error); // impayée
 
 
 async function updateARec() {
@@ -122,9 +123,9 @@ async function updateARec() {
 
 async function real() {
   const recordId = "recdVx9WSFFeX5GP7"; // payée
-  const templatePath = path.join('templates', 'realisation.docx');
+  const templatePath = path.join('templates', 'certif_realisation.docx');
   // const template = fs.readFileSync(templatePath);
-  const template = await fetchTemplate(GITHUBTEMPLATES + "realisation.docx")
+  const template = await fetchTemplate(GITHUBTEMPLATES + "certif_realisation.docx")
 
   const data = await getAirtableRecord("Inscriptions", recordId);
 
@@ -339,6 +340,19 @@ async function zipFilesFromBuffers() {
   await archive.finalize();
 }
 
+async function emarg() {
+  const sessId="recrsRop4E5nMaKY8";
+  // const templatePath = path.join('templates', 'emargement.docx');
+  const documentData = documents.find(doc => doc.name === "emargement");
+  var session = await getAirtableRecord("Sessions", sessId);
+  console.log(`Session: ${session["recordId"]} ${session["code_fromprog"]}`);
+
+  const processed = await documentData.dataPreprocessing(session);
+
+  console.log(processed);
+
+}
+emarg().catch(console.error);
 // Call this function to test zipping of files from Buffers
 // zipFilesFromBuffers();
 

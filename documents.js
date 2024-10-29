@@ -196,6 +196,61 @@ export const documents = [
         }
     },
     {
+        name: 'emargement',
+        multipleRecords: false,
+        titleForming: function(data) {
+            return `Feuille d'émargement ${data["code_fromprog"]} ${ymd(data["au"])}`;
+        },
+        template: 'emargement.docx',
+        table: 'Sessions',
+        queriedField: 'recordId',
+        dataPreprocessing: async function(data) {
+            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
+            const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${data.recordid}",{Statut}="Enregistrée")`);
+            // data['demijournees'] = demij.records.map(d => {
+            //     const horaires = {
+            //         date: new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+            //         horaires: `de ${new Date(d.debut).toLocaleTimeString('fr-FR')} à ${new Date(d.fin).toLocaleTimeString('fr-FR')}`
+            //     }
+            //     return {dates:`${horaires.date}, ${horaires.horaires}`};
+            // });
+            // from demij, make journées
+            // make a set of debut dates
+            const debutDates = new Set(demij.records.map(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })));
+            // make an object that has, for each date, matin and apres-midi (if they exist in demij)
+            const getTimeOfDay = (dateString) => {
+                console.log("dateString", dateString)
+                const date = new Date(dateString);
+                const options = { hour: 'numeric', hour12: false, timeZoneName: 'short' };
+                const localHour = new Intl.DateTimeFormat('fr-FR', options).format(date);
+                // console.log("localHour", localHour)
+                return parseInt(localHour);
+            };
+            data['jrs'] = [...debutDates]
+            const journees = [...debutDates].map(date => {
+                const matin = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) < 12);
+                const apresmidi = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) > 12);
+                return {
+                    date: date,
+                    matin: matin ? `de ${new Date(matin.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')} à ${new Date(matin.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')}` : "",
+                    apresmidi: apresmidi ? `de ${new Date(apresmidi.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')} à ${new Date(apresmidi.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')}` : "",
+                }
+            });
+            data['journees'] = journees;
+            data['stagiaires'] = stagiaires.length > 0 ? stagiaires.records.map(s => {
+                return {
+                    nom: (s.nom[0]).toUpperCase(),
+                    prenom: s.prenom[0],
+                }
+            }) : [];
+
+            return data;
+
+        }
+    },
+    {
         name: 'factures',
         multipleRecords: true,
         titleForming: function(data) {
