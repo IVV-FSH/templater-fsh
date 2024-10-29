@@ -114,7 +114,7 @@ export const documents = [
         queriedField: 'recordId',
         dataPreprocessing: function(data) {
             if(data["date_facture"]) {
-                data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'});
             }
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
@@ -160,12 +160,12 @@ export const documents = [
         queriedField: 'recordId',
         dataPreprocessing: function(data) {
             data['Formateurice'] = Array.isArray(data["Formateurice"]) ? data["Formateurice"].join(", ").replace(/"/g, '') : data["Formateurice"].replace(/"/g, '');
-            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
+            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             // data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
             // data["assiduite"] = data["assiduite"] * 100;
             data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
-            data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             data['apaye'] = data.moyen_paiement && data.date_paiement;
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
@@ -183,12 +183,12 @@ export const documents = [
         queriedField: 'recordId',
         dataPreprocessing: function(data) {
             data['Formateurice'] = Array.isArray(data["Formateurice"]) ? data["Formateurice"].join(", ").replace(/"/g, '') : data["Formateurice"].replace(/"/g, '');
-            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
+            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             // data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
             // data["assiduite"] = data["assiduite"] * 100;
             data['nom'] = Array.isArray(data["nom"]) ? data["nom"][0].toUpperCase() : data["nom"].toUpperCase();
-            data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            data['today'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             data['apaye'] = data.moyen_paiement && data.date_paiement;
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
@@ -205,20 +205,20 @@ export const documents = [
         table: 'Sessions',
         queriedField: 'recordId',
         dataPreprocessing: async function(data) {
-            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
+            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
             const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${data.recordid}",{Statut}="Enregistrée")`);
             // data['demijournees'] = demij.records.map(d => {
             //     const horaires = {
-            //         date: new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+            //         date: new Date(d.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'}),
             //         horaires: `de ${new Date(d.debut).toLocaleTimeString('fr-FR')} à ${new Date(d.fin).toLocaleTimeString('fr-FR')}`
             //     }
             //     return {dates:`${horaires.date}, ${horaires.horaires}`};
             // });
             // from demij, make journées
             // make a set of debut dates
-            const debutDates = new Set(demij.records.map(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })));
+            const debutDates = new Set(demij.records.map(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',timeZone: 'Europe/Paris' })));
             // make an object that has, for each date, matin and apres-midi (if they exist in demij)
             const getTimeOfDay = (dateString) => {
                 // console.log("dateString", dateString)
@@ -230,8 +230,8 @@ export const documents = [
             };
             data['jrs'] = [...debutDates]
             const journees = [...debutDates].map(date => {
-                const matin = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) < 12);
-                const apresmidi = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) === date && getTimeOfDay(d.debut) > 12);
+                const matin = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',timeZone: 'Europe/Paris' }) === date && getTimeOfDay(d.debut) < 12);
+                const apresmidi = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',timeZone: 'Europe/Paris' }) === date && getTimeOfDay(d.debut) > 12);
                 return {
                     date: date,
                     matin: matin ? `de ${new Date(matin.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')} à ${new Date(matin.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')}` : "",
