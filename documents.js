@@ -469,7 +469,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         if (attestParams.dataPreprocessing) {
             attestParams.dataPreprocessing(data);
         }
-        const buffer2 = await generateReport(attestTemplate, data);
+        const bufferAttest = await generateReport(attestTemplate, data);
         // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
         let attestFilename =  sanitizeFileName(attestParams.titleForming(data)+".docx");
         // if(!attestFilename) {
@@ -479,19 +479,19 @@ export const makeSessionDocuments = async (res, sessionId) => {
         // const filename = `file${i + 1}.docx`;
         console.log(`Generated report for: ${attestFilename}`);
         
-        buffers.push({ filename:attestFilename, content: buffer2 });
+        buffers.push({ filename:attestFilename, content: bufferAttest });
 
         if (certifParams.dataPreprocessing) {
             certifParams.dataPreprocessing(data);
         }
 
-        const buffer3 = await generateReport(certifTemplate, data);
+        const bufferCertif = await generateReport(certifTemplate, data);
         let certifFileName =  sanitizeFileName(certifParams.titleForming(data)+".docx");
         // if(!certifFileName) {
         //     certifFileName = `certification ${data["nom"]}.docx`;
         // }
         console.log(`Generated report for: ${certifFileName}`);
-        buffers.push({ filename:certifFileName, content: buffer3 });
+        buffers.push({ filename:certifFileName, content: bufferCertif });
     }
 
     // TODO: add programme?
