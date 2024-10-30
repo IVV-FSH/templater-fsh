@@ -7,7 +7,7 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
-import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents } from './documents.js';
+import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, makeConvention } from './documents.js';
 import {createReport} from 'docx-templates';
 const app = express();
 

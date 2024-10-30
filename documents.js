@@ -266,6 +266,7 @@ export const documents = [
         queriedField: 'recordId',
         dataPreprocessing: async function(data) {
             const session = data["idSess"]
+            data['SIRET'] = data["SIRET"] || null;
             data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
