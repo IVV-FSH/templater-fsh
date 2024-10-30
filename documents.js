@@ -269,6 +269,7 @@ export const documents = [
             data['SIRET'] = data["SIRET"] || null;
             data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
+            data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
             // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
             const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${session}",{Statut}="Enregistrée")`);
             // make a set of debut dates
