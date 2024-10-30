@@ -278,6 +278,28 @@ app.get('/emargement', async (req, res) => {
 
 });
 
+app.get('/convention', async (req, res) => {
+  const { recordId } = req.query;
+  // const recordId = "recGb3crKcmXQ2caL"
+  if(!recordId) {
+    return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+  }
+  const documentData = documents.find(doc => doc.name === "convention");
+  var session = await getAirtableRecord(documentData.table, recordId);
+  // console.log(`Session: ${session["recordId"]} ${session["code_fromprog"]}`);
+
+  const processed = await documentData.dataPreprocessing(session);
+
+  // Generate and send the report
+  await generateAndDownloadReport(
+    GITHUBTEMPLATES + documentData.template,
+    processed,
+    res,
+    documentData.titleForming(processed)
+  );
+
+});
+
 app.get('/facture', async (req, res) => {
   // res.sendFile(path.join(process.cwd(), 'index.html'));
   const table="Inscriptions"; // Inscriptions
@@ -379,8 +401,8 @@ app.get('/facture', async (req, res) => {
 
 app.get('/h', async (req, res) => {
   // makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
-  const conv = await makeConvention("recGb3crKcmXQ2caL");
-  downloadDocxBuffer(res, conv.filename,conv.content );
+  // const conv = await makeConvention("recGb3crKcmXQ2caL");
+  // downloadDocxBuffer(res, conv.filename,conv.content );
 });
 
 app.get('/facture_grp', async (req, res) => {

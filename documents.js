@@ -259,7 +259,7 @@ export const documents = [
         name: 'convention',
         multipleRecords: false,
         titleForming: function(data) {
-            return `${getFrenchFormattedDate()} Convention professionnelle de formation ${data.nom_fromdesti} ${ville_fromlieu}`;
+            return `${getFrenchFormattedDate()} Convention professionnelle de formation ${data.nom_fromdesti} ${data.ville_fromlieu}`;
         },
         template: 'convention.docx',
         table: 'Devis',
