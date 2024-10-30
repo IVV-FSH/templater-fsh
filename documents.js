@@ -256,6 +256,39 @@ export const documents = [
         }
     },
     {
+        name: 'convention',
+        multipleRecords: false,
+        titleForming: function(data) {
+            return `${getFrenchFormattedDate()} Convention professionnelle de formation ${data.nom_fromdesti} ${ville_fromlieu}`;
+        },
+        template: 'convention.docx',
+        table: 'Devis',
+        queriedField: 'recordId',
+        dataPreprocessing: async function(data) {
+            const session = data["idSess"]
+            data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
+            data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
+            // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
+            const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${session}",{Statut}="Enregistrée")`);
+            // make a set of debut dates
+            data['stagiaires'] = stagiaires && stagiaires.records && stagiaires.records.length > 0 ? stagiaires.records.map(s => {
+                return {
+                    nom: (s.nom[0]).toUpperCase(),
+                    prenom: s.prenom[0],
+                    poste: (s.poste && s.poste[0]) || "",
+                }
+            }).sort((a,b) => {
+                if(a.nom < b.nom) { return -1; }
+                if(a.nom > b.nom) { return 1; }
+                return 0;
+            }) : [];
+            // console.log("data", data)
+
+            return data;
+
+        }
+    },
+    {
         name: 'factures',
         multipleRecords: true,
         titleForming: function(data) {
@@ -401,6 +434,24 @@ export const makeFeuilleEmargement = async (sessionId) => {
     }
     const buffer = await generateReportBuffer(emargementParams.template, data);
     const filename = sanitizeFileName(getFrenchFormattedDate()+" "+emargementParams.titleForming(data)+".docx");
+    console.log(`Generated report for: ${filename}`);
+    return { filename:filename, content: buffer };
+}
+
+export const makeConvention = async (devisId) => {
+    const conventionParams = documents.find(doc => doc.name === 'convention');
+    console.log(`Fetching session: ${devisId}`);
+    let data = await getAirtableRecord(conventionParams.table, devisId);
+    if(!data) {
+        console.error('Failed to fetch session');
+        return;
+    }
+    if (conventionParams.dataPreprocessing) {
+        console.log('Preprocessing data...');
+        data = await conventionParams.dataPreprocessing(data);
+    }
+    const buffer = await generateReportBuffer(conventionParams.template, data);
+    const filename = sanitizeFileName(getFrenchFormattedDate()+" "+conventionParams.titleForming(data)+".docx");
     console.log(`Generated report for: ${filename}`);
     return { filename:filename, content: buffer };
 }

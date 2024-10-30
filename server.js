@@ -378,7 +378,9 @@ app.get('/facture', async (req, res) => {
 });  
 
 app.get('/h', async (req, res) => {
-  makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
+  // makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
+  const conv = await makeConvention("recGb3crKcmXQ2caL");
+  downloadDocxBuffer(res, conv.filename,conv.content );
 });
 
 app.get('/facture_grp', async (req, res) => {
