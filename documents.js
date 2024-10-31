@@ -100,7 +100,7 @@ export const documents = [
             return `DEVIS FSH ${data["id"]}`;
         },
         template: 'devis.docx',
-        table: 'Devis',
+        table: 'Factures',
         queriedField: 'recordId',
     },
     {

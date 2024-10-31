@@ -19,8 +19,15 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
+// dynamycally create routes for each document
+documents.forEach(doc => {
+  app.get(`/make/${doc.name}`, (req, res) => {
+    handleReportGeneration(req, res, doc);
+  });
+});
 
 const handleReportGeneration = async (req, res, document) => {
+  console.log('Generating report...', document.name);
   try {
     let data;
     if(document.multipleRecords) {
@@ -44,7 +51,7 @@ const handleReportGeneration = async (req, res, document) => {
 
     if(document.dataPreprocessing) {
       console.log('Preprocessing data...');
-      document.dataPreprocessing(data);
+      data = document.dataPreprocessing(data);
     }
 
     // Generate and send the report
