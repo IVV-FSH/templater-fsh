@@ -112,9 +112,9 @@ async function processImports() {
                 }
 
                 const similarityScore = stringSimilarity.compareTwoStrings(importFullName, person.fullName);
-                if (similarityScore > 0.8) {
+                if (similarityScore > 0.7) {
                     // Log match found with similarity score
-                    console.log(`Match found: ${importFullName} is similar to ${person.fullName} with a score of ${similarityScore}`);
+                    // console.log(`Match found: ${importFullName} is similar to ${person.fullName} with a score of ${similarityScore}`);
                     return true;
                 }
                 return false;
@@ -142,7 +142,7 @@ async function processImports() {
             { headers: AUTH_HEADERS }
         );
 
-        console.log(`Processed import record ID: ${importRecord.id}`);
+        // console.log(`Processed import record ID: ${importRecord.id}`);
 
 
     });
