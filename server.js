@@ -406,17 +406,29 @@ app.get('/h', async (req, res) => {
 });
 
 app.get('/facture_grp', async (req, res) => {
+  const documentData = documents.find(doc => doc.name === "facture_grp");
   try {
     var { factureId } = req.query;
-    const facture = await makeGroupFacture(res, factureId);
-    if (facture) {
-      console.log('Document successfully created:', facture.length);
-      // broadcastLog(`Data successfully retrieved: ${data.length} records`);
-    } else {
-      console.log('Failed to create document.');
-      // broadcastLog('Failed to retrieve data.');
+    if(!factureId) {
+      return res.status(400).json({ success: false, error: 'Paramètre factureId manquant.' });
     }
-    downloadDocxBuffer(facture.content, res, facture.filename);
+    var data = await getAirtableRecord("Factures", factureId);
+    // const facture = await makeGroupFacture(factureId);
+    data = await documentData.dataPreprocessing(data, factureId);
+    await generateAndDownloadReport(
+      GITHUBTEMPLATES + documentData.template,
+      data,
+      res,
+      documentData.titleForming(data)
+    );
+    // if (facture) {
+    //   console.log('Document successfully created:', facture.length);
+    //   // broadcastLog(`Data successfully retrieved: ${data.length} records`);
+    // } else {
+    //   console.log('Failed to create document.');
+    //   // broadcastLog('Failed to retrieve data.');
+    // }
+    // downloadDocxBuffer(res, facture.filename, facture.content);
   } catch (error) {
     console.error('Error:', error);
     // broadcastLog(`Error: ${error.message}`);

@@ -147,7 +147,55 @@ export const documents = [
         },
         template: 'facture_grp.docx',
         table: 'Factures',
-
+        queriedField: 'factureId',
+        dataPreprocessing: async function(data, factureId) {
+            const inscrits = await getAirtableRecords(
+                'Inscriptions', 'Grid view', 
+                `AND({factGroupId}="${factureId}",{Statut}="Enregistrée")`,
+                'nom',
+                'asc'
+            );
+            if(!inscrits || inscrits.length === 0) {
+                console.error('Failed to fetch inscrits');
+                return;
+            }
+            // const session = await getAirtableRecord('Sessions', data.sessId);
+            // merge data and inscrits, but if there are conflicts, data wins
+            // logIfNotVercel('inscr0', inscrits.records[0])
+            data = {...inscrits.records[0], ...data};
+            // logIfNotVercel("data", data)
+        
+            var total = 0.0;
+        
+            var stagiaires = inscrits.records.map(inscrit => {
+                let stagiaire = {
+                    nom: inscrit.nom[0],
+                    prenom: inscrit.prenom[0],
+                    poste: (inscrit.poste && ", "+inscrit.poste[0]) || "",
+                    // nom_poste: `${inscrit.prenom[0]} ${inscrit.nom[0] && inscrit.nom[0].toUpperCase()} ${inscrit.poste && ", "+inscrit.poste[0]}`,
+                    paye: inscrit.paye.includes("✅"),
+                }
+                const montant = calculTotalPrixInscription(inscrit);
+                // total += stagiaire.paye?parseFloat(montant):0;
+                if(!stagiaire.paye) {
+                    total += parseFloat(montant);
+                }
+        
+                stagiaire.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                    parseFloat(montant),
+                );
+                // logIfNotVercel("stagiaire", stagiaire)
+                return stagiaire;
+            });
+        
+            // logIfNotVercel("montant total", total)
+        
+            data.stagiaires = stagiaires;
+            data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                parseFloat(total),
+            );
+            return data;
+        }        
     },
     {
         name: 'certif_realisation',
