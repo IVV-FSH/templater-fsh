@@ -51,7 +51,11 @@ const handleReportGeneration = async (req, res, document) => {
 
     if(document.dataPreprocessing) {
       console.log('Preprocessing data...');
-      data = document.dataPreprocessing(data);
+      if(document.name === "facture_grp") {
+        data = await document.dataPreprocessing(data, recordId);
+      } else {
+        data = await document.dataPreprocessing(data);
+      }
     }
 
     // Generate and send the report
@@ -233,13 +237,13 @@ app.get('/devis', async (req, res) => {
       // broadcastLog('Failed to retrieve data.');
     }
 
-    let newTitle = `DEVIS FSH ${data["id"]} `
+    let newTitle = `FSH ${data["Name"]} `
     // if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
     
     // Generate and send the report
     await generateAndDownloadReport(
-      GITHUBTEMPLATES + 'devis.docx', 
-      data, 
+      GITHUBTEMPLATES + 'devis.docx',
+      data,
       res,
       newTitle
     );
@@ -765,5 +769,13 @@ const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Rabais : http://localhost:${process.env.PORT || 3000}/facture?recordId=recFYDogCDybfujfd`);
   console.log(`Accomp : http://localhost:${process.env.PORT || 3000}/facture?recordId=recvrbZmRuUCgHrFK`);
   console.log(`Payée : http://localhost:${process.env.PORT || 3000}/facture?recordId=recLM3WRAiRYNPZ52`);
+  for (const doc of documents) {
+    console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}`);
+    if(doc.examples) {
+      doc.examples.forEach(example => {
+        console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}?recordId=${example.recordId}`, example.desc);
+      });
+    }
+  }
 });
 

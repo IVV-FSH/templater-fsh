@@ -67,9 +67,21 @@ export const sanitizeFileName = (fileName) => {
 
 export const documents = [
     {
-        name: 'catalogue',
+        name: 'catalogue', // OK
         multipleRecords: true,
-        formula: `AND(OR({année}=2025,{année}=""), OR(FIND(lieuxdemij_cumul,"iège"),FIND(lieuxdemij_cumul,"visio")))`,
+        // formula: `AND(OR({année}=2025,{année}=""), OR(FIND(lieuxdemij_cumul,"iège"),FIND(lieuxdemij_cumul,"visio")))`,
+        formula: `OR(
+                        AND(
+                            {année}="", 
+                            FIND(lieuxdemij_cumul,"intra")
+                        ),
+                        AND(
+                            {année}=${new Date().getFullYear() + 1}, 
+                            FIND(lieuxdemij_cumul,"intra")=0
+                        )
+                    )`,
+        sortField: 'du',
+        sortOrder: 'asc',
         titleForming: function(data) {
             return `Catalogue des formations FSH ${data["année"]}`;
         },
@@ -81,7 +93,7 @@ export const documents = [
         // queriedField: null,
     },
     {
-        name: 'programme',
+        name: 'programme', // OK
         multipleRecords: false,
         titleForming: function(data) {
             let newTitle = data["titre_fromprog"]
@@ -92,16 +104,28 @@ export const documents = [
         template: 'programme.docx',
         table: 'Sessions',
         queriedField: 'recordId',
+        examples: [
+            {recordId:"recvP7YK3HUSxWZqV", desc:"sans dates"},
+            {recordId:"recTgirR6imNqtFAs", desc:"avec dates, visio"},
+            {recordId:"rec8XSuWVObX1R6pW", desc:"ouverte pers accomp, siège"}
+        ],
     },
     {
         name: 'devis',
         multipleRecords: false,
+        queriedField: 'recordId',
         titleForming: function(data) {
-            return `DEVIS FSH ${data["id"]}`;
+            return `${ymd(new Date(data["date_doc"]))} Devis FSH ${data['CODE'].replace("[","").replace("]","")} ${data["entite"]}`;
         },
         template: 'devis.docx',
         table: 'Factures',
-        queriedField: 'recordId',
+        dataPreprocessing: async function(data) {
+            const prog = await getAirtableRecord("Programmes", data.progId);
+            // merge prog and data, but if there are conflicts, data wins
+            data = {...prog, ...data};
+            return data;
+        },
+        examples: [{recordId:"recWMivigueMuraHe", desc:"guilchard"},],
     },
     {
         name: 'facture',
@@ -137,7 +161,8 @@ export const documents = [
                 updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
             }
             return updatedData;
-        }
+        },
+        examples: [{recordId:"recOjSqWKF5VVudrL", desc:"payée"},{recordId:"rec1Mu1M2papdWAmq", desc:"non payée"},],
     },
     {
         name: 'facture_grp',
@@ -241,6 +266,7 @@ export const documents = [
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
+            return data;
         }
     },
     {
@@ -338,16 +364,16 @@ export const documents = [
 
         }
     },
-    {
-        name: 'factures',
-        multipleRecords: true,
-        titleForming: function(data) {
-            return `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`;
-        },
-        template: 'facture.docx',
-        table: 'Inscriptions',
-        queriedField: 'recordId',
-    }
+    // {
+    //     name: 'factures',
+    //     multipleRecords: true,
+    //     titleForming: function(data) {
+    //         return `Facture ${data["id"]} ${data["nom"]} ${data["prenom"]}`;
+    //     },
+    //     template: 'facture.docx',
+    //     table: 'Inscriptions',
+    //     queriedField: 'recordId',
+    // }
 ]
 
 /**

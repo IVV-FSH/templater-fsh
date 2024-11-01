@@ -289,13 +289,20 @@ export function processFieldsForDocx(data, markdownFields) {
 	return data;
 }
 
+/**
+ * Converts a date to a string in the format YYMMDD.
+ *
+ * @param {Date} date - The date to be formatted.
+ * @returns {string} The formatted date string in YYMMDD format, or an empty string if the date is invalid.
+ */
 export function ymd(date) {
+	// can wa add timezone europe/paris
 	if(moment(date, "DD/MM/YYYY", true).isValid()) {
 		const year = String(date.getFullYear()).slice(-2);  // Get last 2 digits of the year
 		const month = String(date.getMonth() + 1).padStart(2, '0');  // Add 1 to month (0-based) and pad to 2 digits
 		const day = String(date.getDate()).padStart(2, '0');  // Pad day to 2 digits
 		const formattedDate = `${year}${month}${day}`;
-
+		
 		return formattedDate;
 	} else {
 		// throw new Error(`${date} is not a valid date`)
