@@ -140,6 +140,13 @@ app.get('/test', async (req, res) => {
   // await makeGroupFacture(res, factureId);
   const factureTemplate = await fetchTemplate(GITHUBTEMPLATES + 'facture.docx');
   const devisTemplate = await fetchTemplate(GITHUBTEMPLATES + 'devis.docx');
+  const testTemplate = await fetchTemplate("https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/z_testsdocx/test.docx");
+  const data = [
+    { titre: 'Titre 1' },
+    { titre: 'Titre 2' },
+    { titre: 'Titre 3' },
+    { titre: 'Titre 4' }
+  ];
   await generateAndSendZipReport(
     res,
     [
