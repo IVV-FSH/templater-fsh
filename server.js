@@ -121,6 +121,9 @@ app.get("/factures_sess", async (req, res) => {
   // const template = await fetchTemplate(GITHUBTEMPLATES + 'test.docx');
   // await makeSessionDocuments(res, '2410CVS7CE');
   var { sessionId } = req.query;
+  if(!sessionId) {
+    return res.status(400).json({ success: false, error: 'Paramètre sessionId manquant' });
+  }
   await makeSessionDocuments(res, sessionId);
   // await makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
 });
