@@ -44,7 +44,7 @@ const handleReportGeneration = async (req, res, document) => {
     }
 
     if (data) {
-      console.log('Data successfully retrieved:', `${data.length} records`);
+      console.log('Data successfully retrieved:', `${document.multipleRecords ? data.records.length : data.length } records`);
     } else {
       console.error('Failed to retrieve data.');
     }

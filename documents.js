@@ -93,7 +93,7 @@ export const documents = [
         // queriedField: null,
     },
     {
-        name: 'programme', // OK
+        name: 'programme', // OK + testé en ligne
         multipleRecords: false,
         titleForming: function(data) {
             let newTitle = data["titre_fromprog"]
@@ -304,8 +304,9 @@ export const documents = [
             };
             data['jrs'] = [...debutDates]
             const journees = [...debutDates].map(date => {
-                const matin = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',timeZone: 'Europe/Paris' }) === date && getTimeOfDay(d.debut) < 12);
-                const apresmidi = demij.records.find(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',timeZone: 'Europe/Paris' }) === date && getTimeOfDay(d.debut) > 12);
+                const demijForDate = demij.records.filter(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }) === date).sort((a, b) => new Date(a.debut) - new Date(b.debut));
+                const matin = demijForDate[0];
+                const apresmidi = demijForDate[1];
                 return {
                     date: date,
                     matin: matin ? `de ${new Date(matin.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')} à ${new Date(matin.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric' }).replace(':', 'h')}` : "",
@@ -327,7 +328,8 @@ export const documents = [
 
             return data;
 
-        }
+        },
+        examples: [{recordId:"recXcDJ6nYYJYsVmV", desc:"SM14JV que aprem"},],
     },
     {
         name: 'convention',
