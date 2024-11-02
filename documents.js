@@ -217,7 +217,7 @@ export const documents = [
         
             // logIfNotVercel("montant total", total)
         
-            data.stagiaires = stagiaires;
+            data['stagiaires'] = stagiaires;
             data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(total),
             );
