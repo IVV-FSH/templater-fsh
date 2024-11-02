@@ -138,23 +138,40 @@ app.get('/test', async (req, res) => {
   // await makeGroupFacture(res, 'recvu2Muu5y0XAwWY');
   // var { factureId } = req.query;
   // await makeGroupFacture(res, factureId);
-  const factureTemplate = await fetchTemplate(GITHUBTEMPLATES + 'facture.docx');
-  const devisTemplate = await fetchTemplate(GITHUBTEMPLATES + 'devis.docx');
+  // const factureTemplate = await fetchTemplate(GITHUBTEMPLATES + 'facture.docx');
+  // const devisTemplate = await fetchTemplate(GITHUBTEMPLATES + 'devis.docx');
+  console.log('Fetching test template...');
   const testTemplate = await fetchTemplate("https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/z_testsdocx/test.docx");
+  console.log('Test template fetched successfully.');
+
   const data = [
     { titre: 'Titre 1' },
     { titre: 'Titre 2' },
     { titre: 'Titre 3' },
     { titre: 'Titre 4' }
   ];
+  let buffers = [];
+
+  for(let i = 0; i < data.length; i++) {
+    console.log(`Generating report for data index ${i}...`);
+    const buffer = await createReport({
+      output: 'buffer',
+      template: testTemplate,
+      data: data[i]
+    });
+    const fileName = `Test${i + 1}.docx`;
+    buffers.push({ filename: fileName, content: buffer });
+    console.log(`Report generated for data index ${i}: ${fileName}`);
+  }
+
+  const zipfileName = encodeURIComponent('Test.zip');
+  console.log('Generating and sending zip report...');
   await generateAndSendZipReport(
     res,
-    [
-      { filename: 'facture.docx', content: factureTemplate },
-      { filename: 'devis.docx', content: devisTemplate }
-    ],
-    'Factures.zip'
+    buffers,
+    zipfileName
   );
+  console.log('Zip report generated and sent successfully.');
 });
 
 app.get('/catalogue', async (req, res) => {
