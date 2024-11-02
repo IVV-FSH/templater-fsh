@@ -120,11 +120,17 @@ app.get('/schemas', async (req, res) => {
 app.get("/factures_sess", async (req, res) => {
   // const template = await fetchTemplate(GITHUBTEMPLATES + 'test.docx');
   // await makeSessionDocuments(res, '2410CVS7CE');
-  var { sessionId } = req.query;
-  if(!sessionId) {
-    return res.status(400).json({ success: false, error: 'Paramètre sessionId manquant' });
+  try {
+    var { sessionId } = req.query;
+    if(!sessionId) {
+      return res.status(400).json({ success: false, error: 'Paramètre sessionId manquant' });
+    }
+    await makeSessionDocuments(res, sessionId);
+    res.status(200).json({ success: true, message: `Documents générés pour la session ${sessionId}` });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
-  await makeSessionDocuments(res, sessionId);
   // await makeSessionDocuments(res, 'recxEooSpjiO0qbvQ');
 });
 
@@ -173,7 +179,7 @@ app.get('/catalogue', async (req, res) => {
       res,
       'Catalogue des formations FSH ' + annee
     );
-    res.status(200).json({ success: true, message: `Catalogue généré pour l'année ${annee}` });
+    // res.status(200).json({ success: true, message: `Catalogue généré pour l'année ${annee}` });
     // res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
     console.error('Error:', error);
