@@ -151,19 +151,24 @@ app.get('/test', async (req, res) => {
     { titre: 'Titre 4' }
   ];
   let buffers = [];
-
   for(let i = 0; i < data.length; i++) {
-    console.log(`Generating report for data index ${i}...`);
-    const buffer = await createReport({
-      output: 'buffer',
-      template: testTemplate,
-      data: data[i]
-    });
-    const fileName = `Test${i + 1}.docx`;
-    buffers.push({ filename: fileName, content: buffer });
-    console.log(`Report generated for data index ${i}: ${fileName}`);
+    try {
+      console.log(`Generating report for data index ${i}...`);
+      const buffer = await createReport({
+        output: 'buffer',
+        template: testTemplate,
+        data: data[i]
+      });
+      const fileName = `Test${i + 1}.docx`;
+      buffers.push({ filename: fileName, content: buffer });
+      console.log(`Report generated for data index ${i}: ${fileName}`);
+    } catch (error) {
+      console.error(`Error generating report for data index ${i}:`, error);
+      const errorBuffer = Buffer.from(`Error generating report for data index ${i}: ${error.message}`);
+      const errorFileName = `Error${i + 1}.txt`;
+      buffers.push({ filename: errorFileName, content: errorBuffer });
+    }
   }
-
   const zipfileName = encodeURIComponent('Test.zip');
   console.log('Generating and sending zip report...');
   await generateAndSendZipReport(
