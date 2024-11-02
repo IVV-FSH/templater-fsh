@@ -482,8 +482,11 @@ export const generateAndSendZipReport = async (res, buffers, zipFileName) => {
     }
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
-
+    
+    
     const archive = archiver('zip', { zlib: { level: 9 } });
+    // add header for size
+    // res.setHeader('Content-Length', archive.pointer());
     archive.pipe(res);
     try {
         logIfNotVercel('Appending files to ZIP archive...');
