@@ -9,6 +9,7 @@ import archiver from 'archiver';
 import { GITHUBTEMPLATES } from './constants.js';
 import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, makeConvention, generateAndSendZipReport } from './documents.js';
 import {createReport} from 'docx-templates';
+import { processImports } from './dups.js';
 const app = express();
 
 app.use(express.json()); // For parsing application/json
@@ -17,6 +18,11 @@ app.use(express.urlencoded({ extended: true })); // For parsing application/x-ww
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
+});
+
+app.get('/duplicates', async (req, res) => {
+  await processImports();
+  res.status(200).json({ success: true, message: 'Duplicates processed successfully.' });
 });
 
 // dynamycally create routes for each document

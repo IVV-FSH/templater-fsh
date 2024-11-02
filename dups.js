@@ -88,7 +88,7 @@ function findBestMatch(target, list) {
 
 
 // Process each import record
-async function processImports() {
+export async function processImports() {
     const { personnes, entites, imports } = await getData();
 
 
