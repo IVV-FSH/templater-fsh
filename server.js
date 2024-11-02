@@ -7,7 +7,7 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
-import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, makeConvention } from './documents.js';
+import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, makeConvention, generateAndSendZipReport } from './documents.js';
 import {createReport} from 'docx-templates';
 const app = express();
 
@@ -135,9 +135,19 @@ app.get("/factures_sess", async (req, res) => {
 });
 
 app.get('/test', async (req, res) => {
-  await makeGroupFacture(res, 'recvu2Muu5y0XAwWY');
+  // await makeGroupFacture(res, 'recvu2Muu5y0XAwWY');
   // var { factureId } = req.query;
   // await makeGroupFacture(res, factureId);
+  const factureTemplate = await fetchTemplate(GITHUBTEMPLATES + 'facture.docx');
+  const devisTemplate = await fetchTemplate(GITHUBTEMPLATES + 'devis.docx');
+  await generateAndSendZipReport(
+    res,
+    [
+      { filename: 'facture.docx', content: factureTemplate },
+      { filename: 'devis.docx', content: devisTemplate }
+    ],
+    'Factures.zip'
+  );
 });
 
 app.get('/catalogue', async (req, res) => {
@@ -709,7 +719,7 @@ async function createZipArchive(files, res, zipFileName = "reports.zip") {
 
 
 
-async function generateAndSendZipReport(url, data, res, fileName = "") {
+async function generateAndSendZipReport2(url, data, res, fileName = "") {
   try {
     console.log('Generating report...');
     
@@ -787,5 +797,15 @@ const server = app.listen(process.env.PORT || 3000, () => {
       });
     }
   }
+  console.log("Documents session ------")
+  for (const doc of 
+    [
+      {recordId:"recXcDJ6nYYJYsVmV", desc:"SM14JV"}
+    ]
+  ) {
+    console.log(`http://localhost:${process.env.PORT || 3000}/factures_sess?sessionId=${doc.recordId}`, doc.desc);
+  }
+  console.log("TESTS SESSION")
+  console.log(`http://localhost:${process.env.PORT || 3000}/test`);
 });
 
