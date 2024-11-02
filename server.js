@@ -126,7 +126,7 @@ app.get("/factures_sess", async (req, res) => {
       return res.status(400).json({ success: false, error: 'Paramètre sessionId manquant' });
     }
     await makeSessionDocuments(res, sessionId);
-    res.status(200).json({ success: true, message: `Documents générés pour la session ${sessionId}` });
+    // res.status(200).json({ success: true, message: `Documents générés pour la session ${sessionId}` });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, error: error.message });
