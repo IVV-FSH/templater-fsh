@@ -173,6 +173,7 @@ app.get('/catalogue', async (req, res) => {
       res,
       'Catalogue des formations FSH ' + annee
     );
+    res.status(200).json({ success: true, message: `Catalogue généré pour l'année ${annee}` });
     // res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
     console.error('Error:', error);
