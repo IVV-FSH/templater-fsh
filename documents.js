@@ -342,7 +342,7 @@ export const documents = [
             return `Convention professionnelle de formation ${data.nom_fromdesti} ${data.ville_fromlieu}`;
         },
         template: 'convention.docx',
-        table: 'Devis',
+        table: 'Factures',
         queriedField: 'recordId',
         dataPreprocessing: async function(data) {
             const session = data["idSess"]

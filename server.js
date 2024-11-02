@@ -30,11 +30,11 @@ const handleReportGeneration = async (req, res, document) => {
   console.log('Generating report...', document.name);
   try {
     let data;
+    const { recordId } = req.query;
     if(document.multipleRecords) {
       console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
       data = await getAirtableRecords(document.table, document.view, document.formula, document.sortField, document.sortOrder);
     } else {
-      const { recordId } = req.query;
       if (document.queriedField && !recordId) {
         console.error('Paramètre recordId manquant.');
         return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
