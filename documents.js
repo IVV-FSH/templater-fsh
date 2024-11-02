@@ -245,6 +245,8 @@ export const documents = [
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
+
+            return data;
         }
     },
     {
@@ -668,6 +670,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
             // logIfNotVercel('Preprocessing data...');
             data = factureParams.dataPreprocessing(data);
         }
+        console.log("data for facture", data)
         
         const buffer = await generateReport(
             factureTemplate,
