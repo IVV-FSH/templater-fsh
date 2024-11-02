@@ -659,6 +659,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         
         let data = {...inscription};
         data = addMissingFields(fields, data);
+        data["today"] = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'});
         // logIfNotVercel("data", data)
         // logIfNotVercel("keys", Object.keys(data))
         if (factureParams.dataPreprocessing) {
