@@ -350,6 +350,7 @@ export async function fetchTemplate(url) {
 
 export async function generateReport(template, data) {
 	return await createReport({
+		output: 'buffer',
 		template,
 		// cmdDelimiter: ['{{', '}}'],
 		data,

@@ -149,6 +149,8 @@ export const documents = [
             data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(data["Montant"]),
             );  
+
+            return data;
             
         },
         airtableUpdatedData: function(data) {
@@ -664,7 +666,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         // logIfNotVercel("keys", Object.keys(data))
         if (factureParams.dataPreprocessing) {
             // logIfNotVercel('Preprocessing data...');
-            factureParams.dataPreprocessing(data);
+            data = factureParams.dataPreprocessing(data);
         }
         
         const buffer = await generateReport(
@@ -681,7 +683,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         
         buffers.push({ filename:filename, content: buffer });
         if (attestParams.dataPreprocessing) {
-            attestParams.dataPreprocessing(data);
+            data = attestParams.dataPreprocessing(data);
         }
         const bufferAttest = await generateReport(attestTemplate, data);
         // const buffer = await generateReportBuffer('test.docx', { Titre: 'Hello'+i });
@@ -696,7 +698,7 @@ export const makeSessionDocuments = async (res, sessionId) => {
         buffers.push({ filename:attestFilename, content: bufferAttest });
 
         if (certifParams.dataPreprocessing) {
-            certifParams.dataPreprocessing(data);
+            data = certifParams.dataPreprocessing(data);
         }
 
         const bufferCertif = await generateReport(certifTemplate, data);
