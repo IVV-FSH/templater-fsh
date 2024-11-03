@@ -21,8 +21,13 @@ app.get('/', (req, res) => {
 });
 
 app.get('/duplicates', async (req, res) => {
-  await processImports();
-  res.status(200).json({ success: true, message: 'Duplicates processed successfully.' });
+  try {
+    await processImports();
+    res.status(200).json({ success: true, message: 'Duplicates processed successfully.' });
+  } catch (error) {
+    console.error('Error processing duplicates:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // dynamycally create routes for each document
