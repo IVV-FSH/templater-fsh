@@ -32,12 +32,12 @@ app.get('/duplicates', async (req, res) => {
 
 // dynamycally create routes for each document
 documents.forEach(doc => {
-  app.get(`/make/${doc.name}`, (req, res) => {
-    handleReportGeneration(req, res, doc);
+  app.get(`/make/${doc.name}`, async (req, res) => {
+    await handleReportGeneration(req, res, doc);
   });
   if(doc.documentField) {
-    app.get(`/email/${doc.name}`, (req, res) => {
-      handleReportGenerationAndSendEmail(req, res, doc);
+    app.get(`/email/${doc.name}`, async (req, res) => {
+      await handleReportGenerationAndSendEmail(req, res, doc);
       // TODO: in documents.js, add documentField
 
     });
@@ -104,10 +104,11 @@ const handleReportGenerationAndSendEmail = async (req, res, document) => {
   console.log('Generating report...', document.name);
   try {
     let data;
-    const { recordId, email } = req.query;
-    if (!email) {
-      return res.status(400).json({ success: false, error: 'Email parameter is missing.' });
-    }
+    const { recordId } = req.query;
+    const email = "isadora.vuongvan@sante-habitat.org";
+    // if (!email) {
+      // return res.status(400).json({ success: false, error: 'Email parameter is missing.' });
+    // }
 
     if (document.multipleRecords) {
       console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
@@ -164,7 +165,7 @@ const handleReportGenerationAndSendEmail = async (req, res, document) => {
   }
 };
 
-const sendEmailWithAttachment = async (toEmail, fileName, buffer) => {
+const sendEmailWithAttachment = async (toEmail="isadora.vuongvan@sante-habitat.org", fileName, buffer) => {
   // Create a transporter object using the default SMTP transport
   const transporter = nodemailer.createTransport({
     host: 'smtp-declic-php5.alwaysdata.net',
