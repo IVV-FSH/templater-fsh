@@ -149,15 +149,16 @@ const handleReportGenerationAndSendEmail = async (req, res, document) => {
     console.log(`Sending report to email: ${email}`);
     await sendEmailWithAttachment(email, document.titleForming(data), buffer);
 
-    if (document.airtableUpdatedData) {
-      console.log('Updating Airtable record...');
-      const updatedRecord = await updateAirtableRecord(document.table, recordId, document.airtableUpdatedData(data));
-      if (updatedRecord) {
-        console.log('Facture date updated successfully:', updatedRecord.id);
-      } else {
-        console.error('Failed to update facture date.');
-      }
-    }
+    // FIX:
+    // if (document.airtableUpdatedData) {
+    //   console.log('Updating Airtable record...');
+    //   const updatedRecord = await updateAirtableRecord(document.table, recordId, document.airtableUpdatedData(data));
+    //   if (updatedRecord) {
+    //     console.log('Facture date updated successfully:', updatedRecord.id);
+    //   } else {
+    //     console.error('Failed to update facture date.');
+    //   }
+    // }
 
     res.status(200).json({ success: true, message: 'Report generated and sent by email successfully.' });
   } catch (error) {
@@ -166,25 +167,27 @@ const handleReportGenerationAndSendEmail = async (req, res, document) => {
   }
 };
 
-const sendEmailWithAttachment = async (toEmail="isadora.vuongvan@sante-habitat.org", fileName, buffer) => {
-  // Create a transporter object using the default SMTP transport
+const sendEmailWithAttachment = async (
+  toEmail = "isadora.vuongvan@sante-habitat.org", fileName, buffer, 
+  subject = 'Votre document est prêt', 
+  text = 'Veuillez trouver en pièce jointe le rapport.') => {
+  // Créer un objet transporteur en utilisant le transport SMTP par défaut
   const transporter = nodemailer.createTransport({
     host: 'smtp-declic-php5.alwaysdata.net',
     port: 465,
-    secure: true, // true for 465, false for other ports
+    secure: true, // true pour 465, false pour les autres ports
     auth: {
-      user: 'isadora.vuongvan@sante-habitat.org', // Your email address
-      pass: 'Renée_Fédér@tion_75' // Your email password
+      user: 'isadora.vuongvan@sante-habitat.org', // Votre adresse email
+      pass: 'Renée_Fédér@tion_75' // Votre mot de passe email
     }
   });
 
-  // Set up email data with unicode symbols
+  // Configurer les données de l'email avec des symboles unicode
   const mailOptions = {
-    from: '"Isadora Vuongvan" <isadora.vuongvan@sante-habitat.org>', // Sender address
-    // to: toEmail, // List of receivers
-    to: 'isadora.vuongvan@sante-habitat.org',
-    subject: 'Your Report', // Subject line
-    text: 'Please find the attached report.', // Plain text body
+    from: '"Isadora Vuong Van - FSH" <isadora.vuongvan@sante-habitat.org>', // Adresse de l'expéditeur
+    to: toEmail, // Liste des destinataires
+    subject: subject, // Objet de l'email
+    text: text, // Corps du texte en clair
     attachments: [
       {
         filename: `${fileName}.docx`,
@@ -193,7 +196,7 @@ const sendEmailWithAttachment = async (toEmail="isadora.vuongvan@sante-habitat.o
     ]
   };
 
-  // Send mail with defined transport object
+  // Envoyer l'email avec l'objet de transport défini
   await transporter.sendMail(mailOptions);
 };
 
