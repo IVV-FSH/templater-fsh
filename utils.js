@@ -63,6 +63,14 @@ export const airtableMarkdownFields = [
 	"Modalités de certification",
 	"markdownField",
 	"markdownArrayField",
+	"Titre",
+	"objectifs",
+	"contenu",
+	"methodespedago",
+	"modaliteseval",
+	"modalitesacces",
+	"modalitescertif",
+	"introcontexte",
 ]
 
 export const getAirtableSchema = async (table) => {

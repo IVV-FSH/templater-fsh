@@ -35,6 +35,13 @@ documents.forEach(doc => {
   app.get(`/make/${doc.name}`, (req, res) => {
     handleReportGeneration(req, res, doc);
   });
+  if(doc.documentField) {
+    app.get(`/email/${doc.name}`, (req, res) => {
+      handleReportGenerationAndSendEmail(req, res, doc);
+      // TODO: in documents.js, add documentField
+
+    });
+  }
 });
 
 const handleReportGeneration = async (req, res, document) => {
@@ -93,12 +100,100 @@ const handleReportGeneration = async (req, res, document) => {
   }
 }
 
-// // Iterate over the documents array and create routes dynamically
-// documents.forEach(doc => {
-//   app.get(`/${doc.name}`, (req, res) => {
-//     handleReportGeneration(req, res, doc.templateUrl, doc.processData, doc.generateFileName);
-//   });
-// });
+const handleReportGenerationAndSendEmail = async (req, res, document) => {
+  console.log('Generating report...', document.name);
+  try {
+    let data;
+    const { recordId, email } = req.query;
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email parameter is missing.' });
+    }
+
+    if (document.multipleRecords) {
+      console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
+      data = await getAirtableRecords(document.table, document.view, document.formula, document.sortField, document.sortOrder);
+    } else {
+      if (document.queriedField && !recordId) {
+        console.error('Paramètre recordId manquant.');
+        return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+      }
+      console.log(`Fetching single record from table: ${document.table}, recordId: ${recordId}`);
+      data = await getAirtableRecord(document.table, recordId);
+    }
+
+    if (data) {
+      console.log('Data successfully retrieved:', `${document.multipleRecords ? data.records.length : data.length} records`);
+    } else {
+      console.error('Failed to retrieve data.');
+    }
+
+    if (document.dataPreprocessing) {
+      console.log('Preprocessing data...');
+      if (document.name === "facture_grp") {
+        data = await document.dataPreprocessing(data, recordId);
+      } else {
+        data = await document.dataPreprocessing(data);
+      }
+    }
+
+    // Generate the report
+    console.log(`Generating report using template: ${document.template}`);
+    const buffer = await generateReportBuffer(
+      `${GITHUBTEMPLATES}${document.template}`,
+      data
+    );
+
+    // Send the report by email
+    console.log(`Sending report to email: ${email}`);
+    await sendEmailWithAttachment(email, document.titleForming(data), buffer);
+
+    if (document.airtableUpdatedData) {
+      console.log('Updating Airtable record...');
+      const updatedRecord = await updateAirtableRecord(document.table, recordId, document.airtableUpdatedData(data));
+      if (updatedRecord) {
+        console.log('Facture date updated successfully:', updatedRecord.id);
+      } else {
+        console.error('Failed to update facture date.');
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'Report generated and sent by email successfully.' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const sendEmailWithAttachment = async (toEmail, fileName, buffer) => {
+  // Create a transporter object using the default SMTP transport
+  const transporter = nodemailer.createTransport({
+    host: 'smtp-declic-php5.alwaysdata.net',
+    port: 465,
+    secure: true, // true for 465, false for other ports
+    auth: {
+      user: 'isadora.vuongvan@sante-habitat.org', // Your email address
+      pass: 'Renée_Fédér@tion_75' // Your email password
+    }
+  });
+
+  // Set up email data with unicode symbols
+  const mailOptions = {
+    from: '"Isadora Vuongvan" <isadora.vuongvan@sante-habitat.org>', // Sender address
+    // to: toEmail, // List of receivers
+    to: 'isadora.vuongvan@sante-habitat.org',
+    subject: 'Your Report', // Subject line
+    text: 'Please find the attached report.', // Plain text body
+    attachments: [
+      {
+        filename: `${fileName}.docx`,
+        content: buffer
+      }
+    ]
+  };
+
+  // Send mail with defined transport object
+  await transporter.sendMail(mailOptions);
+};
 
 app.get('/schemas', async (req, res) => {
   try {

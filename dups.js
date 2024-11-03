@@ -87,7 +87,20 @@ function findBestMatch(target, list) {
 }
 
 
-// Process each import record
+/**
+ * Processes import records by matching them with existing records and updating them in Airtable.
+ * 
+ * This function performs the following steps:
+ * 1. Retrieves data including personnes, entites, and imports.
+ * 2. Iterates over each import record and checks for the presence of 'nom' and 'prénom'.
+ * 3. Constructs the full name from 'nom' and 'prénom' and finds similar records in 'personnes' based on the full name.
+ * 4. Finds the best match for 'entité' in 'entites' if 'entité' exists in the import record.
+ * 5. Updates the import record with potential duplicates and best match for 'entité' in Airtable.
+ * 
+ * @async
+ * @function processImports
+ * @returns {Promise<void>} A promise that resolves when all import records have been processed.
+ */
 export async function processImports() {
     const { personnes, entites, imports } = await getData();
 

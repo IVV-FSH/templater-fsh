@@ -165,6 +165,7 @@ export const documents = [
             return updatedData;
         },
         examples: [{recordId:"recOjSqWKF5VVudrL", desc:"payée"},{recordId:"rec1Mu1M2papdWAmq", desc:"non payée"},],
+        documentField: "doc_facture",
     },
     {
         name: 'facture_grp',
