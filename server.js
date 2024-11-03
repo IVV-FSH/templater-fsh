@@ -5,6 +5,7 @@ import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRe
 import { put } from "@vercel/blob";
 import { PassThrough } from 'stream';
 import archiver from 'archiver';
+import nodemailer from 'nodemailer';
 // import { Stream } from 'stream';
 import { GITHUBTEMPLATES } from './constants.js';
 import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, makeConvention, generateAndSendZipReport } from './documents.js';
