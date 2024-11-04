@@ -124,7 +124,7 @@ export const documents = [
             // merge prog and data, but if there are conflicts, data wins
             data['duree_horaires'] = data["duree_h"]/3600;
             data = {...prog, ...data};
-            // console.log("data", data)
+            data["id"] = `${ymd(new Date(data["date_doc"]))} Devis FSH ${data['CODE'].replace("[","").replace("]","")}-${(data["entite"] || "").substring(0, 3)}`;            // console.log("data", data)
             // for each Tarifs, retrieve record from Tarifs
             // Tarifs: [ 'recVLy02tLFlINZOo', 'recoAZnkTqeEVujSD' ],
             let tarifs = [];
