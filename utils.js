@@ -63,7 +63,6 @@ export const airtableMarkdownFields = [
 	"Modalités de certification",
 	"markdownField",
 	"markdownArrayField",
-	"Titre",
 	"objectifs",
 	"contenu",
 	"methodespedago",
