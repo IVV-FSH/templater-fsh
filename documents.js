@@ -130,16 +130,16 @@ export const documents = [
             let tarifs = [];
             for (let i = 0; i < data.Tarifs.length; i++) {
                 const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
-                tarifs.push(tarif.id);
+                tarifs.push(tarif);
             }
-            let tarif = tarifs.length>0 ? data.tarifs.filter(t => t.includes(data.annee_envisagee))[0]:null;
+            let tarif = tarifs.length>0 ? data.tarifs.filter(t => parseInt(t['Année']) == parseInt(data.annee_envisagee))[0]:null;
             if(tarif) {
             // and then extract from string like 'a2025=450 i2025=3400' the tarif i for the year
-            const regex = new RegExp(`i${data.annee_envisagee}=(\\d{2,})`);
-            const match = tarif.match(regex);
-            if (match) {
-                data['prixintra'] = match[1];
-            }
+            // const regex = new RegExp(`i${data.annee_envisagee}=(\\d{2,})`);
+            // const match = tarif.match(regex);
+            // if (match) {
+                data['prixintra'] = tarif["prix_intra"];
+            // }
             } else {
                 data['prixintra'] = NaN;
             }
