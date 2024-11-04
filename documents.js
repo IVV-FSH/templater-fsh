@@ -120,8 +120,9 @@ export const documents = [
         template: 'devis.docx',
         table: 'Factures',
         dataPreprocessing: async function(data) {
-            const prog = await getAirtableRecord("Programmes", data.progId);
+            const prog = await getAirtableRecord("Programme", data.progId);
             // merge prog and data, but if there are conflicts, data wins
+            data['duree_horaires'] = data["duree_h"]/3600;
             data = {...prog, ...data};
             return data;
         },
