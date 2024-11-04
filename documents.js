@@ -132,7 +132,7 @@ export const documents = [
                 const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
                 tarifs.push(tarif.id);
             }
-            let tarif = data.tarifs.filter(t => t.includes("i"+data.annee_envisagee+"="))[0].join(" ").replace("i"+data.annee_envisagee+"=", "");
+            let tarif = data.tarifs.filter(t => t.includes(data.annee_envisagee))[0];
             // and then extract from string like 'a2025=450 i2025=3400' the tarif i for the year
             const regex = new RegExp(`i${data.annee_envisagee}=(\\d{2,})`);
             const match = tarif.match(regex);
