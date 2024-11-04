@@ -123,7 +123,7 @@ export const documents = [
             const prog = await getAirtableRecord("Programme", data.progId);
             // merge prog and data, but if there are conflicts, data wins
             data['duree_horaires'] = data["duree_h"]/3600;
-            data['prix_intra'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(2400);
+            data['prixintra'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(2400);
             data = {...prog, ...data};
             return data;
         },
