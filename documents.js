@@ -123,8 +123,25 @@ export const documents = [
             const prog = await getAirtableRecord("Programme", data.progId);
             // merge prog and data, but if there are conflicts, data wins
             data['duree_horaires'] = data["duree_h"]/3600;
-            data['prixintra'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(2400);
             data = {...prog, ...data};
+            // console.log("data", data)
+            // for each Tarifs, retrieve record from Tarifs
+            // Tarifs: [ 'recVLy02tLFlINZOo', 'recoAZnkTqeEVujSD' ],
+            let tarifs = [];
+            for (let i = 0; i < data.Tarifs.length; i++) {
+                const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
+                tarifs.push(tarif.id);
+            }
+            let tarif = data.tarifs.filter(t => t.includes("i"+data.annee_envisagee+"="))[0].join(" ").replace("i"+data.annee_envisagee+"=", "");
+            // and then extract from string like 'a2025=450 i2025=3400' the tarif i for the year
+            const regex = new RegExp(`i${data.annee_envisagee}=(\\d{2,})`);
+            const match = tarif.match(regex);
+            if (match) {
+                data['prixintra'] = match[1];
+            } else {
+                data['prixintra'] = NaN;
+            }
+            // console.log("tarifs", tarifs)
             return data;
         },
         examples: [{recordId:"recWMivigueMuraHe", desc:"guilchard"},],
