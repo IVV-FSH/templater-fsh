@@ -393,6 +393,13 @@ export const documents = [
             data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             data['au'] = new Date(data["au"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
             data['dureeh_fromprog'] = data["dureeh_fromprog"]/3600;
+            data.entite = data.entite_sgtr || data.entite_dmdr || data.entite || "";
+            data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
+            data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
+            data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
+            data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                parseFloat(data.prixintra_fromsess),
+            );
             // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
             const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${session}",{Statut}="Enregistrée")`);
             // make a set of debut dates
