@@ -131,6 +131,7 @@ export const documents = [
             data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
             data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
             data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
+            data.poste = data.poste_sgtr || data.poste_dmdr || data.poste || "";
 
             let tarifs = [];
             for (let i = 0; i < data.Tarifs.length; i++) {
@@ -397,6 +398,7 @@ export const documents = [
             data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
             data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
             data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
+            data.poste = data.poste_sgtr || data.poste_dmdr || data.poste || "";
             data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(data.prixintra_fromsess),
             );
