@@ -127,6 +127,11 @@ export const documents = [
             data["id"] = `${ymd(new Date(data["date_doc"]))} Devis FSH ${data['CODE'].replace("[","").replace("]","")}-${(data["entite"] || "").substring(0, 3)}`;            // console.log("data", data)
             // for each Tarifs, retrieve record from Tarifs
             // Tarifs: [ 'recVLy02tLFlINZOo', 'recoAZnkTqeEVujSD' ],
+            data.entite = data.entite_sgtr || data.entite_dmdr || data.entite || "";
+            data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
+            data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
+            data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
+
             let tarifs = [];
             for (let i = 0; i < data.Tarifs.length; i++) {
                 const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
@@ -214,6 +219,11 @@ export const documents = [
             // logIfNotVercel('inscr0', inscrits.records[0])
             data = {...inscrits.records[0], ...data};
             // logIfNotVercel("data", data)
+
+            data.entite = data.entite_sgtr || data.entite_dmdr || data.entite || "";
+            data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
+            data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
+            data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
         
             if(data.lieuxdemij_cumul.includes("En intra")) {
                 // dont make stagiaires liste.
