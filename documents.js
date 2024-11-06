@@ -208,41 +208,52 @@ export const documents = [
                 console.error('Failed to fetch inscrits');
                 return;
             }
+
             // const session = await getAirtableRecord('Sessions', data.sessId);
             // merge data and inscrits, but if there are conflicts, data wins
             // logIfNotVercel('inscr0', inscrits.records[0])
             data = {...inscrits.records[0], ...data};
             // logIfNotVercel("data", data)
         
-            var total = 0.0;
-        
-            var stagiaires = inscrits.records.map(inscrit => {
-                let stagiaire = {
-                    nom: inscrit.nom[0],
-                    prenom: inscrit.prenom[0],
-                    poste: (inscrit.poste && ", "+inscrit.poste[0]) || "",
-                    // nom_poste: `${inscrit.prenom[0]} ${inscrit.nom[0] && inscrit.nom[0].toUpperCase()} ${inscrit.poste && ", "+inscrit.poste[0]}`,
-                    paye: inscrit.paye.includes("✅"),
-                }
-                const montant = calculTotalPrixInscription(inscrit);
-                // total += stagiaire.paye?parseFloat(montant):0;
-                if(!stagiaire.paye) {
-                    total += parseFloat(montant);
-                }
-        
-                stagiaire.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                    parseFloat(montant),
+            if(data.lieuxdemij_cumul.includes("En intra")) {
+                // dont make stagiaires liste.
+                // total = data.prixintra_fromsess
+                data['stagiaires'] = [];
+                data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                    parseFloat(data.prixintra_fromsess),
                 );
-                // logIfNotVercel("stagiaire", stagiaire)
-                return stagiaire;
-            });
-        
-            // logIfNotVercel("montant total", total)
-        
-            data['stagiaires'] = [...stagiaires];
-            data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                parseFloat(total),
-            );
+                data.nb_pax = data.nb_pax > 0 ? data.nb_pax : "A déterminer";
+            } else {
+                var total = 0.0;
+            
+                var stagiaires = inscrits.records.map(inscrit => {
+                    let stagiaire = {
+                        nom: inscrit.nom[0],
+                        prenom: inscrit.prenom[0],
+                        poste: (inscrit.poste && ", "+inscrit.poste[0]) || "",
+                        // nom_poste: `${inscrit.prenom[0]} ${inscrit.nom[0] && inscrit.nom[0].toUpperCase()} ${inscrit.poste && ", "+inscrit.poste[0]}`,
+                        paye: inscrit.paye.includes("✅"),
+                    }
+                    const montant = calculTotalPrixInscription(inscrit);
+                    // total += stagiaire.paye?parseFloat(montant):0;
+                    if(!stagiaire.paye) {
+                        total += parseFloat(montant);
+                    }
+            
+                    stagiaire.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                        parseFloat(montant),
+                    );
+                    // logIfNotVercel("stagiaire", stagiaire)
+                    return stagiaire;
+                });
+            
+                // logIfNotVercel("montant total", total)
+            
+                data['stagiaires'] = [...stagiaires];
+                data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                    parseFloat(total),
+                );
+            }
             return data;
         }        
     },
