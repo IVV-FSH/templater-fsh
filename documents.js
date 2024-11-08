@@ -174,7 +174,7 @@ export const documents = [
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
-            const possibleArrays = ["entite", "nom", "prenom", "cp", "ville", "rue"];
+            const possibleArrays = ["entite", "nom", "prenom", "cp", "ville", "rue", "etab_payeur", "ville_payeur", "cp_payeur", "rue_payeur", "entite_payeur"];
             possibleArrays.forEach(field => {
                 if (Array.isArray(data[field])) {
                     data[field] = data[field][0]; // Extract the first element if it's an array
@@ -185,6 +185,7 @@ export const documents = [
             data.cp = data.cp_payeur || data.cp || "";
             data.rue = data.rue_payeur || data.rue || "";
             data.ville = data.ville_payeur || data.ville || "";
+            console.log("data", data)
             data.factId = `${ymd(new Date(data["du"]))}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
 
             data["Montant"] = calculTotalPrixInscription(data)
