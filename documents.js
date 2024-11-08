@@ -122,30 +122,34 @@ export const documents = [
         dataPreprocessing: async function(data) {
             const prog = await getAirtableRecord("Programme", data.progId);
             // merge prog and data, but if there are conflicts, data wins
-            data['duree_horaires'] = data["duree_h"]/3600;
-            data = {...prog, ...data};
-            data["id"] = `${ymd(new Date(data["date_doc"]))} Devis FSH ${data['CODE'].replace("[","").replace("]","")}-${(data["entite"] || "").substring(0, 3)}`;            // console.log("data", data)
-            // for each Tarifs, retrieve record from Tarifs
-            // Tarifs: [ 'recVLy02tLFlINZOo', 'recoAZnkTqeEVujSD' ],
             data.entite = data.entite_sgtr || data.entite_dmdr || data.entite || "";
             data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
             data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
             data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
             data.poste = data.poste_sgtr || data.poste_dmdr || data.poste || "";
 
+            data['duree_horaires'] = data["duree_h"]/3600;
+            data = {...prog, ...data};
+            data["id"] = `${ymd(new Date(data["date_doc"]))} ${data['CODE'].replace("[","").replace("]","").trim()}-${String(data.entite).substring(0, 3)}`;            // console.log("data", data)
+            // for each Tarifs, retrieve record from Tarifs
+            // Tarifs: [ 'recVLy02tLFlINZOo', 'recoAZnkTqeEVujSD' ],
+            console.log("data.annee_envisagee:", data.annee_envisagee);
+
             let tarifs = [];
             for (let i = 0; i < data.Tarifs.length; i++) {
                 const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
+                // console.log("tarif", tarif) 
                 tarifs.push(tarif);
             }
-            let tarif = tarifs.length>0 ? data.tarifs.filter(t => parseInt(t['Année']) == parseInt(data.annee_envisagee))[0]:null;
-            if(tarif) {
-            // and then extract from string like 'a2025=450 i2025=3400' the tarif i for the year
-            // const regex = new RegExp(`i${data.annee_envisagee}=(\\d{2,})`);
-            // const match = tarif.match(regex);
-            // if (match) {
-                data['prixintra'] = tarif["prix_intra"];
-            // }
+            data.tarifs = tarifs;
+
+            let tarif = tarifs.length > 0 ? tarifs.filter(t => {
+                console.log("Comparing:", parseInt(t['Année']), "with", parseInt(data.annee_envisagee));
+                return parseInt(t['Année']) == parseInt(data.annee_envisagee);
+            })[0] : null;
+
+            if (tarif) {
+                data['prixintra'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(tarif["prix_intra"]);
             } else {
                 data['prixintra'] = NaN;
             }
