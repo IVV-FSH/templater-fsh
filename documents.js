@@ -387,7 +387,7 @@ export const documents = [
         name: 'convention',
         multipleRecords: false,
         titleForming: function(data) {
-            return `Convention professionnelle de formation ${data.nom_fromdesti} ${data.ville_fromlieu}`;
+            return `Convention professionnelle de formation ${data.entite} ${data.ville}`;
         },
         template: 'convention.docx',
         table: 'Factures-Devis-Conventions',
@@ -405,9 +405,11 @@ export const documents = [
             data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
             data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
             data.poste = data.poste_sgtr || data.poste_dmdr || data.poste || "";
+            data.nom = data.nom_sgtr || data.nom_dmdr || data.nom || "";
+            data.prenom = data.prenom_sgtr || data.prenom_dmdr || data.prenom || "";
             data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(data.prixintra_fromsess),
-            );
+            ).replace(/\s/g, '\u202F');;
             // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
             const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${sessId}",{Statut}="Enregistrée")`);
             // make a set of debut dates
@@ -422,7 +424,7 @@ export const documents = [
                 if(a.nom > b.nom) { return 1; }
                 return 0;
             }) : [];
-            // console.log("data", data)
+            console.log("data", data)
 
             return data;
 
