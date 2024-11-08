@@ -118,7 +118,7 @@ export const documents = [
             return `${ymd(new Date(data["date_doc"]))} Devis FSH ${data['CODE'].replace("[","").replace("]","")} ${data["entite"]}`;
         },
         template: 'devis.docx',
-        table: 'Factures',
+        table: 'Factures-Devis-Conventions',
         dataPreprocessing: async function(data) {
             const prog = await getAirtableRecord("Programme", data.progId);
             // merge prog and data, but if there are conflicts, data wins
@@ -205,7 +205,7 @@ export const documents = [
             return `${data["Name"]}`;
         },
         template: 'facture_grp.docx',
-        table: 'Factures',
+        table: 'Factures-Devis-Conventions',
         queriedField: 'factureId',
         dataPreprocessing: async function(data, factureId) {
             const inscrits = await getAirtableRecords(
@@ -390,7 +390,7 @@ export const documents = [
             return `Convention professionnelle de formation ${data.nom_fromdesti} ${data.ville_fromlieu}`;
         },
         template: 'convention.docx',
-        table: 'Factures',
+        table: 'Factures-Devis-Conventions',
         queriedField: 'recordId',
         dataPreprocessing: async function(data) {
             const idSess = data["idSess"]
