@@ -175,6 +175,8 @@ export const documents = [
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
 
+            data.factId = `${ymd(new Date(data["du"]))}${data["id"] || ''}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
+
             data["Montant"] = calculTotalPrixInscription(data)
             logIfNotVercel("Montant calc", data["Montant"])
             data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
