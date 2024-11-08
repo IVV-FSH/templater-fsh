@@ -174,7 +174,9 @@ export const documents = [
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
-
+            if (Array.isArray(data.entite)) {
+                data.entite = data.entite[0]; // Extract the first element if it's an array
+            }
             data.factId = `${ymd(new Date(data["du"]))}${data["id"] || ''}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
 
             data["Montant"] = calculTotalPrixInscription(data)
