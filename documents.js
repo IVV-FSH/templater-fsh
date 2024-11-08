@@ -174,15 +174,13 @@ export const documents = [
             data['acquit'] = data["paye"].includes("Payé")
             ? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
             : "";
-            if (Array.isArray(data.entite)) {
-                data.entite = data.entite[0]; // Extract the first element if it's an array
-            }
-            if (Array.isArray(data.nom)) {
-                data.nom = data.nom[0]; // Extract the first element if it's an array
-            }
-            if (Array.isArray(data.prenom)) {
-                data.prenom = data.prenom[0]; // Extract the first element if it's an array
-            }
+            const possibleArrays = ["entite", "nom", "prenom", "cp", "ville", "rue"];
+            possibleArrays.forEach(field => {
+                if (Array.isArray(data[field])) {
+                    data[field] = data[field][0]; // Extract the first element if it's an array
+                }
+            });
+
             data.entite = data.entite_payeur || data.entite || "";
             data.cp = data.cp_payeur || data.cp || "";
             data.rue = data.rue_payeur || data.rue || "";
