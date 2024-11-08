@@ -197,17 +197,23 @@ export const documents = [
             return data;
             
         },
-        // airtableUpdatedData: function(data) {
-        //     var updatedInvoiceDate = false;
-        //     if(data["date_facture"]) { updatedInvoiceDate = true; }
-        //     var updatedData = { 
-        //         total: data['Montant'].toString()
-        //     }
-        //     if(!updatedInvoiceDate) {
-        //         updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
-        //     }
-        //     return updatedData;
-        // },
+        airtableUpdatedData: async function(document, data) {
+            var updatedInvoiceDate = false;
+            // if(data["date_facture"]) { updatedInvoiceDate = true; } // FIXME
+            var updatedData = { 
+                total: data['Montant'].toString()
+            }
+            if(!updatedInvoiceDate) {
+                updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
+            }
+
+            const updatedRecord = await updateAirtableRecord(document.table, data.docId, updatedData);
+            if (updatedRecord) {
+              console.log('Facture date updated successfully:', updatedRecord.id);
+            } else {
+              console.error('Failed to update facture date.');
+            }
+          },
         examples: [{recordId:"recOjSqWKF5VVudrL", desc:"payée"},{recordId:"rec1Mu1M2papdWAmq", desc:"non payée"},],
         documentField: "doc_facture",
     },

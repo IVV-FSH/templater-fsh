@@ -150,7 +150,6 @@ const handleReportGenerationAndSendEmail = async (req, res, document) => {
     await sendEmailWithAttachment(email, document.titleForming(data), buffer);
 
     // FIX:
-    // if (document.airtableUpdatedData) {
     //   console.log('Updating Airtable record...');
     //   const updatedRecord = await updateAirtableRecord(document.table, recordId, document.airtableUpdatedData(data));
     //   if (updatedRecord) {
@@ -158,7 +157,9 @@ const handleReportGenerationAndSendEmail = async (req, res, document) => {
     //   } else {
     //     console.error('Failed to update facture date.');
     //   }
-    // }
+    if (document.airtableUpdatedData) {
+      await updateAirtableRecord(document, data);
+    }
 
     res.status(200).json({ success: true, message: 'Report generated and sent by email successfully.' });
   } catch (error) {
@@ -936,7 +937,7 @@ const server = app.listen(process.env.PORT || 3000, () => {
         console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}?recordId=${example.recordId}`, example.desc);
       });
     } else {
-      console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}`);
+    console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}`);
     }
   }
   console.log("Documents session ------")
