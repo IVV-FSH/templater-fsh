@@ -583,7 +583,7 @@ app.get('/facture_grp', async (req, res) => {
     if(!factureId) {
       return res.status(400).json({ success: false, error: 'Paramètre factureId manquant.' });
     }
-    var data = await getAirtableRecord("Factures", factureId);
+    var data = await getAirtableRecord("Factures-Devis-Conventions", factureId);
     // const facture = await makeGroupFacture(factureId);
     data = await documentData.dataPreprocessing(data, factureId);
     await generateAndDownloadReport(
