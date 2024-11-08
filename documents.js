@@ -393,8 +393,8 @@ export const documents = [
         table: 'Factures-Devis-Conventions',
         queriedField: 'recordId',
         dataPreprocessing: async function(data) {
-            const idSess = data["idSess"]
-            const session = await getAirtableRecord("Sessions", idSess);
+            const sessId = data["sessId"]
+            const session = await getAirtableRecord("Sessions", sessId);
             data = {...session, ...data};
             data['SIRET'] = data["SIRET"] || null;
             data['du'] = new Date(data["du"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'})
@@ -409,7 +409,7 @@ export const documents = [
                 parseFloat(data.prixintra_fromsess),
             );
             // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
-            const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${idSess}",{Statut}="Enregistrée")`);
+            const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${sessId}",{Statut}="Enregistrée")`);
             // make a set of debut dates
             data['stagiaires'] = stagiaires && stagiaires.records && stagiaires.records.length > 0 ? stagiaires.records.map(s => {
                 return {
@@ -426,7 +426,8 @@ export const documents = [
 
             return data;
 
-        }
+        },
+        examples: [{recordId:"recrzATVTK5NtDfDP", desc:"FMDC besoins remplis + liste pax"},],
     },
     // {
     //     name: 'factures',

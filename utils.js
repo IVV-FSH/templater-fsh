@@ -228,7 +228,7 @@ export const getAirtableRecords = async (table, view = null, formula = null, sor
 		url += `?${params.join('&')}`;
 	  }
 	  console.log(`Fetching records from URL: ${url}`);
-	  // broadcastLog(`Fetching records from URL: ${url}`); // FIXME:
+	  // broadcastLog(`Fetching records from URL: ${url}`); 
 	
 	  const response = await axios.get(url, {
 		headers: AUTH_HEADERS,

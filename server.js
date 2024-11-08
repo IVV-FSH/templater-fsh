@@ -930,7 +930,8 @@ const server = app.listen(process.env.PORT || 3000, () => {
   console.log(`Accomp : http://localhost:${process.env.PORT || 3000}/facture?recordId=recvrbZmRuUCgHrFK`);
   console.log(`Payée : http://localhost:${process.env.PORT || 3000}/facture?recordId=recLM3WRAiRYNPZ52`);
   for (const doc of documents) {
-    console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}`);
+    // console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}`);
+    console.log(doc.name.toUpperCase())
     if(doc.examples) {
       doc.examples.forEach(example => {
         console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}?recordId=${example.recordId}`, example.desc);
