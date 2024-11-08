@@ -197,17 +197,17 @@ export const documents = [
             return data;
             
         },
-        airtableUpdatedData: function(data) {
-            var updatedInvoiceDate = false;
-            if(data["date_facture"]) { updatedInvoiceDate = true; }
-            var updatedData = { 
-                total: data['Montant'].toString()
-            }
-            if(!updatedInvoiceDate) {
-                updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
-            }
-            return updatedData;
-        },
+        // airtableUpdatedData: function(data) {
+        //     var updatedInvoiceDate = false;
+        //     if(data["date_facture"]) { updatedInvoiceDate = true; }
+        //     var updatedData = { 
+        //         total: data['Montant'].toString()
+        //     }
+        //     if(!updatedInvoiceDate) {
+        //         updatedData["date_facture"] = new Date().toLocaleDateString('fr-CA');
+        //     }
+        //     return updatedData;
+        // },
         examples: [{recordId:"recOjSqWKF5VVudrL", desc:"payée"},{recordId:"rec1Mu1M2papdWAmq", desc:"non payée"},],
         documentField: "doc_facture",
     },
