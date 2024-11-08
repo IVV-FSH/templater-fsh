@@ -183,7 +183,7 @@ export const documents = [
             if (Array.isArray(data.prenom)) {
                 data.prenom = data.prenom[0]; // Extract the first element if it's an array
             }
-            data.factId = `${ymd(new Date(data["du"]))}${data["id"] || ''}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
+            data.factId = `${ymd(new Date(data["du"]))}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
 
             data["Montant"] = calculTotalPrixInscription(data)
             logIfNotVercel("Montant calc", data["Montant"])
