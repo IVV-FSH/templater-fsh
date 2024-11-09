@@ -11,6 +11,10 @@ import { GITHUBTEMPLATES } from './constants.js';
 import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, makeConvention, generateAndSendZipReport } from './documents.js';
 import {createReport} from 'docx-templates';
 import { processImports } from './dups.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const app = express();
 
 app.use(express.json()); // For parsing application/json
@@ -179,7 +183,7 @@ const sendEmailWithAttachment = async (
     secure: true, // true pour 465, false pour les autres ports
     auth: {
       user: 'isadora.vuongvan@sante-habitat.org', // Votre adresse email
-      pass: 'Renée_Fédér@tion_75' // Votre mot de passe email
+      pass: process.env.FSH_PASSWORD // Votre mot de passe email
     }
   });
 

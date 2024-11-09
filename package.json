@@ -13,6 +13,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@azure/identity": "^4.5.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@vercel/blob": "^0.25.1",
     "archiver": "^7.0.1",
     "axios": "^1.7.7",
