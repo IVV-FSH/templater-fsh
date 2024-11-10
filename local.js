@@ -445,8 +445,8 @@ async function generateAndZipFile() {
 // Test the function
 // generateAndZipFile().catch(err => console.error(err));
 
-var testData = await getAirtableRecord("Inscriptions", "reccgxlfUg4USc9Mf");
-testData = processFieldsForDocx(testData, airtableMarkdownFields);
+// var testData = await getAirtableRecord("Inscriptions", "reccgxlfUg4USc9Mf");
+// testData = processFieldsForDocx(testData, airtableMarkdownFields);
 // console.log(testData);
 // const testData = {
 //   "Participant.e-Statut": "Sarah Akhoun - ⏳⌛",
@@ -528,51 +528,51 @@ testData = processFieldsForDocx(testData, airtableMarkdownFields);
 //   "inscriptionId": "reci9WM7SUYozceAf"
 // };
 
-const { 
-  prenom,
-  nom,
-  mail: email,
-  prerequis_fromprog,
-  public_fromprog,
-  titre_fromprog,
-  introcontexte_fromprog,
-  objectifs_fromprog,
-  contenu_fromprog,
-	methodespedago_fromprog,
-	modaliteseval_fromprog,
-  dates,
-  lieux: str_lieu,
-  fillout_recueil,
-  du,
-  sessId 
-} = testData;
-var Formateurice = testData["Formateurice"][0];
-try {
-  Formateurice = Formateurice.replace(/"/g, '');
-} catch (error) {}
-const completionDate = new Date(du);
-completionDate.setDate(completionDate.getDate() - 15);
-const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+// const { 
+//   prenom,
+//   nom,
+//   mail: email,
+//   prerequis_fromprog,
+//   public_fromprog,
+//   titre_fromprog,
+//   introcontexte_fromprog,
+//   objectifs_fromprog,
+//   contenu_fromprog,
+// 	methodespedago_fromprog,
+// 	modaliteseval_fromprog,
+//   dates,
+//   lieux: str_lieu,
+//   fillout_recueil,
+//   du,
+//   sessId 
+// } = testData;
+// var Formateurice = testData["Formateurice"][0];
+// try {
+//   Formateurice = Formateurice.replace(/"/g, '');
+// } catch (error) {}
+// const completionDate = new Date(du);
+// completionDate.setDate(completionDate.getDate() - 15);
+// const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-sendConvocation(
-  prenom,
-  nom,
-  "isadoravuongvan@gmail.com",
-  prerequis_fromprog,
-  public_fromprog,
-  titre_fromprog,
-  marked(introcontexte_fromprog),
-  marked(contenu_fromprog),
-  marked(objectifs_fromprog),
-	marked(methodespedago_fromprog),
-	marked(modaliteseval_fromprog),
-	Formateurice,
-  dates,
-  str_lieu,
-  fillout_recueil,
-  completionDateString,
-  sessId)
-  .then(() => console.log('Convocation sent successfully'))
-  .catch(error => console.error('Error sending convocation:', error));
+// sendConvocation(
+//   prenom,
+//   nom,
+//   "isadoravuongvan@gmail.com",
+//   prerequis_fromprog,
+//   public_fromprog,
+//   titre_fromprog,
+//   marked(introcontexte_fromprog),
+//   marked(contenu_fromprog),
+//   marked(objectifs_fromprog),
+// 	marked(methodespedago_fromprog),
+// 	marked(modaliteseval_fromprog),
+// 	Formateurice,
+//   dates,
+//   str_lieu,
+//   fillout_recueil,
+//   completionDateString,
+//   sessId)
+//   .then(() => console.log('Convocation sent successfully'))
+//   .catch(error => console.error('Error sending convocation:', error));
 
 // await createRecueil("recxl0kDLsP8EP5It").catch(console.error);

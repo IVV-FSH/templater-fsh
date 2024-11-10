@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, updateAirtableRecords, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd } from './utils.js';
+import { getFrenchFormattedDate, fetchTemplate, generateReport, updateAirtableRecord, updateAirtableRecords, getAirtableSchema, processFieldsForDocx, getAirtableRecords, getAirtableRecord, ymd, sendConfirmation, sendConfirmationToAllSession, serveConvocationPage } from './utils.js';
 import { put } from "@vercel/blob";
 import { PassThrough } from 'stream';
 import archiver from 'archiver';
@@ -31,6 +31,122 @@ app.get('/duplicates', async (req, res) => {
     res.status(200).json({ success: true, message: 'Duplicates processed successfully.' });
   } catch (error) {
     console.error('Error processing duplicates:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/confirm', async (req, res) => {
+  const { inscriptionId } = req.query;
+  try {
+    // await sendConfirmation(inscriptionId);
+    res.status(200).json({ success: true, message: 'Confirmation sent successfully.' });
+  } catch (error) {
+    console.error('Error sending confirmation:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/convoc', async (req, res) => {
+  const { inscriptionId } = req.query;
+  try {
+    const record = await getAirtableRecord('Inscriptions', inscriptionId);
+    // if (!record) {
+    //   console.log(`Record with id ${inscriptionId} not found`);
+    //   return;
+    // }
+  
+    // Check if envoi_convocation is empty and necessary fields are available
+    const { envoi_convocation, 
+      prenom, nom, mail:email, 
+      titre_fromprog, 
+      adresses_intra, nb_adresses, 
+      lieux, 
+      fillout_recueil, du,
+      prerequis_fromprog,
+      public_fromprog,
+      introcontexte_fromprog,
+      contenu_fromprog,
+      objectifs_fromprog,
+      methodespedago_fromprog,
+      modaliteseval_fromprog,
+      Formateurice,
+      dates, 
+      sessId
+    } = record;
+  
+    let str_lieu = '';
+    if (nb_adresses === 1) {
+      if (lieux === "Visioconférence") {
+        str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+      } else if (lieux.includes("Siège")) {
+        str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+      } else if (lieux.includes("intra")) {
+        str_lieu = `à l'adresse : ${adresses_intra}`;
+      }
+    } else if (nb_adresses > 1) {
+      console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
+      return;
+    }
+
+    const completionDate = new Date(du);
+    completionDate.setDate(completionDate.getDate() - 15);
+    const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  
+  
+    await serveConvocationPage(
+      res,
+      prenom, 
+      nom, 
+      email, 
+      prerequis_fromprog,
+      public_fromprog,
+      titre_fromprog, 
+      introcontexte_fromprog,
+      contenu_fromprog,
+      objectifs_fromprog,
+      methodespedago_fromprog,
+      modaliteseval_fromprog,
+      Formateurice,
+      dates, 
+      str_lieu, 
+      fillout_recueil, 
+      completionDateString, 
+      sessId,
+      inscriptionId
+    )
+    // await sendConfirmation(inscriptionId);
+    // res.status(200).json({ success: true, message: 'Confirmation sent successfully.' });
+  } catch (error) {
+    console.error('Error sending confirmation:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/updateDateConvoc', async (req, res) => {
+  const { inscriptionId } = req.query;
+  try {
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // Extract the date part in YYYY-MM-DD format
+    const updatedRecord = await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: formattedDate });
+    if (updatedRecord) {
+      console.log('Convocation date updated successfully:', updatedRecord.id);
+    } else {
+      console.error('Failed to update convocation date.');
+    }
+    res.status(200).json({ success: true, message: 'Convocation date updated successfully.' });
+  } catch (error) {
+    console.error('Error updating convocation date:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/confirmForSession', async (req, res) => {
+  const { sessionId } = req.query;
+  try {
+    await sendConfirmationToAllSession(sessionId);
+    res.status(200).json({ success: true, message: 'Confirmations sent successfully.' });
+  } catch (error) {
+    console.error('Error sending confirmations:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

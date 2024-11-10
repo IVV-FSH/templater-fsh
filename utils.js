@@ -9,6 +9,7 @@ import { marked } from 'marked';
 import moment from 'moment';
 import nodemailer from 'nodemailer';
 import mjml from 'mjml';
+import mjml2html from 'mjml';
 import { documents } from './documents.js';
 // import { broadcastLog } from './server.js';
 
@@ -471,8 +472,157 @@ export const createRecueil = async (inscriptionId) => {
     }
 };
 
+export const serveConvocationPage = async (res, 
+    prenom, 
+    nom, 
+    email, 
+    prerequis_fromprog,
+    public_fromprog,
+    titre_fromprog, 
+    introcontexte_fromprog,
+    contenu_fromprog,
+    objectifs_fromprog,
+    methodespedago_fromprog,
+    modaliteseval_fromprog,
+    Formateurice,
+    dates, 
+    str_lieu, 
+    fillout_recueil, 
+    completionDateString, 
+    sessId,
+	inscriptionId
+) => {
+    // Prepare halfdaysHtml like in sendConvocation
+	var halfdaysHtml = null;
+	try {
+		const data = await getAirtableRecords("Demi-journées", null, `sessId='${sessId}'`);
+		if(data) {
+			// console.log('Half days:', data);
+			const halfdays = data.records
+			.sort((a, b) => new Date(a.debut) - new Date(b.debut))
+			.map(record => {
+				const params = {date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date(record.debut)),
+				horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.fin))}`,
+				lieu: record.adresse}
+				return `<tr style="border-bottom: 1px solid lightgray;">
+						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.date}</td>
+						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.horaires}</td>
+						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.lieu}</td>
+					</tr>`;
+			});
+			halfdaysHtml = `<table>
+    <thead>
+        <tr style="border-bottom: 1px solid lightgray;">
+            <th style="padding: 4px 16px;font-size:11px">Date</th>
+            <th style="padding: 4px 16px;font-size:11px">Horaires</th>
+            <th style="padding: 4px 16px;font-size:11px">Lieu</th>
+        </tr>
+    </thead>
+    <tbody>`+halfdays.join('')+`    </tbody>
+</table>`.replace(/font-family:'Open Sans';/g, '');
+// halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-table>";
+
+	// console.log(halfdaysMjml);
+		}
+	} catch(error) {
+		console.error('Failed to get half days', error);
+		// res.send({ success: false, error: 'Failed to get half days' });
+	}
+
+
+    // let halfdaysHtml = '<table>...</table>'; // This should be generated based on actual records as in the sendConvocation function
+    try {
+    // MJML template for email body
+    const mjmlContent = `
+        <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Confirmation d'inscription à la formation et recueil des besoins</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Open Sans', 'Segoe UI', sans-serif; color: #000; }
+    .orange { color: #f5a157; }
+    .button {
+      font-family: 'Open Sans';
+      background-color: #f4913a;
+      color: white;
+      font-size: 16px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 25px;
+      display: inline-block;
+	  margin-left: 60px;
+    }
+	.flex-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0; /* Light gray background */
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="flex-container">
+    <p>Envoyer à : <a href="mailto:${email}">${email}</a></p>
+    <a href="/updateDateConvoc?inscriptionId=${inscriptionId}">Mettre à jour la date de convocation</a>
+  </div>
+  
+  <p>Bonjour ${prenom} ${nom},</p>
+  <p>Nous avons le plaisir de confirmer votre inscription à la formation <em>${titre_fromprog}</em> qui se déroulera ${dates}, ${str_lieu}.</p>
+
+  ${halfdaysHtml}
+
+  <p>Je vous prie de bien vouloir <strong>compléter la fiche de recueil des besoins avant le ${completionDateString}</strong> en cliquant sur le bouton ci-après :</p>
+
+  <a href="${fillout_recueil}" class="button">Complétez votre fiche maintenant</a>
+
+  <p>Vous trouverez sous ce courriel le programme de la formation.</p>
+  <p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
+  <p>En attendant de recevoir votre fiche complétée, je me tiens à votre disposition pour toute précision.</p>
+
+  <p style="margin: 0; padding: 0;">Isadora Vuong Van</p>
+  <p style="margin: 0; padding: 0;">Pôle Formations</p>
+  <p style="margin: 0; padding: 0; font-weight: bold;">Fédération Santé Habitat</p>
+  <p style="margin: 0; padding: 0;">6 rue du Chemin Vert - Paris 11ème</p>
+  <p style="margin: 0; padding: 0;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
+  <p style="margin: 0; padding: 0;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
+
+  <hr style="border: 1px solid lightgrey; margin: 20px 0;">
+
+  <h1 class="orange">${titre_fromprog}</h1>
+
+  ${Formateurice ? `<p><strong>Formateur</strong> : ${Formateurice}</p>` : ''}
+  ${prerequis_fromprog ? `<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>` : ''}
+  ${public_fromprog ? `<p><strong>Public</strong> : ${public_fromprog}</p>` : ''}
+  ${introcontexte_fromprog ? `${introcontexte_fromprog}` : ''}
+  ${objectifs_fromprog ? `<h2 style="background-color: #a0d3f6; color: #005f9e; text-align: center;">Objectifs</h2>${objectifs_fromprog}` : ''}
+  ${contenu_fromprog ? `<h2 style="background-color: #a0d3f6; color: #005f9e; text-align: center;">Contenu</h2>${contenu_fromprog}` : ''}
+  ${modaliteseval_fromprog ? `<h2 style="background-color: #a0d3f6; color: #005f9e; text-align: center;">Modalités d'évaluation</h2>${modaliteseval_fromprog}` : ''}
+  ${methodespedago_fromprog ? `<h2 style="background-color: #a0d3f6; color: #005f9e; text-align: center;">Méthodes pédagogiques</h2>${methodespedago_fromprog}` : ''}
+
+</body>
+</html>
+
+    `;
+
+    // Convert MJML to HTML
+    // const { html } = mjml2html(mjmlContent);
+
+    // Serve HTML
+    res.send(mjmlContent);
+    // res.send(html);
+
+	} catch(error) {
+		res.send({ success: false, error: 'Failed to get half days' });
+	}
+};
 // Helper function to send the HTML email
-export const sendConvocation = async (prenom, 
+export const sendConvocation = async (
+	prenom, 
 	nom, 
 	email, 
 	prerequis_fromprog,
@@ -500,50 +650,90 @@ export const sendConvocation = async (prenom,
 		}
 	});
 
-	const docDefinition = documents.find(doc => doc.name === 'programme');
-	let attachmentBuffer = null;
-	const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
-	let filename;
+	var halfdaysMjml = null;
+	var halfdaysHtml = null;
 
 	try {
-		const data = await getAirtableRecord(docDefinition.table, sessionId);
+		const data = await getAirtableRecords("Demi-journées", null, `sessId='${sessId}'`);
 		if(data) {
-			const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
+			// console.log('Half days:', data);
+			const halfdays = data.records
+			.sort((a, b) => new Date(a.debut) - new Date(b.debut))
+			.map(record => {
+				const params = {date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date(record.debut)),
+				horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.fin))}`,
+				lieu: record.adresse}
+				return `<tr>
+						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.date}</td>
+						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.horaires}</td>
+						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.lieu}</td>
+					</tr>`;
+			});
+			halfdaysHtml = `<table>
+    <thead>
+        <tr>
+            <th style="padding: 4px 16px;font-size:11px">Date</th>
+            <th style="padding: 4px 16px;font-size:11px">Horaires</th>
+            <th style="padding: 4px 16px;font-size:11px">Lieu</th>
+        </tr>
+    </thead>
+    <tbody>`+halfdays.join('')+`    </tbody>
+</table>`.replace(/font-family:'Open Sans';/g, '');
+halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-table>";
 
-			// const processedData = processFieldsForDocx(data, airtableMarkdownFields);
-			filename = docDefinition.titleForming(data);
-			attachmentBuffer = await generateReport(template, data);
+	// console.log(halfdaysMjml);
 		}
 	} catch(error) {
-		console.error('Failed to generate report for attachment', error);
+		console.error('Failed to get half days', error);
 	}
-	let attachments = [];
-	if(attachmentBuffer) {
-		attachments = [
-			{
-				filename: filename+ ".docx" || 'programme.docx',
-				content: attachmentBuffer,
-				contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-			}
-		];
-	}
+
+	// attach a file
+	// const docDefinition = documents.find(doc => doc.name === 'programme');
+	// let attachmentBuffer = null;
+	// const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
+	// let filename;
+	// try {
+	// 	const data = await getAirtableRecord(docDefinition.table, sessionId);
+	// 	if(data) {
+	// 		const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
+
+	// 		// const processedData = processFieldsForDocx(data, airtableMarkdownFields);
+	// 		filename = docDefinition.titleForming(data);
+	// 		attachmentBuffer = await generateReport(template, data);
+	// 	}
+	// } catch(error) {
+	// 	console.error('Failed to generate report for attachment', error);
+	// }
+	// let attachments = [];
+	// if(attachmentBuffer) {
+	// 	attachments = [
+	// 		{
+	// 			filename: filename+ ".docx" || 'programme.docx',
+	// 			content: attachmentBuffer,
+	// 			contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+	// 		}
+	// 	];
+	// }
 	
 
 	// MJML template for the email body
 	const mjmlContent = `
 	<mjml>
 		<mj-head>
+			<mj-attributes>
+				<mj-class name="orange" color="#f5a157" />
+				<mj-all font-family="Open Sans, sans-serif" color="#000" />
+			</mj-attributes>
 			<mj-preview>Vous êtes inscrit(e) ! Veuillez compléter votre fiche de recueil des besoins.</mj-preview>
 			<mj-title>Confirmation d'inscription à la formation et recueil des besoins</mj-title>
-			    <mj-attributes>
-					<mj-class name="orange" color="#f5a157" />
-					<mj-all font-family="Open Sans, sans-serif" color="#000" />
-				</mj-attributes>
 		</mj-head>
 		<mj-body>
 			<mj-text>
 				<p>Bonjour ${prenom} ${nom},</p>
-				<p>Nous avons le plaisir de confirmer votre inscription à la formation <em>${titre_fromprog}</em> qui se déroulera <em>${dates}, ${str_lieu}</em>.</p>
+				<p>Nous avons le plaisir de confirmer votre inscription à la formation <em>${titre_fromprog}</em> qui se déroulera ${dates}, ${str_lieu}.</p>
+			</mj-text>
+			${halfdaysMjml ? `${halfdaysMjml}` : ''}
+			<mj-text>
 				<p>Je vous prie de bien vouloir <strong>compléter la fiche de recueil des besoins avant le ${completionDateString}</strong> en cliquant sur le bouton ci-après :</p>
 			</mj-text>
 
@@ -559,29 +749,23 @@ export const sendConvocation = async (prenom,
 			<mj-text>
 				<p>Vous trouverez sous ce courriel le programme de la formation.</p>
 				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
-				<p>Dans cette attente et restant à votre disposition pour tout renseignement complémentaire,</p>
+				<p>En attendant de recevoir votre fiche complétée, je me tiens à votre disposition pour toute précision.</p>
 			</mj-text>
-				
-			
 
 			<!-- Signature -->
-			
-				
-					<mj-text font-family="Open Sans, sans-serif">
-						<p style="margin: 0; padding: 0;">Isadora Vuong Van</p>
-						<p style="margin: 0; padding: 0;">Pôle Formations</p>
-						<p style="margin: 0; padding: 0; font-weight:bold;">Fédération Santé Habitat</p>
-						<p style="margin: 0; padding: 0;">6 rue du Chemin Vert - Paris 11ème</p>
-						<p style="margin: 0; padding: 0;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
-						<p style="margin: 0; padding: 0;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
-					</mj-text>
-				
+			<mj-text font-family="Open Sans, sans-serif">
+				<p style="margin: 0; padding: 0;">Isadora Vuong Van</p>
+				<p style="margin: 0; padding: 0;">Pôle Formations</p>
+				<p style="margin: 0; padding: 0; font-weight:bold;">Fédération Santé Habitat</p>
+				<p style="margin: 0; padding: 0;">6 rue du Chemin Vert - Paris 11ème</p>
+				<p style="margin: 0; padding: 0;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
+				<p style="margin: 0; padding: 0;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
+			</mj-text>
+		
 			
 
 			<!-- Image below signature -->
-			
-				
-					<mj-image src="https://www.sante-habitat.org/images/2019/LOL.png" alt="FSH Logo" width="3.02cm" height="1.15cm" />
+			<!-- <mj-image src="https://www.sante-habitat.org/images/2019/LOL.png" alt="FSH Logo" width="3.02cm" height="1.15cm" /> -->
 			
 			<mj-divider border-width="1px" border-color="lightgrey" />
 
@@ -589,18 +773,14 @@ export const sendConvocation = async (prenom,
 				<h1>${titre_fromprog}</h1>
 			</mj-text>
 			<mj-text>
-				<p><strong>Formateur</strong> : ${Formateurice}</p>
-				<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>
-				<p><strong>Public</strong> : ${public_fromprog}</p>
-				${introcontexte_fromprog ? `<p>${introcontexte_fromprog}</p>` : ''}
-				<h2>Objectifs</h2>
-				${objectifs_fromprog}
-				<h2>Contenu</h2>
-				${contenu_fromprog}
-				<h2>Modalités d'évaluation</h2>
-				${modaliteseval_fromprog}
-				<h2>Méthodes pédagogiques</h2>
-				${methodespedago_fromprog}
+				${Formateurice ? `<p><strong>Formateur</strong> : ${Formateurice}</p>` : ''}
+				${prerequis_fromprog ? `<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>` : ''}
+				${public_fromprog ? `<p><strong>Public</strong> : ${public_fromprog}</p>` : ''}
+				${introcontexte_fromprog ? `${introcontexte_fromprog}` : ''}
+				${objectifs_fromprog ? `<h2 style="background-color:#a0d3f6; color: #005f9e;text-align:center">Objectifs</h2>${objectifs_fromprog}` : ''}
+				${contenu_fromprog ? `<h2 style="background-color:#a0d3f6; color: #005f9e;text-align:center">Contenu</h2>${contenu_fromprog}` : ''}
+				${modaliteseval_fromprog ? `<h2 style="background-color:#a0d3f6; color: #005f9e;text-align:center">Modalités d'évaluation</h2>${modaliteseval_fromprog}` : ''}
+				${methodespedago_fromprog ? `<h2 style="background-color:#a0d3f6; color: #005f9e;text-align:center">Méthodes pédagogiques</h2>${methodespedago_fromprog}` : ''}
 			</mj-text>
 
 		</mj-body>
@@ -614,7 +794,6 @@ export const sendConvocation = async (prenom,
 	// Define the email options
 	const mailOptions = {
 		from: '"Formations FSH" <formation@sante-habitat.org>',
-		to: "isadoravuongvan@gmail.com",
 		// to: email,
 		bcc: 'formation@sante-habitat.org',
 		replyTo: 'formation@sante-habitat.org',
@@ -632,7 +811,7 @@ export const sendConvocation = async (prenom,
 		Je vous prie de bien vouloir compléter la fiche de recueil des besoins avant le ${completionDateString} en cliquant sur le lien suivant :
 		${fillout_recueil}
 		
-		Vous trouverez ci-joint le programme de la formation.
+		Vous trouverez ci-dessous le programme de la formation.
 		
 		Pour information, vous trouverez ici le Livret d’accueil du stagiaire : https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf
 		
@@ -645,6 +824,19 @@ export const sendConvocation = async (prenom,
 		6 rue du Chemin Vert - Paris 11ème
 		Tél. 01 48 05 55 54 / 06 33 82 17 52
 		www.sante-habitat.org
+
+		--------------------------------
+
+		${titre_fromprog}
+
+		${Formateurice ? `Formateur : ${Formateurice}\n` : ''}
+		${prerequis_fromprog ? `Prérequis : ${prerequis_fromprog}\n` : ''}
+		${public_fromprog ? `Public : ${public_fromprog}\n` : ''}
+		${introcontexte_fromprog ? `${introcontexte_fromprog}\n` : ''}
+		${objectifs_fromprog ? `\nObjectifs\n${objectifs_fromprog}\n` : ''}
+		${contenu_fromprog ? `\nContenu\n${contenu_fromprog}\n` : ''}
+		${modaliteseval_fromprog ? `\nModalités d'évaluation\n${modaliteseval_fromprog}\n` : ''}
+		${methodespedago_fromprog ? `\nMéthodes pédagogiques\n${methodespedago_fromprog}\n` : ''}
 			  `
 			},
 			{
@@ -654,6 +846,7 @@ export const sendConvocation = async (prenom,
 					<body>
 					  <p>Bonjour ${prenom} ${nom},</p>
 					  <p>Nous avons le plaisir de confirmer votre inscription à la formation <strong>${titre_fromprog}</strong> qui se déroulera le <strong>${dates}, ${str_lieu}</strong>.</p>
+					  ${halfdaysHtml ? halfdaysHtml : ''}
 					  <p><strong>Merci de compléter la fiche de recueil des besoins avant le <u>${completionDateString}</u> en cliquant sur ce bouton :</strong></p>
 						<div style="text-align: center;">
 						<a href="${fillout_recueil}" style="color: white; background-color: #f4913a; font-weight: bold; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Remplir la fiche des besoins</a>
@@ -667,34 +860,46 @@ export const sendConvocation = async (prenom,
 						 6 rue du Chemin Vert - Paris 11ème<br/>
 						 Tél. 01 48 05 55 54 / 06 33 82 17 52<br/>
 						 <a href="http://www.sante-habitat.org">www.sante-habitat.org</a></p>
+
+				<h1>${titre_fromprog}</h1>
+				${Formateurice ? `<p><strong>Formateur</strong> : ${Formateurice}</p>` : ''}
+				${prerequis_fromprog ? `<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>` : ''}
+				${public_fromprog ? `<p><strong>Public</strong> : ${public_fromprog}</p>` : ''}
+				${introcontexte_fromprog ? `${introcontexte_fromprog}` : ''}
+				${objectifs_fromprog ? `<h2>Objectifs</h2>${objectifs_fromprog}` : ''}
+				${contenu_fromprog ? `<h2>Contenu</h2>${contenu_fromprog}` : ''}
+				${modaliteseval_fromprog ? `<h2>Modalités d'évaluation</h2>${modaliteseval_fromprog}` : ''}
+				${methodespedago_fromprog ? `<h2>Méthodes pédagogiques</h2>${methodespedago_fromprog}` : ''}
+
 					</body>
 				  </html>
-				`.replace(/é/g, '&eacute;')
-				.replace(/è/g, '&egrave;')
-				.replace(/ê/g, '&ecirc;')
-				.replace(/ë/g, '&euml;')
-				.replace(/à/g, '&agrave;')
-				.replace(/â/g, '&acirc;')
-				.replace(/ä/g, '&auml;')
-				.replace(/ç/g, '&ccedil;')
-				.replace(/î/g, '&icirc;')
-				.replace(/ï/g, '&iuml;')
-				.replace(/ô/g, '&ocirc;')
-				.replace(/ö/g, '&ouml;')
-				.replace(/ù/g, '&ugrave;')
-				.replace(/û/g, '&ucirc;')
-				.replace(/ü/g, '&uuml;')
-				.replace(/œ/g, '&oelig;')
-				.replace(/’/g, '&rsquo;')
-				.replace(/'/g, '&apos;')
-				.replace(/"/g, '&quot;')
-				.replace(/&/g, '&amp;')
-				.replace(/€/g, '&euro;')
-				.replace(/«/g, '&laquo;')
-				.replace(/»/g, '&raquo;')
-				.replace(/–/g, '&ndash;')
-				.replace(/—/g, '&mdash;')
-				.replace(/…/g, '&hellip;')
+				`
+				// .replace(/é/g, '&eacute;')
+				// .replace(/è/g, '&egrave;')
+				// .replace(/ê/g, '&ecirc;')
+				// .replace(/ë/g, '&euml;')
+				// .replace(/à/g, '&agrave;')
+				// .replace(/â/g, '&acirc;')
+				// .replace(/ä/g, '&auml;')
+				// .replace(/ç/g, '&ccedil;')
+				// .replace(/î/g, '&icirc;')
+				// .replace(/ï/g, '&iuml;')
+				// .replace(/ô/g, '&ocirc;')
+				// .replace(/ö/g, '&ouml;')
+				// .replace(/ù/g, '&ugrave;')
+				// .replace(/û/g, '&ucirc;')
+				// .replace(/ü/g, '&uuml;')
+				// .replace(/œ/g, '&oelig;')
+				// .replace(/’/g, '&rsquo;')
+				// .replace(/'/g, '&apos;')
+				// .replace(/"/g, '&quot;')
+				// .replace(/&/g, '&amp;')
+				// .replace(/€/g, '&euro;')
+				// .replace(/«/g, '&laquo;')
+				// .replace(/»/g, '&raquo;')
+				// .replace(/–/g, '&ndash;')
+				// .replace(/—/g, '&mdash;')
+				// .replace(/…/g, '&hellip;')
 			  },
 			// {
 			//   contentType: 'application/json',
@@ -750,9 +955,132 @@ export const sendConfirmationToAllSession = async (sessId) => {
 		return;
 	}
 
+	const rec1 = records[0];
+	let str_lieu = '';
+	if (rec1.nb_adresses === 1) {
+		if (rec1.lieux === "Visioconférence") {
+			str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		} else if (rec1.lieux.includes("Siège")) {
+			str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		} else if (rec1.lieux.includes("intra")) {
+			str_lieu = `à l'adresse : ${rec1.adresses_intra}`;
+		}
+	} else if (rec1.nb_adresses > 1) {
+		console.log(`Record ${rec1.inscriptionId} has multiple addresses and cannot determine location`);
+		return;
+	}
+
+	// Calculate the completion date string
+	const completionDate = new Date(rec1.du);
+	completionDate.setDate(completionDate.getDate() - 15);
+	
+	const today = new Date();
+	while (completionDate < today) {
+		completionDate.setDate(completionDate.getDate() + 1);
+	}
+	
+	const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+
 	for (const record of records) {
-		const { inscriptionId } = record;
-		await sendConfirmation(inscriptionId);
+		// const { inscriptionId } = record;
+		// await sendConfirmation(inscriptionId);
+		const { envoi_convocation, 
+			prenom, nom, mail:email, 
+			titre_fromprog, 
+			fillout_recueil, du,
+			prerequis_fromprog,
+			public_fromprog,
+			introcontexte_fromprog,
+			contenu_fromprog,
+			objectifs_fromprog,
+			methodespedago_fromprog,
+			modaliteseval_fromprog,
+			Formateurice,
+			dates, 
+			sessId
+		
+		} = record;
+	
+		if (envoi_convocation) {
+			console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
+			return;
+		}
+		if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
+			console.log(`Record ${inscriptionId} is missing necessary fields`);
+			return;
+		}
+	
+		let recueilLink = fillout_recueil;
+		if (!recueilLink) {
+			try {
+				const recueil = await createRecueil(inscriptionId);
+				if (recueil.fields && recueil.fields.fillout) {
+					recueilLink = recueil.fields.fillout; // Use the 'fillout' field from the created record
+					console.log(`Created recueil with fillout link: ${recueilLink}`);
+				} else {
+					recueilLink = "https://forms.fillout.com/t/1wNMoFGDTYus?id=" + recueil.id; // Use the recueilId for the link
+					console.log(`Created recueil, but 'fillout' field is missing. Using default link: ${recueilLink}`);
+				}
+			} catch (error) {
+				console.error(`Failed to create recueil for inscriptionId ${inscriptionId}:`, error);
+				return;
+			}
+		}
+
+		try {
+			// Send the convocation email
+			console.log(`Will send email with this data:`, {
+				prenom, 
+				nom, 
+				email, 
+				prerequis_fromprog,
+				public_fromprog,
+				titre_fromprog, 
+				introcontexte_fromprog,
+				contenu_fromprog,
+				objectifs_fromprog,
+				methodespedago_fromprog,
+				modaliteseval_fromprog,
+				Formateurice,
+				dates, 
+				str_lieu, 
+				fillout_recueil: fillout_recueil || recueilLink,
+				completionDateString, 
+				sessId
+			});
+			
+			await sendConvocation(
+				prenom,
+				nom,
+				"isadoravuongvan@gmail.com",
+				prerequis_fromprog,
+				public_fromprog,
+				titre_fromprog,
+				introcontexte_fromprog,
+				contenu_fromprog,
+				objectifs_fromprog,
+				methodespedago_fromprog,
+				modaliteseval_fromprog,
+				Formateurice,
+				dates,
+				str_lieu,
+				fillout_recueil,
+				completionDateString,
+				sessId
+			)
+				
+	
+			// Update the record with the current datetime
+			const currentDateTime = new Date().toISOString();
+			await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
+			console.log(`Updated record ${inscriptionId} with envoi_convocation: ${currentDateTime}`);
+	
+		} catch (error) {
+			console.error(`Failed to send email to ${mail} or update Airtable record:`, error);
+		}
+	
+		
 	}
 };
 
@@ -766,9 +1094,25 @@ export const sendConfirmation = async (inscriptionId) => {
 	}
 
 	// Check if envoi_convocation is empty and necessary fields are available
-	const { envoi_convocation, prenom, nom, mail, titre_fromprog, dates, adresses_intra, nb_adresses, lieux, fillout_recueil, du } = record;
+	const { envoi_convocation, 
+		prenom, nom, mail:email, 
+		titre_fromprog, 
+		adresses_intra, nb_adresses, 
+		lieux, 
+		fillout_recueil, du,
+		prerequis_fromprog,
+		public_fromprog,
+		introcontexte_fromprog,
+		contenu_fromprog,
+		objectifs_fromprog,
+		methodespedago_fromprog,
+		modaliteseval_fromprog,
+		Formateurice,
+		dates, 
+		sessId
+	} = record;
 	if (envoi_convocation) {
-		console.log(`Record ${inscriptionId} already has envoi_convocation`);
+		console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
 		return;
 	}
 	if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
@@ -811,27 +1155,59 @@ export const sendConfirmation = async (inscriptionId) => {
 	// Calculate the completion date string
 	const completionDate = new Date(du);
 	completionDate.setDate(completionDate.getDate() - 15);
-	const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
+	const today = new Date();
+	while (completionDate < today) {
+		completionDate.setDate(completionDate.getDate() + 1);
+	}
+
+	const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+	
 	try {
 		// Send the convocation email
 		console.log(`Will send email with this data:`, {
-			prenom,
-			nom,
-			mail,
-			titre_fromprog,
-			dates,
-			str_lieu,
+			prenom, 
+			nom, 
+			email, 
+			prerequis_fromprog,
+			public_fromprog,
+			titre_fromprog, 
+			introcontexte_fromprog,
+			contenu_fromprog,
+			objectifs_fromprog,
+			methodespedago_fromprog,
+			modaliteseval_fromprog,
+			Formateurice,
+			dates, 
+			str_lieu, 
 			fillout_recueil: fillout_recueil || recueilLink,
-			completionDateString,
+			completionDateString, 
 			sessId
 		});
 		
-		// await sendConvocation(prenom, nom, mail, titre_fromprog, dates, str_lieu, fillout_recueil || recueilLink, completionDateString, sessId);
+		await sendConvocation(
+			prenom,
+			nom,
+			"isadoravuongvan@gmail.com",
+			prerequis_fromprog,
+			public_fromprog,
+			titre_fromprog,
+			introcontexte_fromprog,
+			contenu_fromprog,
+			objectifs_fromprog,
+			methodespedago_fromprog,
+			modaliteseval_fromprog,
+			Formateurice,
+			dates,
+			str_lieu,
+			fillout_recueil,
+			completionDateString,
+			sessId
+		)
 
 		// Update the record with the current datetime
 		const currentDateTime = new Date().toISOString();
-		// await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
+		await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
 		console.log(`Updated record ${inscriptionId} with envoi_convocation: ${currentDateTime}`);
 
 	} catch (error) {
