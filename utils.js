@@ -472,7 +472,24 @@ export const createRecueil = async (inscriptionId) => {
 };
 
 // Helper function to send the HTML email
-export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString, sessId) => {
+export const sendConvocation = async (prenom, 
+	nom, 
+	email, 
+	prerequis_fromprog,
+	public_fromprog,
+	titre_fromprog, 
+	introcontexte_fromprog,
+	contenu_fromprog,
+	objectifs_fromprog,
+	methodespedago_fromprog,
+	modaliteseval_fromprog,
+	Formateurice,
+	dates, 
+	str_lieu, 
+	fillout_recueil, 
+	completionDateString, 
+	sessId
+) => {
 	const transporter = nodemailer.createTransport({
 		host: 'smtp-declic-php5.alwaysdata.net',
 		port: 465,
@@ -486,6 +503,7 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 	const docDefinition = documents.find(doc => doc.name === 'programme');
 	let attachmentBuffer = null;
 	const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
+	let filename;
 
 	try {
 		const data = await getAirtableRecord(docDefinition.table, sessionId);
@@ -493,19 +511,22 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 			const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
 
 			// const processedData = processFieldsForDocx(data, airtableMarkdownFields);
+			filename = docDefinition.titleForming(data);
 			attachmentBuffer = await generateReport(template, data);
 		}
 	} catch(error) {
 		console.error('Failed to generate report for attachment', error);
 	}
-
-	const attachments = attachmentBuffer ? [
-		{
-			filename: `Programme_${sessionId}.docx`,
-			content: attachmentBuffer,
-			contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-		}
-	] : [];
+	let attachments = [];
+	if(attachmentBuffer) {
+		attachments = [
+			{
+				filename: filename+ ".docx" || 'programme.docx',
+				content: attachmentBuffer,
+				contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			}
+		];
+	}
 	
 
 	// MJML template for the email body
@@ -515,14 +536,14 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 			<mj-preview>Vous êtes inscrit(e) ! Veuillez compléter votre fiche de recueil des besoins.</mj-preview>
 			<mj-title>Confirmation d'inscription à la formation et recueil des besoins</mj-title>
 			    <mj-attributes>
-					<mj-class name="orange" color="#f4913a" />
+					<mj-class name="orange" color="#f5a157" />
 					<mj-all font-family="Open Sans, sans-serif" color="#000" />
 				</mj-attributes>
 		</mj-head>
 		<mj-body>
 			<mj-text>
 				<p>Bonjour ${prenom} ${nom},</p>
-				<p>Nous avons le plaisir de confirmer votre inscription à la formation <strong>${titre_fromprog}</strong> qui se déroulera <strong>${dates}, ${str_lieu}</strong>.</p>
+				<p>Nous avons le plaisir de confirmer votre inscription à la formation <em>${titre_fromprog}</em> qui se déroulera <em>${dates}, ${str_lieu}</em>.</p>
 				<p>Je vous prie de bien vouloir <strong>compléter la fiche de recueil des besoins avant le ${completionDateString}</strong> en cliquant sur le bouton ci-après :</p>
 			</mj-text>
 
@@ -536,7 +557,7 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 			</mj-section>
 
 			<mj-text>
-				<p>Vous trouverez ci-joint le programme de la formation.</p>
+				<p>Vous trouverez sous ce courriel le programme de la formation.</p>
 				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
 				<p>Dans cette attente et restant à votre disposition pour tout renseignement complémentaire,</p>
 			</mj-text>
@@ -561,8 +582,27 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 			
 				
 					<mj-image src="https://www.sante-habitat.org/images/2019/LOL.png" alt="FSH Logo" width="3.02cm" height="1.15cm" />
-				
 			
+			<mj-divider border-width="1px" border-color="lightgrey" />
+
+			<mj-text mj-class="orange">
+				<h1>${titre_fromprog}</h1>
+			</mj-text>
+			<mj-text>
+				<p><strong>Formateur</strong> : ${Formateurice}</p>
+				<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>
+				<p><strong>Public</strong> : ${public_fromprog}</p>
+				${introcontexte_fromprog ? `<p>${introcontexte_fromprog}</p>` : ''}
+				<h2>Objectifs</h2>
+				${objectifs_fromprog}
+				<h2>Contenu</h2>
+				${contenu_fromprog}
+				<h2>Modalités d'évaluation</h2>
+				${modaliteseval_fromprog}
+				<h2>Méthodes pédagogiques</h2>
+				${methodespedago_fromprog}
+			</mj-text>
+
 		</mj-body>
 	</mjml>
 
@@ -580,7 +620,7 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 		replyTo: 'formation@sante-habitat.org',
 		subject: `Convocation à la formation ${titre_fromprog}`,
 		html: html,  // MJML rendered to HTML
-		attachments,
+		// attachments,
 		alternatives: [
 			{
 			  contentType: 'text/plain',
@@ -618,7 +658,7 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 						<div style="text-align: center;">
 						<a href="${fillout_recueil}" style="color: white; background-color: #f4913a; font-weight: bold; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Remplir la fiche des besoins</a>
 						</div>
-						<p>Vous trouverez ci-joint le programme de la formation.</p>
+						<p>Vous trouverez ci-dessous le programme de la formation.</p>
 					  <p>Pour plus d'informations, vous pouvez consulter le <a href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a>.</p>
 					  <p>Bien cordialement,</p>
 					  <p>Isadora Vuong Van<br/>
@@ -629,7 +669,32 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 						 <a href="http://www.sante-habitat.org">www.sante-habitat.org</a></p>
 					</body>
 				  </html>
-				`
+				`.replace(/é/g, '&eacute;')
+				.replace(/è/g, '&egrave;')
+				.replace(/ê/g, '&ecirc;')
+				.replace(/ë/g, '&euml;')
+				.replace(/à/g, '&agrave;')
+				.replace(/â/g, '&acirc;')
+				.replace(/ä/g, '&auml;')
+				.replace(/ç/g, '&ccedil;')
+				.replace(/î/g, '&icirc;')
+				.replace(/ï/g, '&iuml;')
+				.replace(/ô/g, '&ocirc;')
+				.replace(/ö/g, '&ouml;')
+				.replace(/ù/g, '&ugrave;')
+				.replace(/û/g, '&ucirc;')
+				.replace(/ü/g, '&uuml;')
+				.replace(/œ/g, '&oelig;')
+				.replace(/’/g, '&rsquo;')
+				.replace(/'/g, '&apos;')
+				.replace(/"/g, '&quot;')
+				.replace(/&/g, '&amp;')
+				.replace(/€/g, '&euro;')
+				.replace(/«/g, '&laquo;')
+				.replace(/»/g, '&raquo;')
+				.replace(/–/g, '&ndash;')
+				.replace(/—/g, '&mdash;')
+				.replace(/…/g, '&hellip;')
 			  },
 			// {
 			//   contentType: 'application/json',
@@ -659,7 +724,7 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 					<text>Bonjour ${prenom} ${nom},</text>
 					<text>Nous avons le plaisir de confirmer votre inscription à la formation ${titre_fromprog} qui se déroulera le ${dates}, à ${str_lieu}.</text>
 					<text>Veuillez remplir la fiche de recueil des besoins avant le ${completionDateString} en cliquant sur ce <url>${fillout_recueil}</url>.</text>
-					<text>Consultez le programme et le Livret d’accueil du stagiaire : <url>https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf</url></text>
+					<text>Consultez le Livret d’accueil du stagiaire à cette adresse : <url>https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf</url></text>
 				  </body>
 				</email>
 			  `
