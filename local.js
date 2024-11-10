@@ -1,7 +1,7 @@
 import { createReport } from 'docx-templates';
 import fs from 'fs';
 import path from 'path';
-import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord } from './utils.js';
+import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord, sendConvocation } from './utils.js';
 import archiver from 'archiver';
 import { GITHUBTEMPLATES } from './constants.js';
 import { documents } from './documents.js';
@@ -352,7 +352,7 @@ async function emarg() {
   console.log(processed);
 
 }
-emarg().catch(console.error);
+// emarg().catch(console.error);
 // Call this function to test zipping of files from Buffers
 // zipFilesFromBuffers();
 
@@ -443,3 +443,93 @@ async function generateAndZipFile() {
 
 // Test the function
 // generateAndZipFile().catch(err => console.error(err));
+
+
+const testData = {
+  "Participant.e-Statut": "Sarah Akhoun - ⏳⌛",
+  "Session": "CPOM7ML ",
+  "Participant.e": "Sarah Akhoun",
+  "Entité": "",
+  "Eval à chaud🔥": "\"Contrat pluriannuel d'objectifs et de moyens (CPOM) des établissements ou services sociaux ou médico-sociaux (ESMS), le 13 septembre 2024 (7 heures sur 1 journée, 04h30-12h30) || Sarah Akhoun\"",
+  "Adhérent? (from Participant.e)": "0 checked out of 0",
+  "mail": "gestion@association-rive.org",
+  "Coût non adhérent TTC (from Programme) (from Session)": "400",
+  "Coût adhérent TTC (from Programme) (from Session)": "200",
+  "dates": "le 13 septembre 2024 (7 heures sur 1 journée, 04h30-12h30)",
+  "titre_fromprog": "Contrat pluriannuel d'objectifs et de moyens (CPOM) des établissements ou services sociaux ou médico-sociaux (ESMS)",
+  "Recueil des besoins": "",
+  "Attestation de réalisation": "",
+  "Eval à froid🧊": "",
+  "heures_effectuees": "",
+  "dureeh_fromprog": "7:00",
+  "date_paiement": "",
+  "moyen_paiement": "",
+  "date_facture": "",
+  "au": "2024-09-13 12:30",
+  "du": "2024-09-13 04:30",
+  "paye": "❗⌛ Retard !",
+  "id": "249CPOM7ML ",
+  "Adresse siège (from Entité) (from Participant.e)": "",
+  "poste": "Responsable saisie  comptable et secrétariat",
+  "prenom": "Sarah",
+  "nom": "Akhoun",
+  "Statut": "Enregistrée",
+  "rue": " 21 Rue Malartic",
+  "cp": "97400",
+  "ville": "Saint Denis",
+  "entite": "RIVE",
+  "lieux": "Visioconférence",
+  "Besoin handicap": "",
+  "Evaluation des acquis": "",
+  "objectifs_fromprog": "- Maîtriser le contexte dans lequel intervient la négociation du CPOM\n- Connaitre les ESSMS couverts par l’obligation de conclure un CPOM\n- Maîtriser le nouveau régime juridique des CPOM\n- S’approprier la méthodologie et les étapes de négociations du CPOM",
+  "modaliteseval_fromprog": "Évaluation des travaux réalisés et analyse des résultats",
+  "Formateurice": "\"Madame Maiwenn L'Hostis, consultante et formatrice en gestion – secteur social et médico-social\"",
+  "code_fromprog": "CPOM",
+  "prixaccomp": "100",
+  "accomp": "",
+  "rabais": "",
+  "année (from Session)": "2024",
+  "total": "",
+  "dates_short (from Session)": "'24 13/9->13/9",
+  "session_dates": "CPOM7ML  '24 13/9->13/9",
+  "assiduite": "0%",
+  "Certificat de réalisation": "https://templater-ten.vercel.app/realisation?recordId=reci9WM7SUYozceAf",
+  "Factures": "",
+  "sessId": "recxWFzRHkrEW94q9",
+  "factGroupId": "",
+  "paye (from Factures)": "",
+  "Cc": "",
+  "Notes": "",
+  "frais_total (from Session)": "€0,00",
+  "sess": "240913 CPOM7ML ",
+  "test_mail": "https://templater-ten.vercel.app/email/facture?recordId=reci9WM7SUYozceAf",
+  "Envoi récap": "",
+  "FullName (from Participant.e)": "Sarah Akhoun",
+  "entreprise_formateur (from Session)": "",
+  "lieuintra_cumul (from Session)": "",
+  "rempli (from Recueil des besoins)": "",
+  "fillout_recueil": "http://google.com",
+  "relance_besoins": "",
+  "recueil_besoins": "",
+  "Edit (from Eval à chaud🔥)": "https://forms.fillout.com/t/1vK4DyKm66us?id=recl8zyriOzBWYpWl",
+  "adresses_intra": "Visioconférence",
+  "envoi_convocation": "",
+  "prêt pour envoi convoc": "",
+  "sessCode": "CPOM7ML ",
+  "etab_payeur": "",
+  "ville_payeur": "",
+  "cp_payeur": "",
+  "rue_payeur": "",
+  "entite_payeur": "",
+  "nb_adresses": "1",
+  "inscriptionId": "reci9WM7SUYozceAf"
+};
+
+const { prenom, nom, mail: email, titre_fromprog, dates, lieux: str_lieu, fillout_recueil, du } = testData;
+const completionDate = new Date(du);
+completionDate.setDate(completionDate.getDate() - 15);
+const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+sendConvocation(prenom, nom, "isadora.vuongvan@sante-habitat.org", titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString)
+  .then(() => console.log('Convocation sent successfully'))
+  .catch(error => console.error('Error sending convocation:', error));

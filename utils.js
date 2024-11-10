@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import { marked } from 'marked';
 import moment from 'moment';
+import nodemailer from 'nodemailer';
 // import { broadcastLog } from './server.js';
 
 dotenv.config();
@@ -14,6 +15,10 @@ const AIRTABLE_BASE_ID = 'appK5MDuerTOMig1H'; // Replace with your Airtable Base
 const AUTH_HEADERS = {
 	Authorization: `Bearer ${AIRTABLE_API_KEY}`,
 };
+
+const mjmlApiApplicationId = process.env.MJML_API_APPLICATION_ID;
+const mjmlApiPublicKey = process.env.MJML_API_PUBLIC_KEY;
+const mjmlApiSecretKey = process.env.MJML_API_SECRET_KEY;
 
 /**
 * Encodes an Airtable formula for use in URLs.
@@ -370,3 +375,214 @@ export function ensureDirectoryExists(dir) {
 		fs.mkdirSync(dir);
 	}
 }
+
+// Function to create a new record in "Recueil des besoins" and link it to an Inscription record by ID
+export const createRecueil = async (inscriptionId) => {
+    // First, check if the Inscription record exists
+    // const record = await getAirtableRecord('Inscriptions', inscriptionId);
+    // if (!record) {
+    //     console.log(`Inscription with id ${inscriptionId} does not exist.`);
+    //     return;
+    // }
+
+    // Define the URL for creating a record in "Recueil des besoins"
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Recueil%20des%20besoins`;
+    const data = {
+        fields: {
+            Inscrits: [inscriptionId] // Linking to the Inscription ID
+        }
+    };
+    console.log(`Creating record in "Recueil des besoins" at URL: ${url}`);
+    console.log(`Data being sent: ${JSON.stringify(data)}`);
+
+    try {
+        const response = await axios.post(url, data, {
+            headers: {
+                ...AUTH_HEADERS,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log(`Response from Airtable: ${JSON.stringify(response.data)}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Failed to create record in "Recueil des besoins":`, error);
+        throw new Error('Error creating record in Recueil des besoins');
+    }
+};
+
+// Helper function to send the HTML email
+export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString) => {
+	const transporter = nodemailer.createTransport({
+		host: 'smtp-declic-php5.alwaysdata.net',
+		port: 465,
+		secure: true,
+		auth: {
+			user: 'formation@sante-habitat.org',
+			pass: process.env.FSH_PASSWORD
+		}
+	});
+
+	const mailOptions = {
+		from: '"Formation" <formation@sante-habitat.org>',
+		// to: email,
+		bcc: 'formation@sante-habitat.org',
+		replyTo: 'formation@sante-habitat.org',
+		subject: `Convocation à la formation ${titre_fromprog}`,
+		html: `
+        <div style="font-family: 'Open Sans', sans-serif; font-size: 11px; color: #000;">
+            <p>Bonjour ${prenom} ${nom},</p>
+            <p>Nous avons le plaisir de confirmer votre inscription à la formation <strong>${titre_fromprog}</strong> qui se déroulera <strong>${dates}, ${str_lieu}</strong>.</p>
+            <p>Je vous prie de bien vouloir compléter la fiche de recueil des besoins avant le <strong>${completionDateString}</strong> en cliquant sur le bouton ci-après :</p>
+            <p style="text-align: center;">
+                <a href="${fillout_recueil}" style="background-color: rgb(245, 161, 87); color: white; padding: 10px 20px !important; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block !important;">Vos besoins pour la formation</a>
+            </p>
+            <p>Vous trouverez ci-joint le programme de la formation.</p>
+            <p>Pour information : <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
+            <p>Dans cette attente et restant à votre disposition pour tout renseignement complémentaire,</p>
+            
+            <!-- Signature -->
+            <div style="margin-top: 20px;">
+                <p style="margin: 0; padding: 0;font-size: 11px; font-weight: bold;">Isadora Vuong Van</p>
+                <p style="margin: 0; padding: 0;font-size: 11px; font-weight: bold;">Pôle Formations</p>
+                <p style="margin: 0; padding: 0;font-size: 10px;">Fédération Santé Habitat</p>
+                <p style="margin: 0; padding: 0;font-size: 10px;">6 rue du Chemin Vert - Paris 11ème</p>
+                <p style="margin: 0; padding: 0;font-size: 10px;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
+                <p style="margin: 0; padding: 0;font-size: 10px;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
+            </div>
+            
+            <!-- Image below signature -->
+            <div style="margin-top: 15px;">
+                <img src="https://www.sante-habitat.org/images/2019/LOL.png" alt="FSH Logo" style="width: 3.02cm; height: 1.15cm;" />
+            </div>
+        </div>
+    `,
+	alternatives: [
+        {
+            contentType: 'text/plain',
+            content: `
+Bonjour ${prenom} ${nom},
+
+Nous avons le plaisir de confirmer votre inscription à la formation ${titre_fromprog} qui se déroulera le ${dates}, ${str_lieu}.
+
+Je vous prie de bien vouloir compléter la fiche de recueil des besoins avant le ${completionDateString} en cliquant sur le lien suivant :
+${fillout_recueil}
+
+Vous trouverez ci-joint le programme de la formation.
+
+Pour information : Livret d’accueil du stagiaire : https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf
+
+Dans cette attente, et restant à votre disposition pour tout renseignement complémentaire.
+
+Cordialement,
+Isadora Vuong Van
+Pôle Formations
+Fédération Santé Habitat
+6 rue du Chemin Vert - Paris 11ème
+Tél. 01 48 05 55 54 / 06 33 82 17 52
+www.sante-habitat.org
+            `
+        }
+    ]
+	};
+
+	await transporter.sendMail(mailOptions);
+	console.log(`Email sent to ${email}`);
+};
+
+// Function to send email to all eligible records for a specific session
+export const sendConfirmationToAllSession = async (sessId) => {
+	// Fetch records from Airtable with conditions (only records without envoi_convocation)
+	const { records } = await getAirtableRecords('Inscriptions', null, `{sessId} = '${sessId}' AND {Statut} = 'Enregistrée' AND {envoi_convocation} = ""`);
+	if (records.length === 0) {
+		console.log('No records found');
+		return;
+	}
+
+	for (const record of records) {
+		const { inscriptionId } = record;
+		await sendConfirmation(inscriptionId);
+	}
+};
+
+// Function to send email for a single Inscription record
+export const sendConfirmation = async (inscriptionId) => {
+	// Retrieve a single record
+	const record = await getAirtableRecord('Inscriptions', inscriptionId);
+	if (!record) {
+		console.log(`Record with id ${inscriptionId} not found`);
+		return;
+	}
+
+	// Check if envoi_convocation is empty and necessary fields are available
+	const { envoi_convocation, prenom, nom, mail, titre_fromprog, dates, adresses_intra, nb_adresses, lieux, fillout_recueil, du } = record;
+	if (envoi_convocation) {
+		console.log(`Record ${inscriptionId} already has envoi_convocation`);
+		return;
+	}
+	if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
+		console.log(`Record ${inscriptionId} is missing necessary fields`);
+		return;
+	}
+
+	let recueilLink = fillout_recueil;
+	if (!recueilLink) {
+		try {
+			const recueil = await createRecueil(inscriptionId);
+			if (recueil.fields && recueil.fields.fillout) {
+				recueilLink = recueil.fields.fillout; // Use the 'fillout' field from the created record
+				console.log(`Created recueil with fillout link: ${recueilLink}`);
+			} else {
+				recueilLink = "https://forms.fillout.com/t/1wNMoFGDTYus?id=" + recueil.id; // Use the recueilId for the link
+				console.log(`Created recueil, but 'fillout' field is missing. Using default link: ${recueilLink}`);
+			}
+		} catch (error) {
+			console.error(`Failed to create recueil for inscriptionId ${inscriptionId}:`, error);
+			return;
+		}
+	}
+	
+	// Determine the location description based on the available data
+	let str_lieu = '';
+	if (nb_adresses === 1) {
+		if (lieux === "Visioconférence") {
+			str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		} else if (lieux.includes("Siège")) {
+			str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		} else if (lieux.includes("intra")) {
+			str_lieu = `à l'adresse : ${adresses_intra}`;
+		}
+	} else if (nb_adresses > 1) {
+		console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
+		return;
+	}
+
+	// Calculate the completion date string
+	const completionDate = new Date(du);
+	completionDate.setDate(completionDate.getDate() - 15);
+	const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+	try {
+		// Send the convocation email
+		console.log(`Will send email with this data:`, {
+			prenom,
+			nom,
+			mail,
+			titre_fromprog,
+			dates,
+			str_lieu,
+			fillout_recueil: fillout_recueil || recueilLink,
+			completionDateString
+		});
+		
+		// await sendConvocation(prenom, nom, mail, titre_fromprog, dates, str_lieu, fillout_recueil || recueilLink, completionDateString);
+
+		// Update the record with the current datetime
+		const currentDateTime = new Date().toISOString();
+		// await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
+		console.log(`Updated record ${inscriptionId} with envoi_convocation: ${currentDateTime}`);
+
+	} catch (error) {
+		console.error(`Failed to send email to ${mail} or update Airtable record:`, error);
+	}
+};
