@@ -1072,7 +1072,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 				
 	
 			// Update the record with the current datetime
-			const currentDateTime = new Date().toISOString();
+			const currentDateTime = new Date().toISOString().split('T')[0]; // Extract the date part in YYYY-MM-DD format
 			await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
 			console.log(`Updated record ${inscriptionId} with envoi_convocation: ${currentDateTime}`);
 	
@@ -1206,7 +1206,7 @@ export const sendConfirmation = async (inscriptionId) => {
 		)
 
 		// Update the record with the current datetime
-		const currentDateTime = new Date().toISOString();
+		const currentDateTime = new Date().toISOString().split('T')[0]; // Extract the date part in YYYY-MM-DD format
 		await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
 		console.log(`Updated record ${inscriptionId} with envoi_convocation: ${currentDateTime}`);
 
