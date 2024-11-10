@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { GITHUBTEMPLATES } from './constants.js';
 import path from 'path';
 import { createReport } from 'docx-templates';
 import fetch from 'node-fetch';
@@ -8,6 +9,7 @@ import { marked } from 'marked';
 import moment from 'moment';
 import nodemailer from 'nodemailer';
 import mjml from 'mjml';
+import { documents } from './documents.js';
 // import { broadcastLog } from './server.js';
 
 dotenv.config();
@@ -377,6 +379,63 @@ export function ensureDirectoryExists(dir) {
 	}
 }
 
+const generateAndAttachReportFile = async (req, res, document) => {
+	console.log('Generating report file for attachment...', document.name);
+	try {
+	  let data;
+	  const { recordId } = req.query;
+  
+	  // Fetch the records from Airtable
+	  if (document.multipleRecords) {
+		console.log(`Fetching multiple records from table: ${document.table}, view: ${document.view}, formula: ${document.formula}, sortField: ${document.sortField}, sortOrder: ${document.sortOrder}`);
+		data = await getAirtableRecords(document.table, document.view, document.formula, document.sortField, document.sortOrder);
+	  } else {
+		if (document.queriedField && !recordId) {
+		  console.error('Paramètre recordId manquant.');
+		  return res.status(400).json({ success: false, error: 'Paramètre recordId manquant.' });
+		}
+		console.log(`Fetching single record from table: ${document.table}, recordId: ${recordId}`);
+		data = await getAirtableRecord(document.table, recordId);
+	  }
+  
+	  // Data preprocessing if needed
+	  if (data) {
+		console.log('Data successfully retrieved:', `${document.multipleRecords ? data.records.length : data.length } records`);
+	  } else {
+		console.error('Failed to retrieve data.');
+	  }
+  
+	  if (document.dataPreprocessing) {
+		console.log('Preprocessing data...');
+		if (document.name === "facture_grp") {
+		  data = await document.dataPreprocessing(data, recordId);
+		} else {
+		  data = await document.dataPreprocessing(data);
+		}
+	  }
+  
+	  // Generate the report buffer using template
+	  console.log(`Generating report using template: ${document.template}`);
+	  const reportBuffer = await generateAndDownloadReport(
+		`${GITHUBTEMPLATES}${document.template}`,
+		data,
+		document.titleForming(data)
+	  );
+  
+	  // Set response headers for file download
+	  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+	  res.setHeader('Content-Disposition', `attachment; filename=${document.titleForming(data)}.docx`);
+	  
+	  // Send the generated buffer as the attachment
+	  res.send(reportBuffer); // Send the buffer as response
+  
+	} catch (error) {
+	  console.error('Error generating report file:', error);
+	  res.status(500).json({ success: false, error: error.message });
+	}
+  };
+  
+
 // Function to create a new record in "Recueil des besoins" and link it to an Inscription record by ID
 export const createRecueil = async (inscriptionId) => {
     // First, check if the Inscription record exists
@@ -413,7 +472,7 @@ export const createRecueil = async (inscriptionId) => {
 };
 
 // Helper function to send the HTML email
-export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString) => {
+export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString, sessId) => {
 	const transporter = nodemailer.createTransport({
 		host: 'smtp-declic-php5.alwaysdata.net',
 		port: 465,
@@ -423,6 +482,31 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 			pass: process.env.FSH_PASSWORD
 		}
 	});
+
+	const docDefinition = documents.find(doc => doc.name === 'programme');
+	let attachmentBuffer = null;
+	const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
+
+	try {
+		const data = await getAirtableRecord(docDefinition.table, sessionId);
+		if(data) {
+			const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
+
+			// const processedData = processFieldsForDocx(data, airtableMarkdownFields);
+			attachmentBuffer = await generateReport(template, data);
+		}
+	} catch(error) {
+		console.error('Failed to generate report for attachment', error);
+	}
+
+	const attachments = attachmentBuffer ? [
+		{
+			filename: `Programme_${sessionId}.docx`,
+			content: attachmentBuffer,
+			contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+		}
+	] : [];
+	
 
 	// MJML template for the email body
 	const mjmlContent = `
@@ -490,11 +574,13 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 	// Define the email options
 	const mailOptions = {
 		from: '"Formations FSH" <formation@sante-habitat.org>',
-		to: email,
+		to: "isadoravuongvan@gmail.com",
+		// to: email,
 		bcc: 'formation@sante-habitat.org',
 		replyTo: 'formation@sante-habitat.org',
 		subject: `Convocation à la formation ${titre_fromprog}`,
 		html: html,  // MJML rendered to HTML
+		attachments,
 		alternatives: [
 			{
 			  contentType: 'text/plain',
@@ -582,8 +668,12 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 		};
 
 	// Send the email
-	await transporter.sendMail(mailOptions);
-	console.log(`Email sent to ${email}`);
+	try {
+		await transporter.sendMail(mailOptions);
+		console.log(`Email sent to ${email}`);
+	  } catch (error) {
+		console.error('Error sending email:', error);
+	  }
 };
 
 // Function to send email to all eligible records for a specific session
@@ -668,10 +758,11 @@ export const sendConfirmation = async (inscriptionId) => {
 			dates,
 			str_lieu,
 			fillout_recueil: fillout_recueil || recueilLink,
-			completionDateString
+			completionDateString,
+			sessId
 		});
 		
-		// await sendConvocation(prenom, nom, mail, titre_fromprog, dates, str_lieu, fillout_recueil || recueilLink, completionDateString);
+		// await sendConvocation(prenom, nom, mail, titre_fromprog, dates, str_lieu, fillout_recueil || recueilLink, completionDateString, sessId);
 
 		// Update the record with the current datetime
 		const currentDateTime = new Date().toISOString();

@@ -1,7 +1,7 @@
 import { createReport } from 'docx-templates';
 import fs from 'fs';
 import path from 'path';
-import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord, sendConvocation } from './utils.js';
+import { getAirtableRecord, processFieldsForDocx, getFrenchFormattedDate, airtableMarkdownFields, getAirtableRecords, fetchTemplate, updateAirtableRecord, sendConvocation, createRecueil } from './utils.js';
 import archiver from 'archiver';
 import { GITHUBTEMPLATES } from './constants.js';
 import { documents } from './documents.js';
@@ -525,11 +525,13 @@ const testData = {
   "inscriptionId": "reci9WM7SUYozceAf"
 };
 
-const { prenom, nom, mail: email, titre_fromprog, dates, lieux: str_lieu, fillout_recueil, du } = testData;
+const { prenom, nom, mail: email, titre_fromprog, dates, lieux: str_lieu, fillout_recueil, du, sessId } = testData;
 const completionDate = new Date(du);
 completionDate.setDate(completionDate.getDate() - 15);
 const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-sendConvocation(prenom, nom, "isadoravuongvan@gmail.com", titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString)
+sendConvocation(prenom, nom, "isadoravuongvan@gmail.com", titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString, sessId)
   .then(() => console.log('Convocation sent successfully'))
   .catch(error => console.error('Error sending convocation:', error));
+
+// await createRecueil("recxl0kDLsP8EP5It").catch(console.error);
