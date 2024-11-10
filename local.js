@@ -530,6 +530,6 @@ const completionDate = new Date(du);
 completionDate.setDate(completionDate.getDate() - 15);
 const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-sendConvocation(prenom, nom, "isadora.vuongvan@sante-habitat.org", titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString)
+sendConvocation(prenom, nom, "isadoravuongvan@gmail.com", titre_fromprog, dates, str_lieu, fillout_recueil, completionDateString)
   .then(() => console.log('Convocation sent successfully'))
   .catch(error => console.error('Error sending convocation:', error));

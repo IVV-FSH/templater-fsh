@@ -7,6 +7,7 @@ import axios from 'axios';
 import { marked } from 'marked';
 import moment from 'moment';
 import nodemailer from 'nodemailer';
+import mjml from 'mjml';
 // import { broadcastLog } from './server.js';
 
 dotenv.config();
@@ -423,69 +424,164 @@ export const sendConvocation = async (prenom, nom, email, titre_fromprog, dates,
 		}
 	});
 
+	// MJML template for the email body
+	const mjmlContent = `
+	<mjml>
+		<mj-head>
+			<mj-preview>Vous êtes inscrit(e) ! Veuillez compléter votre fiche de recueil des besoins.</mj-preview>
+			<mj-title>Confirmation d'inscription à la formation et recueil des besoins</mj-title>
+			    <mj-attributes>
+					<mj-class name="orange" color="#f4913a" />
+					<mj-all font-family="Open Sans, sans-serif" color="#000" />
+				</mj-attributes>
+		</mj-head>
+		<mj-body>
+			<mj-text>
+				<p>Bonjour ${prenom} ${nom},</p>
+				<p>Nous avons le plaisir de confirmer votre inscription à la formation <strong>${titre_fromprog}</strong> qui se déroulera <strong>${dates}, ${str_lieu}</strong>.</p>
+				<p>Je vous prie de bien vouloir <strong>compléter la fiche de recueil des besoins avant le ${completionDateString}</strong> en cliquant sur le bouton ci-après :</p>
+			</mj-text>
+
+			<!-- Centered Button in Section and Column -->
+			<mj-section padding="0">
+				<mj-column width="100%">
+					<mj-button font-family="Open Sans" background-color="#f4913a" color="white" font-size="16px" border-radius="14px" href="${fillout_recueil}">
+						<a href="${fillout_recueil}" style="text-decoration:none;color:white;font-weight:bold;">Complétez votre fiche maintenant</a>
+					</mj-button>
+				</mj-column>
+			</mj-section>
+
+			<mj-text>
+				<p>Vous trouverez ci-joint le programme de la formation.</p>
+				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
+				<p>Dans cette attente et restant à votre disposition pour tout renseignement complémentaire,</p>
+			</mj-text>
+				
+			
+
+			<!-- Signature -->
+			
+				
+					<mj-text font-family="Open Sans, sans-serif">
+						<p style="margin: 0; padding: 0;">Isadora Vuong Van</p>
+						<p style="margin: 0; padding: 0;">Pôle Formations</p>
+						<p style="margin: 0; padding: 0; font-weight:bold;">Fédération Santé Habitat</p>
+						<p style="margin: 0; padding: 0;">6 rue du Chemin Vert - Paris 11ème</p>
+						<p style="margin: 0; padding: 0;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
+						<p style="margin: 0; padding: 0;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
+					</mj-text>
+				
+			
+
+			<!-- Image below signature -->
+			
+				
+					<mj-image src="https://www.sante-habitat.org/images/2019/LOL.png" alt="FSH Logo" width="3.02cm" height="1.15cm" />
+				
+			
+		</mj-body>
+	</mjml>
+
+    `;
+
+	// Convert MJML to HTML
+	const { html } = mjml(mjmlContent);
+
+	// Define the email options
 	const mailOptions = {
-		from: '"Formation" <formation@sante-habitat.org>',
-		// to: email,
+		from: '"Formations FSH" <formation@sante-habitat.org>',
+		to: email,
 		bcc: 'formation@sante-habitat.org',
 		replyTo: 'formation@sante-habitat.org',
 		subject: `Convocation à la formation ${titre_fromprog}`,
-		html: `
-        <div style="font-family: 'Open Sans', sans-serif; font-size: 11px; color: #000;">
-            <p>Bonjour ${prenom} ${nom},</p>
-            <p>Nous avons le plaisir de confirmer votre inscription à la formation <strong>${titre_fromprog}</strong> qui se déroulera <strong>${dates}, ${str_lieu}</strong>.</p>
-            <p>Je vous prie de bien vouloir compléter la fiche de recueil des besoins avant le <strong>${completionDateString}</strong> en cliquant sur le bouton ci-après :</p>
-            <p style="text-align: center;">
-                <a href="${fillout_recueil}" style="background-color: rgb(245, 161, 87); color: white; padding: 10px 20px !important; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block !important;">Vos besoins pour la formation</a>
-            </p>
-            <p>Vous trouverez ci-joint le programme de la formation.</p>
-            <p>Pour information : <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
-            <p>Dans cette attente et restant à votre disposition pour tout renseignement complémentaire,</p>
-            
-            <!-- Signature -->
-            <div style="margin-top: 20px;">
-                <p style="margin: 0; padding: 0;font-size: 11px; font-weight: bold;">Isadora Vuong Van</p>
-                <p style="margin: 0; padding: 0;font-size: 11px; font-weight: bold;">Pôle Formations</p>
-                <p style="margin: 0; padding: 0;font-size: 10px;">Fédération Santé Habitat</p>
-                <p style="margin: 0; padding: 0;font-size: 10px;">6 rue du Chemin Vert - Paris 11ème</p>
-                <p style="margin: 0; padding: 0;font-size: 10px;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
-                <p style="margin: 0; padding: 0;font-size: 10px;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
-            </div>
-            
-            <!-- Image below signature -->
-            <div style="margin-top: 15px;">
-                <img src="https://www.sante-habitat.org/images/2019/LOL.png" alt="FSH Logo" style="width: 3.02cm; height: 1.15cm;" />
-            </div>
-        </div>
-    `,
-	alternatives: [
-        {
-            contentType: 'text/plain',
-            content: `
-Bonjour ${prenom} ${nom},
+		html: html,  // MJML rendered to HTML
+		alternatives: [
+			{
+			  contentType: 'text/plain',
+			  content: `
+		Bonjour ${prenom} ${nom},
+		
+		Nous avons le plaisir de confirmer votre inscription à la formation ${titre_fromprog} qui se déroulera le ${dates}, ${str_lieu}.
+		
+		Je vous prie de bien vouloir compléter la fiche de recueil des besoins avant le ${completionDateString} en cliquant sur le lien suivant :
+		${fillout_recueil}
+		
+		Vous trouverez ci-joint le programme de la formation.
+		
+		Pour information, vous trouverez ici le Livret d’accueil du stagiaire : https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf
+		
+		Dans cette attente, et restant à votre disposition pour tout renseignement complémentaire.
+		
+		Bien cordialement,
+		Isadora Vuong Van
+		Pôle Formations
+		Fédération Santé Habitat
+		6 rue du Chemin Vert - Paris 11ème
+		Tél. 01 48 05 55 54 / 06 33 82 17 52
+		www.sante-habitat.org
+			  `
+			},
+			{
+				contentType: 'text/html',
+				content: `
+				  <html>
+					<body>
+					  <p>Bonjour ${prenom} ${nom},</p>
+					  <p>Nous avons le plaisir de confirmer votre inscription à la formation <strong>${titre_fromprog}</strong> qui se déroulera le <strong>${dates}, ${str_lieu}</strong>.</p>
+					  <p><strong>Merci de compléter la fiche de recueil des besoins avant le <u>${completionDateString}</u> en cliquant sur ce bouton :</strong></p>
+						<div style="text-align: center;">
+						<a href="${fillout_recueil}" style="color: white; background-color: #f4913a; font-weight: bold; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Remplir la fiche des besoins</a>
+						</div>
+						<p>Vous trouverez ci-joint le programme de la formation.</p>
+					  <p>Pour plus d'informations, vous pouvez consulter le <a href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a>.</p>
+					  <p>Bien cordialement,</p>
+					  <p>Isadora Vuong Van<br/>
+						 Pôle Formations<br/>
+						 <strong>Fédération Santé Habitat</strong><br/>
+						 6 rue du Chemin Vert - Paris 11ème<br/>
+						 Tél. 01 48 05 55 54 / 06 33 82 17 52<br/>
+						 <a href="http://www.sante-habitat.org">www.sante-habitat.org</a></p>
+					</body>
+				  </html>
+				`
+			  },
+			// {
+			//   contentType: 'application/json',
+			//   content: JSON.stringify({
+			// 	subject: `Convocation à la formation ${titre_fromprog}`,
+			// 	body: {
+			// 	  text: `Bonjour ${prenom} ${nom},\n\nVotre inscription à la formation ${titre_fromprog} est confirmée pour le ${dates}, à ${str_lieu}.`,
+			// 	  links: [
+			// 		{
+			// 		  label: 'Complétez votre fiche maintenant',
+			// 		  url: fillout_recueil
+			// 		},
+			// 		{
+			// 		  label: 'Livret d’accueil du stagiaire',
+			// 		  url: 'https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf'
+			// 		}
+			// 	  ]
+			// 	}
+			//   })
+			// },
+			{
+			  contentType: 'application/xml',
+			  content: `
+				<email>
+				  <subject>Convocation à la formation ${titre_fromprog}</subject>
+				  <body>
+					<text>Bonjour ${prenom} ${nom},</text>
+					<text>Nous avons le plaisir de confirmer votre inscription à la formation ${titre_fromprog} qui se déroulera le ${dates}, à ${str_lieu}.</text>
+					<text>Veuillez remplir la fiche de recueil des besoins avant le ${completionDateString} en cliquant sur ce <url>${fillout_recueil}</url>.</text>
+					<text>Consultez le programme et le Livret d’accueil du stagiaire : <url>https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf</url></text>
+				  </body>
+				</email>
+			  `
+			}
+		  ]	
+		};
 
-Nous avons le plaisir de confirmer votre inscription à la formation ${titre_fromprog} qui se déroulera le ${dates}, ${str_lieu}.
-
-Je vous prie de bien vouloir compléter la fiche de recueil des besoins avant le ${completionDateString} en cliquant sur le lien suivant :
-${fillout_recueil}
-
-Vous trouverez ci-joint le programme de la formation.
-
-Pour information : Livret d’accueil du stagiaire : https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf
-
-Dans cette attente, et restant à votre disposition pour tout renseignement complémentaire.
-
-Cordialement,
-Isadora Vuong Van
-Pôle Formations
-Fédération Santé Habitat
-6 rue du Chemin Vert - Paris 11ème
-Tél. 01 48 05 55 54 / 06 33 82 17 52
-www.sante-habitat.org
-            `
-        }
-    ]
-	};
-
+	// Send the email
 	await transporter.sendMail(mailOptions);
 	console.log(`Email sent to ${email}`);
 };
