@@ -9,6 +9,8 @@ import { marked } from 'marked';
 import moment from 'moment';
 import nodemailer from 'nodemailer';
 import mjml from 'mjml';
+import puppeteer from 'puppeteer';
+import { calculTotalPrixInscription } from './documents.js';
 import mjml2html from 'mjml';
 import { documents } from './documents.js';
 // import { broadcastLog } from './server.js';
@@ -504,7 +506,7 @@ export const serveConvocationPage = async (res,
 				const params = {date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date(record.debut)),
 				horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.fin))}`,
 				lieu: record.adresse}
-				return `<tr style="border-bottom: 1px solid lightgray;">
+				return `<tr style="border-bottom: 0.4px solid lightgray;">
 						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.date}</td>
 						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.horaires}</td>
 						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.lieu}</td>
@@ -512,7 +514,7 @@ export const serveConvocationPage = async (res,
 			});
 			halfdaysHtml = `<table>
     <thead>
-        <tr style="border-bottom: 1px solid lightgray;">
+        <tr style="border-bottom: 0.4px solid lightgray;">
             <th style="padding: 4px 16px;font-size:11px">Date</th>
             <th style="padding: 4px 16px;font-size:11px">Horaires</th>
             <th style="padding: 4px 16px;font-size:11px">Lieu</th>
@@ -591,7 +593,7 @@ export const serveConvocationPage = async (res,
   <p style="margin: 0; padding: 0;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
   <p style="margin: 0; padding: 0;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
 
-  <hr style="border: 1px solid lightgrey; margin: 20px 0;">
+  <hr style="border: 0.4px solid lightgrey; margin: 20px 0;">
 
   <h1 class="orange">${titre_fromprog}</h1>
 
@@ -622,24 +624,22 @@ export const serveConvocationPage = async (res,
 };
 // Helper function to send the HTML email
 export const sendConvocation = async (
-	prenom, 
-	nom, 
-	email, 
-	prerequis_fromprog,
-	public_fromprog,
-	titre_fromprog, 
-	introcontexte_fromprog,
-	contenu_fromprog,
-	objectifs_fromprog,
-	methodespedago_fromprog,
-	modaliteseval_fromprog,
-	Formateurice,
-	dates, 
+	inscriptionData,
 	str_lieu, 
 	fillout_recueil, 
 	completionDateString, 
-	sessId
 ) => {
+	const {
+		prenom, 
+		nom, 
+		mail:email, 
+		prerequis_fromprog, public_fromprog, titre_fromprog, introcontexte_fromprog, contenu_fromprog, 
+		objectifs_fromprog, methodespedago_fromprog, modaliteseval_fromprog,
+		Formateurice,
+		dates, 
+		sessId,
+		inscriptionId
+	} = inscriptionData;
 	const transporter = nodemailer.createTransport({
 		host: 'smtp-declic-php5.alwaysdata.net',
 		port: 465,
@@ -687,33 +687,34 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 		console.error('Failed to get half days', error);
 	}
 
-	// attach a file
-	// const docDefinition = documents.find(doc => doc.name === 'programme');
-	// let attachmentBuffer = null;
-	// const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
-	// let filename;
-	// try {
-	// 	const data = await getAirtableRecord(docDefinition.table, sessionId);
-	// 	if(data) {
-	// 		const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
+	const enIntra = inscriptionData.lieux.includes('intra');
 
-	// 		// const processedData = processFieldsForDocx(data, airtableMarkdownFields);
-	// 		filename = docDefinition.titleForming(data);
-	// 		attachmentBuffer = await generateReport(template, data);
-	// 	}
-	// } catch(error) {
-	// 	console.error('Failed to generate report for attachment', error);
-	// }
-	// let attachments = [];
-	// if(attachmentBuffer) {
-	// 	attachments = [
-	// 		{
-	// 			filename: filename+ ".docx" || 'programme.docx',
-	// 			content: attachmentBuffer,
-	// 			contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-	// 		}
-	// 	];
-	// }
+	// attach a file
+	const docDefinition = documents.find(doc => doc.name === 'facture');
+	let attachmentBuffer = null;
+	const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
+	let filename;
+	let attachments = [];
+	if(!enIntra) {
+		try {
+			// const factureData = await getAirtableRecord(docDefinition.table, inscriptionId);
+				// const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
+				filename = docDefinition.titleForming(inscriptionData)+ ".pdf";
+				// attachmentBuffer = await generateReport(template, data);
+				attachmentBuffer = await createFacturePdf(inscriptionData);
+		} catch(error) {
+			console.error('Failed to generate report for attachment', error);
+		}
+		if(attachmentBuffer) {
+			attachments = [
+				{
+					filename: filename || 'facture.pdf',
+					content: attachmentBuffer,
+					contentType: 'application/pdf'
+				}
+			];
+		}
+	}
 	
 
 	// MJML template for the email body
@@ -747,7 +748,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 			</mj-section>
 
 			<mj-text>
-				<p>Vous trouverez sous ce courriel le programme de la formation.</p>
+				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.</p>
 				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
 				<p>En attendant de recevoir votre fiche complétée, je me tiens à votre disposition pour toute précision.</p>
 			</mj-text>
@@ -799,7 +800,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 		replyTo: 'formation@sante-habitat.org',
 		subject: `Convocation à la formation ${titre_fromprog}`,
 		html: html,  // MJML rendered to HTML
-		// attachments,
+		attachments,
 		alternatives: [
 			{
 			  contentType: 'text/plain',
@@ -989,14 +990,6 @@ export const sendConfirmationToAllSession = async (sessId) => {
 			prenom, nom, mail:email, 
 			titre_fromprog, 
 			fillout_recueil, du,
-			prerequis_fromprog,
-			public_fromprog,
-			introcontexte_fromprog,
-			contenu_fromprog,
-			objectifs_fromprog,
-			methodespedago_fromprog,
-			modaliteseval_fromprog,
-			Formateurice,
 			dates, 
 			sessId
 		
@@ -1031,19 +1024,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 		try {
 			// Send the convocation email
 			console.log(`Will send email with this data:`, {
-				prenom, 
-				nom, 
-				email, 
-				prerequis_fromprog,
-				public_fromprog,
-				titre_fromprog, 
-				introcontexte_fromprog,
-				contenu_fromprog,
-				objectifs_fromprog,
-				methodespedago_fromprog,
-				modaliteseval_fromprog,
-				Formateurice,
-				dates, 
+				record,
 				str_lieu, 
 				fillout_recueil: fillout_recueil || recueilLink,
 				completionDateString, 
@@ -1051,23 +1032,10 @@ export const sendConfirmationToAllSession = async (sessId) => {
 			});
 			
 			await sendConvocation(
-				prenom,
-				nom,
-				"isadoravuongvan@gmail.com",
-				prerequis_fromprog,
-				public_fromprog,
-				titre_fromprog,
-				introcontexte_fromprog,
-				contenu_fromprog,
-				objectifs_fromprog,
-				methodespedago_fromprog,
-				modaliteseval_fromprog,
-				Formateurice,
-				dates,
+				record,
 				str_lieu,
-				fillout_recueil,
+				recueilLink,
 				completionDateString,
-				sessId
 			)
 				
 	
@@ -1100,16 +1068,7 @@ export const sendConfirmation = async (inscriptionId) => {
 		adresses_intra, nb_adresses, 
 		lieux, 
 		fillout_recueil, du,
-		prerequis_fromprog,
-		public_fromprog,
-		introcontexte_fromprog,
-		contenu_fromprog,
-		objectifs_fromprog,
-		methodespedago_fromprog,
-		modaliteseval_fromprog,
-		Formateurice,
 		dates, 
-		sessId
 	} = record;
 	if (envoi_convocation) {
 		console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
@@ -1165,44 +1124,25 @@ export const sendConfirmation = async (inscriptionId) => {
 	
 	try {
 		// Send the convocation email
-		console.log(`Will send email with this data:`, {
-			prenom, 
-			nom, 
-			email, 
-			prerequis_fromprog,
-			public_fromprog,
-			titre_fromprog, 
-			introcontexte_fromprog,
-			contenu_fromprog,
-			objectifs_fromprog,
-			methodespedago_fromprog,
-			modaliteseval_fromprog,
-			Formateurice,
-			dates, 
-			str_lieu, 
-			fillout_recueil: fillout_recueil || recueilLink,
-			completionDateString, 
-			sessId
-		});
+		// console.log(`Will send email with this data:`, {
+		// 	prenom, 
+		// 	nom, 
+		// 	email, 
+		// 	Formateurice,
+		// 	dates, 
+		// 	str_lieu, 
+		// 	fillout_recueil: fillout_recueil || recueilLink,
+		// 	completionDateString, 
+		// 	sessId
+		// });
+
+		console.log(`Will send email to:`, record.nom)
 		
 		await sendConvocation(
-			prenom,
-			nom,
-			"isadoravuongvan@gmail.com",
-			prerequis_fromprog,
-			public_fromprog,
-			titre_fromprog,
-			introcontexte_fromprog,
-			contenu_fromprog,
-			objectifs_fromprog,
-			methodespedago_fromprog,
-			modaliteseval_fromprog,
-			Formateurice,
-			dates,
+			record,
 			str_lieu,
-			fillout_recueil,
+			recueilLink,
 			completionDateString,
-			sessId
 		)
 
 		// Update the record with the current datetime
@@ -1214,3 +1154,300 @@ export const sendConfirmation = async (inscriptionId) => {
 		console.error(`Failed to send email to ${mail} or update Airtable record:`, error);
 	}
 };
+
+export async function createFacturePdf(factureData) {
+	var data = factureData;
+	if(data["date_facture"]) {
+		data["today"] = new Date(data["date_facture"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'});
+	}
+	data['acquit'] = data["paye"].includes("Payé")
+	? `Acquittée par ${data.moyen_paiement.toLowerCase()} le ${(new Date(data.date_paiement)).toLocaleDateString('fr-FR')}`
+	: "";
+	const possibleArrays = ["entite", "nom", "prenom", "cp", "ville", "rue", "etab_payeur", "ville_payeur", "cp_payeur", "rue_payeur", "entite_payeur"];
+	possibleArrays.forEach(field => {
+		if (Array.isArray(data[field])) {
+			data[field] = data[field][0]; // Extract the first element if it's an array
+		}
+	});
+
+	data.entite = data.entite_payeur || data.entite || "";
+	data.cp = data.cp_payeur || data.cp || "";
+	data.rue = data.rue_payeur || data.rue || "";
+	data.ville = data.ville_payeur || data.ville || "";
+	console.log("data", data)
+	data.factId = `${ymd(new Date(data["du"]))}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
+
+	data["Montant"] = calculTotalPrixInscription(data)
+	// logIfNotVercel("Montant calc", data["Montant"])
+	data['montant'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+		parseFloat(data["Montant"]),
+	);  
+
+	const template = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', 'Segoe UI', sans-serif;
+        }
+        p {
+            display: block;
+            margin-block-start: 0;
+            margin-block-end: 0;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+            unicode-bidi: isolate;
+        }
+        .header, .footer {
+            /* text-align: center; */
+        }
+        .bluetext {
+            color: #063c64;
+        }
+        .redtext {
+            color: #d51038;
+        }
+        .smtext {
+            font-size: small;
+        }
+        .textxxs {
+            font-size: xx-small;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        .details, .footer {
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        /* .table, .table th, .table td { */
+            /* border: 0.4px solid #333; */
+        /* } */
+        .table th, .table td {
+            padding: 8px;
+            text-align: left;
+        }
+        .totals {
+            margin-top: 10px;
+        }
+        .totals .right {
+            text-align: right;
+        }
+
+        .smallcaps {
+            font-variant: small-caps;
+            font-size: larger;
+            font-weight: 600;
+        }
+
+        .tablenoborder {
+            border: none !important;
+        }
+        .text-left {
+            text-align: left;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-right {
+            text-align: right !important;
+        }
+        .table-paiements {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: lightgray;
+            border-bottom: 0.4px solid black; 
+            border-top: 0.4px solid #333;
+        }
+        .altop {
+            vertical-align: top;
+        }
+
+        .totaldiv div {
+            float: right;
+            width: 158px;
+        }
+
+        .blnone {
+            border: 0.4px solid #063c64;
+            border-left: none;
+        }
+
+    </style>
+</head>
+<body>
+<div style="width: 100%; text-align: center; font-size: 12px; padding-top: 10px;">
+            <table style="width: 100%; border: 0;">
+              <tr>
+                <td style="width: 161px; text-align: left;">
+                    <img src="https://github.com/IVV-FSH/templater-fsh/blob/main/assets/Logo%20FSH%20-%20transparent.png?raw=true" style="width: 160px; height: auto;">
+                </td>
+                <td style="width: auto; text-align: left; font-size: large;"><p class="bold">FORMATIONS</p><p>Facture n°${data.factId}</p></td>
+                <td style="width: 56px; text-align: right;">Page 1/1</td>
+              </tr>
+            </table>
+          </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; width: 100%;">
+        <div>
+            FÉDÉRATION SANTÉ HABITAT</br>
+            6 rue du Chemin Vert</br>
+            75011 PARIS 11</br>
+            Tel : +33 1 48 05 55 54</br>
+            Port. : +33 6 33 82 17 52</br>
+            formation@sante-habitat.org</br>
+            N° SIRET : 43776264400049</br>
+            Code NAF : 8790B</br>
+        </div>
+        <div class="bluetext">
+            <div class="smallcaps bluetext">destinataire</div>
+            <p><span class="bold">${data.entite}</span><br>
+            ${data.rue}<br>
+            ${data.cp} ${data.ville}</p>
+            <p style="margin-top: 8px;"><span class="smallcaps">stagiaire</span> : <span class="bold">${data.prenom} ${data.nom}</span><br>
+            ${data.poste}<br>
+            ${data.mail}</p>
+        </div>
+    </div>
+    <table class="tablenoborder text-left table">
+        <tr>
+            <th>
+                <h1 class="bluetext">Facture n°${data.factId}</h1>
+                <p class="bluetext">du ${data.today}</p>
+            </th>
+            <th style="max-width:86px;" class="text-center">
+                ${data.paye.includes("Payé") ? `<p class="redtext smtext text-center">Facture acquittée le ${data.date_paiement} par ${data.moyen_paiement}</p>` : ""}
+            </th>
+        </tr>
+    </table>
+    
+
+    <table class="table tablenoborder" style="border: 0.4px solid #063c64; border-collapse: collapse;">
+        <tr style="background-color: #063c64; color:white;">
+            <th>Formation</th>
+            <th class="text-right altop" style="border: 0.4px solid #063c64;">Quantité</th>
+            <th class="text-right altop" style="width: 108px; border: 0.4px solid #063c64;">Montant TTC</th>
+        </tr>
+        <tr>
+            <td class="altop" style="border: 0.4px solid #063c64;">
+                <p class="bold">${data.titre_fromprog}</p>
+                <p>Dates : ${data.dates}</p>
+                <p>Lieu : ${data.lieux}</p>
+            </td>
+            <td class="altop text-right" style="width: 80px;border: 0.4px solid #063c64;">1,00</td>
+            <td class="altop text-right" style="width: 108px;border: 0.4px solid #063c64;">${data.montant}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td colspan="2" class="textxxs text-center">TVA non applicable (article 239B du CGI)</td>
+        </tr>
+        <tr class="text-right bold">
+            <td></td>
+            <td colspan="2" class="text-right bold" style="background-color: #063c64; color:white;">${!data.paye.includes("Payé") ? "<p>Net à payer</p>" : "<p>Réglé</p>"}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td class="text-left bold" style="background-color: #063c64; color:white;">Total TTC</td>
+            <td class="text-right bold" style="background-color: #063c64; color:white;">${data.montant}</td>
+        </tr>
+    </table>
+
+
+    ${!data.paye.includes("Payé") ? `
+		
+    <table class="table-paiements" style="margin-bottom: 8px; margin-top:8px;">
+        <thead>
+          <td style="width: 260px;">
+            <p class="bold">Règlement par virement</p>
+            <p>Indiquer la référence :</p> 
+            <p class="text-center">${data.factId}</p>
+          </td>
+          <td>
+              <p>CCM STRASBOURG KRUTENAU<br>
+              IBAN FR76 1027 8010 8800 0277 6084 557</p>
+          </td>    
+        </thead>  
+    </table>
+
+    <table class="table-paiements">
+        <thead>
+          <td style="width: 260px;">
+            <p class="bold">Règlement par chèque</p>
+            <p>Indiquer la référence :</p> 
+            <p class="text-center">${data.factId}</p>
+          </td>
+          <td>
+            <p>A l’ordre de la FÉDÉRATION SANTÉ HABITAT<br>
+                6 rue du Chemin Vert 75011 PARIS</p>
+          </td>
+        </thead>  
+    </table>    
+   
+
+    <p class="textxxs">En cas de retard de paiement, des indemnités de retard seront appliquées au taux de 10% du montant total dû par jour de retard, conformément à l'article L. 441-10 du Code de commerce.</p>
+    <p class="textxxs">Toute somme non réglée à l'échéance entraînera l'application d'intérêts de retard au taux de 10% par an, calculés à partir de la date d'échéance jusqu'au paiement complet.</p>
+    ` : ""}
+</body>
+</html>
+`;
+
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Set HTML content and wait until it is fully loaded
+    await page.setContent(template, { waitUntil: 'networkidle0' });
+
+    // Generate PDF with A4 size
+    const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        displayHeaderFooter: true,
+        // headerTemplate: `
+        // <div style="width: 100%; text-align: center; font-size: 12px; padding-top: 10px;">
+        //     <table style="width: 100%; border: 0;">
+        //       <tr>
+        //         <td style="width: 161px; text-align: left;">
+        //             <img src="https://github.com/IVV-FSH/templater-fsh/blob/main/assets/Logo%20FSH%20-%20transparent.png?raw=true" style="width: 160px; height: auto;">
+        //         </td>
+        //         <td style="width: auto; text-align: left; font-size: large;"><p class="bold">FORMATIONS</p><p>Facture n°${'${factId}'}</p></td>
+        //         <td style="width: 56px; text-align: right;">Page ${'${pageNumber}'} / ${'${totalPages}'}</td>
+        //       </tr>
+        //     </table>
+        //   </div>
+        // `,
+        footerTemplate: `
+        <div style="font-family: 'Segoe UI', sans-serif;font-size: 10px; text-align: center; width: 100%; ">
+            <p style="padding-bottom:0";margin-block-start: 0;
+            margin-block-end: 0;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;>FÉDÉRATION SANTÉ HABITAT │ 6 rue du Chemin Vert, 75011 Paris │ 01 48 05 55 54 │ www.sante-habitat.org</p>
+            <p style="padding-bottom:0";margin-block-start: 0;
+            margin-block-end: 0;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;>SIRET 437 762 644 000 49 │ Code APE/NAF 8790B │ Organisme de formation n°11 75 49764 75 - certifié Qualiopi</p>
+        </div>
+        `,
+        margin: {
+            top: '0',
+            bottom: '120px',
+            left: '20px',
+            right: '20px'
+        }
+    });
+
+    await browser.close();
+    return pdfBuffer;
+
+}
