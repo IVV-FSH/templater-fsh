@@ -687,7 +687,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 		console.error('Failed to get half days', error);
 	}
 
-	const enIntra = inscriptionData.lieux.includes('intra');
+	const enIntra = Array.isArray(inscriptionData.lieux) ? inscriptionData.lieux.join("").includes('intra'): inscriptionData.lieux.includes('intra');
 
 	// attach a file
 	const docDefinition = documents.find(doc => doc.name === 'facture');
@@ -1427,16 +1427,16 @@ export async function createFacturePdf(factureData) {
         //     </table>
         //   </div>
         // `,
-        footerTemplate: `
-        <div style="font-family: 'Segoe UI', sans-serif;font-size: 10px; text-align: center; width: 100%; ">
-            <p style="padding-bottom:0";margin-block-start: 0;
+		//<style>@font-face {font-family: 'Luciole';src: url('https://github.com/IVV-FSH/templater-fsh/raw/refs/heads/main/assets/Luciole-Regular.ttf') format('truetype');font-weight: 400;font-style: normal;}p {font-family: 'Luciole', sans-serif;}</style>
+        footerTemplate: `<div style="font-family: 'Luciole', 'Segoe UI', sans-serif;font-size: 10px; text-align: center; width: 100%; ">
+            <p style="padding-bottom:0;margin-block-start: 0;
             margin-block-end: 0;
             margin-inline-start: 0px;
-            margin-inline-end: 0px;>FÉDÉRATION SANTÉ HABITAT │ 6 rue du Chemin Vert, 75011 Paris │ 01 48 05 55 54 │ www.sante-habitat.org</p>
-            <p style="padding-bottom:0";margin-block-start: 0;
+            margin-inline-end: 0px;">FÉDÉRATION SANTÉ HABITAT │ 6 rue du Chemin Vert, 75011 Paris │ 01 48 05 55 54 │ www.sante-habitat.org</p>
+            <p style="padding-bottom:0;margin-block-start: 0;
             margin-block-end: 0;
             margin-inline-start: 0px;
-            margin-inline-end: 0px;>SIRET 437 762 644 000 49 │ Code APE/NAF 8790B │ Organisme de formation n°11 75 49764 75 - certifié Qualiopi</p>
+            margin-inline-end: 0px;">SIRET 437 762 644 000 49 │ Code APE/NAF 8790B │ Organisme de formation n°11 75 49764 75 - certifié Qualiopi</p>
         </div>
         `,
         margin: {
