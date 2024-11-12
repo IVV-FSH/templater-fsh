@@ -688,6 +688,10 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 	}
 
 	const enIntra = Array.isArray(inscriptionData.lieux) ? inscriptionData.lieux.join("").includes('intra'): inscriptionData.lieux.includes('intra');
+	const factdegroupe = inscriptionData.factGroupId && (
+		(Array.isArray(inscriptionData.factGroupId) && (inscriptionData.factGroupId.length > 1 || (inscriptionData.factGroupId.length === 1 && inscriptionData.factGroupId[0] !== ''))) ||
+		(typeof inscriptionData.factGroupId === 'string' && inscriptionData.factGroupId !== '')
+	  );
 
 	// attach a file
 	const docDefinition = documents.find(doc => doc.name === 'facture');
