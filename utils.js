@@ -699,7 +699,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 	const sessionId = Array.isArray(sessId) ? sessId[0] : sessId;
 	let filename;
 	let attachments = [];
-	if(!enIntra) {
+	if(!enIntra && !factdegroupe) {
 		try {
 			// const factureData = await getAirtableRecord(docDefinition.table, inscriptionId);
 				// const template = await fetchTemplate(`${GITHUBTEMPLATES}${docDefinition.template}`);
@@ -752,7 +752,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 			</mj-section>
 
 			<mj-text>
-				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.</p>
+				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && !factdegroupe && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.</p>
 				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
 				<p>En attendant de recevoir votre fiche complétée, je me tiens à votre disposition pour toute précision.</p>
 			</mj-text>
