@@ -574,6 +574,9 @@ export const serveConvocationPage = async (res,
     <p>Envoyer à : <a href="mailto:${email}">${email}</a></p>
     <a href="/updateDateConvoc?inscriptionId=${inscriptionId}">Mettre à jour la date de convocation</a>
   </div>
+  <div class="flex-container">
+    <p>Convocation à la formation: ${titre_fromprog}</p>
+  </div>
   
   <p>Bonjour ${prenom} ${nom},</p>
   <p>Nous avons le plaisir de confirmer votre inscription à la formation <em>${titre_fromprog}</em> qui se déroulera ${dates}, ${str_lieu}.</p>
