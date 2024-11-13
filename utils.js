@@ -987,10 +987,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 		  }
 		});
 		str_lieu = leslieux.join(" et ");
-			  
-		// console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
-		// res.status(400).json({ success: false, error: `Record ${inscriptionId} has multiple addresses and cannot determine location` });
-		// return;
+
 	  }
   
 
@@ -1029,6 +1026,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 	
 		let recueilLink = fillout_recueil;
 		if (!recueilLink) {
+			console.log(`Record ${inscriptionId} is missing recueil link. Creating one...`);
 			try {
 				const recueil = await createRecueil(inscriptionId);
 				if (recueil.fields && recueil.fields.fillout) {
@@ -1121,19 +1119,32 @@ export const sendConfirmation = async (inscriptionId) => {
 	
 	// Determine the location description based on the available data
 	let str_lieu = '';
-	if (nb_adresses === 1) {
-		if (lieux === "Visioconférence") {
-			str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
-		} else if (lieux.includes("Siège")) {
-			str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
-		} else if (lieux.includes("intra")) {
-			str_lieu = `à l'adresse : ${adresses_intra}`;
+	if (parseInt(nb_adresses) == 1) {
+		console.log(`Record ${inscriptionId} has one address`);
+		if (lieux.includes("isioconf") || lieux.join("").includes("isioconf")) {
+		  str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		} else if (lieux.includes("iège") || lieux.includes("iège")) {
+		  str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		} else if (lieux.includes("intra") || lieux.includes("intra")) {
+		  str_lieu = `à l'adresse : ${adresses_intra}`;
 		}
-	} else if (nb_adresses > 1) {
-		console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
-		res.send({ success: false, error: 'Record has multiple addresses and we cannot determine location' });
-		return;
-	}
+	  } else if (parseInt(nb_adresses) > 1) {
+		var leslieux = lieux.map((lieu, index) => {
+		  if (lieu.includes("isioconf")) {
+			return "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		  } else if (lieu.includes("iège")) {
+			return "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		  } else if (lieu.includes("intra")) {
+			return `à l'adresse : ${adresses_intra}`;
+		  }
+		});
+		str_lieu = leslieux.join(" et ");
+			  
+		// console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
+		// res.status(400).json({ success: false, error: `Record ${inscriptionId} has multiple addresses and cannot determine location` });
+		// return;
+	  }
+
 
 	// Calculate the completion date string
 	const completionDate = new Date(du);

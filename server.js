@@ -38,7 +38,7 @@ app.get('/duplicates', async (req, res) => {
 app.get('/confirm', async (req, res) => {
   const { inscriptionId } = req.query;
   try {
-    // await sendConfirmation(inscriptionId);
+    await sendConfirmation(inscriptionId);
     res.status(200).json({ success: true, message: 'Confirmation sent successfully.' });
   } catch (error) {
     console.error('Error sending confirmation:', error);
@@ -97,9 +97,6 @@ app.get('/convoc', async (req, res) => {
       });
       str_lieu = leslieux.join(" et ");
             
-      // console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
-      // res.status(400).json({ success: false, error: `Record ${inscriptionId} has multiple addresses and cannot determine location` });
-      // return;
     }
 
     const completionDate = new Date(du);
