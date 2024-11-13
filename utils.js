@@ -503,9 +503,11 @@ export const serveConvocationPage = async (res,
 			const halfdays = data.records
 			.sort((a, b) => new Date(a.debut) - new Date(b.debut))
 			.map(record => {
-				const params = {date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full' }).format(new Date(record.debut)),
-				horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(record.fin))}`,
-				lieu: record.adresse}
+				const params = {
+					date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone: 'Europe/Paris' }).format(new Date(record.debut)),
+					horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.fin))}`,
+					lieu: record.adresse
+				};
 				return `<tr style="border-bottom: 0.4px solid lightgray;">
 						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.date}</td>
 						<td style="padding: 4px 16px;font-family:'Open Sans';font-size:11px">${params.horaires}</td>
