@@ -836,7 +836,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 
 		${titre_fromprog}
 
-		${Formateurice ? `Formateur : ${Formateurice}\n` : ''}
+		${Formateurice ? `Formateur : ${Formateurice.replace(/"/g,"")}\n` : ''}
 		${prerequis_fromprog ? `Prérequis : ${prerequis_fromprog}\n` : ''}
 		${public_fromprog ? `Public : ${public_fromprog}\n` : ''}
 		${introcontexte_fromprog ? `${introcontexte_fromprog}\n` : ''}

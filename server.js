@@ -85,7 +85,8 @@ app.get('/convoc', async (req, res) => {
       }
     } else if (nb_adresses > 1) {
       console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
-      return;
+      res.status(400).json({ success: false, error: `Record ${inscriptionId} has multiple addresses and cannot determine location` });
+      // return;
     }
 
     const completionDate = new Date(du);
