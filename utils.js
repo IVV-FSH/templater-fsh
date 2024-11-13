@@ -815,8 +815,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 		alternatives: [
 			{
 			  contentType: 'text/plain',
-			  content: `
-		Bonjour ${prenom} ${nom},
+			  content: `Bonjour ${prenom} ${nom},
 		
 		Nous avons le plaisir de confirmer votre inscription à la formation ${titre_fromprog} qui se déroulera le ${dates}, ${str_lieu}.
 		
