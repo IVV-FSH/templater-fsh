@@ -477,7 +477,7 @@ export const createRecueil = async (inscriptionId) => {
 export const serveConvocationPage = async (res, 
     prenom, 
     nom, 
-    email, 
+    mail, 
     prerequis_fromprog,
     public_fromprog,
     titre_fromprog, 
@@ -571,7 +571,7 @@ export const serveConvocationPage = async (res,
 <body>
 
   <div class="flex-container">
-    <p>Envoyer à : <a href="mailto:${email}">${email}</a></p>
+    <p>Envoyer à : <a href="mailto:${mail}">${mail}</a></p>
     <a href="/updateDateConvoc?inscriptionId=${inscriptionId}">Mettre à jour la date de convocation</a>
   </div>
   <div class="flex-container">
@@ -637,7 +637,7 @@ export const sendConvocation = async (
 	const {
 		prenom, 
 		nom, 
-		mail:email, 
+		mail, 
 		prerequis_fromprog, public_fromprog, titre_fromprog, introcontexte_fromprog, contenu_fromprog, 
 		objectifs_fromprog, methodespedago_fromprog, modaliteseval_fromprog,
 		Formateurice,
@@ -950,9 +950,9 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 	// Send the email
 	try {
 		await transporter.sendMail(mailOptions);
-		console.log(`Email sent to ${email}`);
+		console.log(`Email sent to ${mail}`);
 	  } catch (error) {
-		console.error('Error sending email:', error);
+		console.error('Error sending mail:', error);
 	  }
 };
 
@@ -1007,7 +1007,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 		// const { inscriptionId } = record;
 		// await sendConfirmation(inscriptionId);
 		const { envoi_convocation, 
-			prenom, nom, mail:email, 
+			prenom, nom, mail, 
 			titre_fromprog, 
 			fillout_recueil, du,
 			dates, 
@@ -1084,7 +1084,7 @@ export const sendConfirmation = async (inscriptionId) => {
 
 	// Check if envoi_convocation is empty and necessary fields are available
 	const { envoi_convocation, 
-		prenom, nom, mail:email, 
+		prenom, nom, mail, 
 		titre_fromprog, 
 		adresses_intra, nb_adresses, 
 		lieux, 
@@ -1095,7 +1095,7 @@ export const sendConfirmation = async (inscriptionId) => {
 		console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
 		return;
 	}
-	if (!(prenom && nom && email && titre_fromprog && dates && lieux && fillout_recueil && du)) {
+	if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
 		console.log(`Record ${inscriptionId} is missing necessary fields`);
 		return;
 	}

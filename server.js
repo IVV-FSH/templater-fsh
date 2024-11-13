@@ -57,7 +57,7 @@ app.get('/convoc', async (req, res) => {
   
     // Check if envoi_convocation is empty and necessary fields are available
     const { envoi_convocation, 
-      prenom, nom, mail:email, 
+      prenom, nom, mail, 
       titre_fromprog, 
       adresses_intra, nb_adresses, 
       lieux, 
@@ -108,7 +108,7 @@ app.get('/convoc', async (req, res) => {
       res,
       prenom, 
       nom, 
-      email, 
+      mail, 
       prerequis_fromprog,
       public_fromprog,
       titre_fromprog, 
