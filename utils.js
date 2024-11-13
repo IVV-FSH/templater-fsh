@@ -1095,7 +1095,7 @@ export const sendConfirmation = async (inscriptionId) => {
 		console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
 		return;
 	}
-	if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
+	if (!(prenom && nom && email && titre_fromprog && dates && lieux && fillout_recueil && du)) {
 		console.log(`Record ${inscriptionId} is missing necessary fields`);
 		return;
 	}
