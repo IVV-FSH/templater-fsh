@@ -759,7 +759,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 			</mj-section>
 
 			<mj-text>
-				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && !factdegroupe && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.${!enIntra && !factdegroupe && attachments.length > 0 && !inscriptionData.paye ? " Merci de la régler au plus vite, dans tous les cas avant la formation." : ""}</p>
+				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && !factdegroupe && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.${!enIntra && !factdegroupe && attachments.length > 0 && !inscriptionData.paye ? ' Merci de <span style="font-weight:700">procéder au règlement de celle-ci avant la formation</span>.' : ""}</p>
 				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
 				<p>En attendant de recevoir votre fiche complétée, je me tiens à votre disposition pour toute précision.</p>
 			</mj-text>
@@ -806,7 +806,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 	// Define the email options
 	const mailOptions = {
 		from: '"Formations FSH" <formation@sante-habitat.org>',
-		// to: email,
+		to: mail,
 		bcc: 'formation@sante-habitat.org',
 		replyTo: 'formation@sante-habitat.org',
 		subject: `Convocation à la formation ${titre_fromprog}`,
