@@ -76,7 +76,7 @@ app.get('/convoc', async (req, res) => {
   
     let str_lieu = '';
     if (nb_adresses === 1) {
-      if (lieux === "Visioconférence") {
+      if (lieux.includes("isioconf")) {
         str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
       } else if (lieux.includes("Siège")) {
         str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
