@@ -1213,7 +1213,7 @@ export async function createFacturePdf(factureData) {
 	if(!data.today) {
 		data.today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'});
 	}
-	console.log("data", data)
+	// console.log("data", data)
 	data.factId = `${ymd(new Date(data["du"]))}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
 
 	data["Montant"] = calculTotalPrixInscription(data)
@@ -1371,7 +1371,7 @@ export async function createFacturePdf(factureData) {
                 <p class="bluetext">du ${data.today}</p>
             </th>
             <th style="max-width:86px;" class="text-center">
-                ${data.paye.includes("Payé") ? `<p class="redtext smtext text-center">Facture acquittée le ${data.date_paiement} par ${data.moyen_paiement}</p>` : ""}
+                ${data.paye.includes("Payé") ? `<p class="redtext smtext text-center">${data.acquit}</p>` : ""}
             </th>
         </tr>
     </table>
