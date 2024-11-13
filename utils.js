@@ -759,7 +759,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 			</mj-section>
 
 			<mj-text>
-				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && !factdegroupe && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.</p>
+				<p>Vous trouverez sous ce courriel le programme de la formation${!enIntra && !factdegroupe && attachments.length > 0 ? `, ainsi que votre facture en pièce jointe` : ''}.${!enIntra && !factdegroupe && attachments.length > 0 && !inscriptionData.paye ? " Merci de la régler au plus vite, dans tous les cas avant la formation." : ""}</p>
 				<p>Pour information, vous trouverez ici le <a style="color: rgb(0, 113, 187)" href="https://www.sante-habitat.org/images/formations/FSH-Livret-accueil-stagiaire.pdf">Livret d’accueil du stagiaire</a></p>
 				<p>En attendant de recevoir votre fiche complétée, je me tiens à votre disposition pour toute précision.</p>
 			</mj-text>
