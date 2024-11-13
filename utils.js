@@ -602,7 +602,7 @@ export const serveConvocationPage = async (res,
 
   <h1 class="orange">${titre_fromprog}</h1>
 
-  ${Formateurice ? `<p><strong>Formateur</strong> : ${Formateurice}</p>` : ''}
+  ${Formateurice ? `<p><strong>Formateur</strong> : ${Array.isArray(Formateurice) ? Formateurice.join("").replace(/"/g,"") : Formateurice.replace(/"/g,"")}</p>` : ''}
   ${prerequis_fromprog ? `<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>` : ''}
   ${public_fromprog ? `<p><strong>Public</strong> : ${public_fromprog}</p>` : ''}
   ${introcontexte_fromprog ? `${introcontexte_fromprog}` : ''}
@@ -785,7 +785,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 				<h1>${titre_fromprog}</h1>
 			</mj-text>
 			<mj-text>
-				${Formateurice ? `<p><strong>Formateur</strong> : ${Formateurice}</p>` : ''}
+				${Formateurice ? `<p><strong>Formateur</strong> : ${Array.isArray(Formateurice) ? Formateurice.join("").replace(/"/g,"") : Formateurice.replace(/"/g,"")}\n` : ''}
 				${prerequis_fromprog ? `<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>` : ''}
 				${public_fromprog ? `<p><strong>Public</strong> : ${public_fromprog}</p>` : ''}
 				${introcontexte_fromprog ? `${introcontexte_fromprog}` : ''}
@@ -873,7 +873,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 						 <a href="http://www.sante-habitat.org">www.sante-habitat.org</a></p>
 
 				<h1>${titre_fromprog}</h1>
-				${Formateurice ? `<p><strong>Formateur</strong> : ${Formateurice}</p>` : ''}
+				${Formateurice ? `<p><strong>Formateur</strong> : ${Array.isArray(Formateurice) ? Formateurice.join("").replace(/"/g,"") : Formateurice.replace(/"/g,"")}</p>` : ''}
 				${prerequis_fromprog ? `<p><strong>Prérequis</strong> : ${prerequis_fromprog}</p>` : ''}
 				${public_fromprog ? `<p><strong>Public</strong> : ${public_fromprog}</p>` : ''}
 				${introcontexte_fromprog ? `${introcontexte_fromprog}` : ''}
