@@ -967,18 +967,32 @@ export const sendConfirmationToAllSession = async (sessId) => {
 
 	const rec1 = records[0];
 	let str_lieu = '';
-	if (rec1.nb_adresses === 1) {
-		if (rec1.lieux === "Visioconférence") {
-			str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
-		} else if (rec1.lieux.includes("Siège")) {
-			str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
-		} else if (rec1.lieux.includes("intra")) {
-			str_lieu = `à l'adresse : ${rec1.adresses_intra}`;
+	if (parseInt(nb_adresses) == 1) {
+		console.log(`Record ${inscriptionId} has one address`);
+		if (rec1.lieux.includes("isioconf") || rec1.lieux.join("").includes("isioconf")) {
+		  str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		} else if (rec1.lieux.includes("iège") || rec1.lieux.includes("iège")) {
+		  str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		} else if (rec1.lieux.includes("intra") || rec1.lieux.includes("intra")) {
+		  str_lieu = `à l'adresse : ${adresses_intra}`;
 		}
-	} else if (rec1.nb_adresses > 1) {
-		console.log(`Record ${rec1.inscriptionId} has multiple addresses and cannot determine location`);
-		return;
-	}
+	  } else if (parseInt(nb_adresses) > 1) {
+		var leslieux = rec1.lieux.map((lieu, index) => {
+		  if (lieu.includes("isioconf")) {
+			return "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		  } else if (lieu.includes("iège")) {
+			return "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		  } else if (lieu.includes("intra")) {
+			return `à l'adresse : ${adresses_intra}`;
+		  }
+		});
+		str_lieu = leslieux.join(" et ");
+			  
+		// console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
+		// res.status(400).json({ success: false, error: `Record ${inscriptionId} has multiple addresses and cannot determine location` });
+		// return;
+	  }
+  
 
 	// Calculate the completion date string
 	const completionDate = new Date(rec1.du);
