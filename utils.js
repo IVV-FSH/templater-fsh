@@ -1114,6 +1114,7 @@ export const sendConfirmation = async (inscriptionId) => {
 		}
 	} else if (nb_adresses > 1) {
 		console.log(`Record ${inscriptionId} has multiple addresses and cannot determine location`);
+		res.send({ success: false, error: 'Record has multiple addresses and we cannot determine location' });
 		return;
 	}
 
