@@ -1020,7 +1020,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 			console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
 			return;
 		}
-		if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
+		if (!(prenom && nom && mail && titre_fromprog && dates && fillout_recueil && du)) {
 			console.log(`Record ${inscriptionId} is missing necessary fields`);
 			return;
 		}
@@ -1210,6 +1210,9 @@ export async function createFacturePdf(factureData) {
 	data.cp = data.cp_payeur || data.cp || "";
 	data.rue = data.rue_payeur || data.rue || "";
 	data.ville = data.ville_payeur || data.ville || "";
+	if(!data.today) {
+		data.today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'});
+	}
 	console.log("data", data)
 	data.factId = `${ymd(new Date(data["du"]))}${data.sessCode ? data.sessCode.replace("[","").replace("]","") : ''}${data.entite ? data.entite.substring(0,2) : ''}${data["nom"] ? data["nom"].substring(0,2).toUpperCase() : ''}${data["prenom"] ? data["prenom"].substring(0,1) : ''}`;
 
