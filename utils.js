@@ -1220,6 +1220,10 @@ export async function createFacturePdf(factureData) {
 		parseFloat(data["Montant"]),
 	);  
 
+	let paiement = data.date_paiement ? `Paiement reçu le ${new Date(data.date_paiement).toLocaleDateString('fr-FR')}` : "";
+	if(data.moyen_paiement) {
+		paiement += ` par ${data.moyen_paiement}`;
+	}
 	const template = `
 <!DOCTYPE html>
 <html lang="en">
