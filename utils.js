@@ -960,7 +960,7 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 // Function to send email to all eligible records for a specific session
 export const sendConfirmationToAllSession = async (sessId) => {
 	// Fetch records from Airtable with conditions (only records without envoi_convocation)
-	const { records } = await getAirtableRecords('Inscriptions', null, `{sessId} = '${sessId}' AND {Statut} = 'Enregistrée' AND {envoi_convocation} = ""`);
+	const { records } = await getAirtableRecords('Sessions', null, `{sessId} = '${sessId}' AND {Statut} = 'Enregistrée' AND {envoi_convocation} = ""`);
 	if (records.length === 0) {
 		console.log('No records found');
 		return;
