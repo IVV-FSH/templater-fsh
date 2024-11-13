@@ -968,7 +968,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 
 	const rec1 = records[0];
 	let str_lieu = '';
-	if (parseInt(nb_adresses) == 1) {
+	if (parseInt(rec1.nb_adresses) == 1) {
 		console.log(`Record ${inscriptionId} has one address`);
 		if (rec1.lieux.includes("isioconf") || rec1.lieux.join("").includes("isioconf")) {
 		  str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
