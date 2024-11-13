@@ -726,6 +726,9 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 	}
 	
 
+	// 			<mj-preview>Vous êtes inscrit(e) ! Veuillez compléter votre fiche de recueil des besoins.</mj-preview>
+
+
 	// MJML template for the email body
 	const mjmlContent = `
 	<mjml>
@@ -734,7 +737,6 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 				<mj-class name="orange" color="#f5a157" />
 				<mj-all font-family="Open Sans, sans-serif" color="#000" />
 			</mj-attributes>
-			<mj-preview>Vous êtes inscrit(e) ! Veuillez compléter votre fiche de recueil des besoins.</mj-preview>
 			<mj-title>Confirmation d'inscription à la formation et recueil des besoins</mj-title>
 		</mj-head>
 		<mj-body>
