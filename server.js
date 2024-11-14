@@ -639,25 +639,25 @@ app.get('/catalogue', async (req, res) => {
     }
 
     // make a set of all titre_fromprog
-    var set = new Set();
-    data.records.forEach(record => {
-      set.add(record["titre_fromprog"]);
-    });
-    var recap = Array.from(set);
-    recap = recap.map((titre, index) => {
-      const records = data.records.filter(record => record["titre_fromprog"] === titre);
-      return {
-        titre_fromprog: titre,
-        dates_lieux: records.map(record => `${record["dates"]} ${record["lieuxdemij_cumul"] ? record["lieuxdemij_cumul"].join('').toLowerCase() : ''}`),
-        nb_dates: new Set(records.map(record => record["dates"])).size,
-        prixadh: records.map(record => record["prixadh"]),
-        prixnonadh: records.map(record => record["prixnonadh"]),
-        ouvertepersaccomp_fromprog: records.map(record => record["ouvertepersaccomp_fromprog"]),
-      }
-    });
+    // var set = new Set();
+    // data.records.forEach(record => {
+    //   set.add(record["titre_fromprog"]);
+    // });
+    // var recap = Array.from(set);
+    // recap = recap.map((titre, index) => {
+    //   const records = data.records.filter(record => record["titre_fromprog"] === titre);
+    //   return {
+    //     titre_fromprog: titre,
+    //     dates_lieux: records.map(record => `${record["dates"]} ${record["lieuxdemij_cumul"] ? record["lieuxdemij_cumul"].join('').toLowerCase() : ''}`),
+    //     nb_dates: new Set(records.map(record => record["dates"])).size,
+    //     prixadh: records.map(record => record["prixadh"]),
+    //     prixnonadh: records.map(record => record["prixnonadh"]),
+    //     ouvertepersaccomp_fromprog: records.map(record => record["ouvertepersaccomp_fromprog"]),
+    //   }
+    // });
 
-    console.log('Recap:', recap);
-    data.recap = recap;
+    // console.log('Recap:', recap);
+    // data.recap = recap;
     
     
     // Generate and send the report
