@@ -162,6 +162,15 @@ app.get('/confirmForSession', async (req, res) => {
   }
 });
 
+app.get('/besoins', async (req, res) => {
+  // TODO: display results for formateurice
+  const table = "Recueil des besoins";
+  const { sessId } = req.query;
+  const besoins = await getAirtableRecords(table, "Grid view", "rempli='🟢'");
+  // const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
+  console.log("besoins", besoins, besoins.records.length);
+});
+
 // dynamycally create routes for each document
 documents.forEach(doc => {
   app.get(`/make/${doc.name}`, async (req, res) => {
