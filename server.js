@@ -650,8 +650,8 @@ app.get('/catalogue', async (req, res) => {
         titre_fromprog: titre,
         dates_lieux: records.map(record => `${record["dates"]} ${record["lieuxdemij_cumul"] ? record["lieuxdemij_cumul"].join('').toLowerCase() : ''}`),
         nb_dates: new Set(records.map(record => record["dates"])).size,
-        prixttc_fromprog: records.map(record => record["prixttc_fromprog"]),
-        prixnonadherent_fromprog: records.map(record => record["prixnonadherent_fromprog"]),
+        prixadh: records.map(record => record["prixadh"]),
+        prixnonadh: records.map(record => record["prixnonadh"]),
         ouvertepersaccomp_fromprog: records.map(record => record["ouvertepersaccomp_fromprog"]),
       }
     });
