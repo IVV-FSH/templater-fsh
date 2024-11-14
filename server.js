@@ -13,6 +13,7 @@ import {createReport} from 'docx-templates';
 import { processImports } from './dups.js';
 import dotenv from 'dotenv';
 import { TabulatorFull as Tabulator } from 'tabulator-tables';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -21,7 +22,11 @@ const app = express();
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
-app.set('view engine', 'ejs');
+// Get the directory name using import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Set the views directory
 app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
