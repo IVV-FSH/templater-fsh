@@ -615,21 +615,21 @@ app.get('/catalogue', async (req, res) => {
 
   if(!annee) { annee = new Date().getFullYear() + 1; }
 
-  // const formula = `AND(OR({année}=${annee},{année}=""), OR(FIND(lieuxdemij_cumul,"iège"),FIND(lieuxdemij_cumul,"visio")))`; 
-  const formula = `
-  OR(
-    AND(
-        {année}="", 
-        FIND(lieuxdemij_cumul,"intra")
-    ),
-    AND(
-        {année}=2025, 
-        FIND(lieuxdemij_cumul,"intra")=0
-    )
-  )`
+  const formula = `OR(AND(OR({année}=${annee},{année}=""), OR(REGEX_MATCH(lieuxdemij_cumul&"","iège"),REGEX_MATCH(lieuxdemij_cumul&"","isio"))), AND({année}&""="",lieuxdemij_cumul&""=""))`; 
+  // const formula = `
+  // OR(
+  //   AND(
+  //       {année}="", 
+  //       FIND(lieuxdemij_cumul,"intra")
+  //   ),
+  //   AND(
+  //       {année}=${annee}, 
+  //       FIND(lieuxdemij_cumul,"intra")=0
+  //   )
+  // )`
 
   try {
-    const data = await getAirtableRecords(table, view, formula, "du", "asc");
+    var data = await getAirtableRecords(table, view, formula, "du", "asc");
     if (data) {
       console.log('Data successfully retrieved:', data.records.length, "records");
       // broadcastLog(`Data successfully retrieved: ${data.records.length} records`);
@@ -637,14 +637,34 @@ app.get('/catalogue', async (req, res) => {
       console.log('Failed to retrieve data.');
       // broadcastLog('Failed to retrieve data.');
     }
+
+    // make a set of all titre_fromprog
+    var set = new Set();
+    data.records.forEach(record => {
+      set.add(record["titre_fromprog"]);
+    });
+    var recap = Array.from(set);
+    recap = recap.map((titre, index) => {
+      const records = data.records.filter(record => record["titre_fromprog"] === titre);
+      return {
+        titre_fromprog: titre,
+        dates_lieux: records.map(record => `${record["dates"]} ${record["lieuxdemij_cumul"] ? record["lieuxdemij_cumul"].join('').toLowerCase() : ''}`),
+        prixttc_fromprog: records.map(record => record["prixttc_fromprog"]),
+        prixnonadherent_fromprog: records.map(record => record["prixnonadherent_fromprog"]),
+        ouvertepersaccomp_fromprog: records.map(record => record["ouvertepersaccomp_fromprog"]),
+      }
+    });
+
+    console.log('Recap:', recap);
+    
     
     // Generate and send the report
-    await generateAndDownloadReport(
-      GITHUBTEMPLATES + 'catalogue.docx', 
-      data, 
-      res,
-      'Catalogue des formations FSH ' + annee
-    );
+    // await generateAndDownloadReport(
+    //   GITHUBTEMPLATES + 'catalogue.docx', 
+    //   data, 
+    //   res,
+    //   'Catalogue des formations FSH ' + annee
+    // );
     // res.status(200).json({ success: true, message: `Catalogue généré pour l'année ${annee}` });
     // res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
