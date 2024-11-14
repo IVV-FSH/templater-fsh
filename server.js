@@ -12,6 +12,7 @@ import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, 
 import {createReport} from 'docx-templates';
 import { processImports } from './dups.js';
 import dotenv from 'dotenv';
+import { TabulatorFull as Tabulator } from 'tabulator-tables';
 
 dotenv.config();
 
@@ -20,6 +21,8 @@ const app = express();
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
+app.set('view engine', 'ejs');
+app.set('views', './views'); // This is the directory for your EJS files
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
@@ -165,10 +168,76 @@ app.get('/confirmForSession', async (req, res) => {
 app.get('/besoins', async (req, res) => {
   // TODO: display results for formateurice
   const table = "Recueil des besoins";
-  const { sessId } = req.query;
-  const besoins = await getAirtableRecords(table, "Grid view", "rempli='🟢'");
-  // const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
+  const { sessId, formateurId } = req.query;
+  // const besoins = await getAirtableRecords(table, "Grid view", "rempli='🟢'");
+  const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
   console.log("besoins", besoins, besoins.records.length);
+  // Create a new Tabulator instance
+  // Append the table to the response
+  const type = besoins.records[0].Type
+  const arrCg = [
+    {
+      intitule: 'Pour quelle(s)s raison(s) souhaitez-vous suivre cette formation ?',
+      fieldName: 'Pour quelle(s)s raison(s) souhaitez-vous suivre cette formation ?',
+      other: 'raisons_autres'
+    },
+    {
+      intitule: 'Quelles sont vos attentes prioritaires en participant à cette formation ?',
+      fieldName: 'Quelles sont vos attentes prioritaires en participant à cette formation ?',
+      other: 'attentes_autres'
+    },
+    {
+      intitule: 'Quels sont les 3 critères les plus importants pour vous en assistant à cette formation ?',
+      fieldName: 'Quels sont les 3 critères les plus importants pour vous en assistant à cette formation ?',
+      other: 'criteres_autres'
+    },
+    {
+      intitule: 'A l’issue de cette formation, avez-vous un projet à court moyen ou long terme ?',
+      fieldName: 'A l’issue de cette formation, avez-vous un projet à court moyen ou long terme ? ',
+      other: 'projet_plus'
+    }
+  ];
+  var questions = type == "CG" ? arrCg : type == "Formassad" ? [] : [];
+  questions = [...questions, {
+      intitule: 'Note personnelle à l’attention de l’intervenant',
+      fieldName: 'Note personnelle à l’attention de l’intervenant',
+  }]
+  const besoinsRemplis = besoins.records.filter(besoin => besoin.rempli === '🟢');
+
+  // for each of the questions, count the number of times each answer was given
+  var answers = {};
+  questions.forEach(question => {
+    question.reponses = {};
+    besoinsRemplis.forEach(besoin => {
+      const reponse = besoin[question.fieldName];
+      // if response is an array, count each element
+      if (Array.isArray(reponse)) {
+        reponse.forEach(r => {
+          if (question.reponses[r]) {
+            question.reponses[r]++;
+          } else {
+            question.reponses[r] = 1;
+          }
+        });
+      } else {
+        if (question.reponses[reponse]) {
+          question.reponses[reponse]++;
+        } else {
+          question.reponses[reponse] = 1;
+        }
+      }
+      answers[question.fieldName] = question.reponses;
+    });
+  });
+  // sort the answers by count for each question
+  answers = Object.fromEntries(Object.entries(answers).map(([key, value]) => [key, Object.fromEntries(Object.entries(value).sort((a, b) => b[1] - a[1]))]));
+  
+    res.render('formateur', { 
+    titre: besoins.records[0]["titre_fromprog (from Inscrits)"] + " " + besoins.records[0]["dates"],
+    questions,
+    besoins: {records:besoinsRemplis},
+    answers
+  });
 });
 
 // dynamycally create routes for each document

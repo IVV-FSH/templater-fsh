@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Besoins Data</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; }
+    .fiche-besoin { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; }
+    .filled { color: green; }
+    .not-filled { color: red; }
+    .question { font-weight: bold; }
+    .answer { color: black; }
+  </style>
+</head>
+<body>
+  <h1>Formation : <span><%=titre%></span></h1>
+  <!-- <h2>Participants</h2> -->
+
+  <h2>Recueil des besoins</h2>
+  <% besoins.records.forEach(record => { %>
+    <div class="fiche-besoin">
+      <h3>Participant: <%= record["FullName (from Participant.e) (from Inscrits)"] %></h3>
+      <% if (record["poste (from Inscrits)"]) { %>
+        <p><strong>Poste :</strong> <%= record["poste (from Inscrits)"] %></p>
+      <% } %>
+
+      <% questions.forEach(question => { %>
+        <% if (record[question.fieldName]) { %>
+          <div>
+            <p class="question"><%= question.intitule %></p>
+            <p class="answer"><%= record[question.fieldName] %></p>
+            
+            <% if (question.other && record[question.other]) { %>
+              <p><strong>+:</strong> <%= record[question.other].replace(/\n/g, ' ') %></p>
+            <% } %>
+          </div>
+        <% } %>
+      <% }) %>
+
+    </div>
+  <% }) %>
+
+  <div class="stats">
+    <h3>Récapitulatif des besoins</h3>
+    <% for (const question in answers) { %>
+      <div>
+        <p class="question"><strong><%= question %></strong></p>
+        <ul>
+          <% for (const answer in answers[question]) { %>
+            <li><%= answer %>: <%= answers[question][answer] %></li>
+          <% } %>
+        </ul>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
