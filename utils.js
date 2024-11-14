@@ -1039,7 +1039,7 @@ export const sendConfirmationToAllSession = async (sessId) => {
 		}
 		if (!(prenom && nom && mail && titre_fromprog && dates && recueilLink && du)) {
 			console.log(`Record ${inscriptionId} is missing necessary fields`);
-			return;
+			continue;
 		}
 	
 
