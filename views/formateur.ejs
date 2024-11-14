@@ -29,7 +29,7 @@
         <% if (record[question.fieldName]) { %>
           <div>
             <p class="question"><%= question.intitule %></p>
-            <p class="answer"><%= record[question.fieldName] %></p>
+            <p class="answer"><%= record[question.fieldName] %><% if (question.sur) { %>/<%=question.sur%><% } %></p>
             
             <% if (question.other && record[question.other]) { %>
               <p><strong>+:</strong> <%= record[question.other].replace(/\n/g, ' ') %></p>

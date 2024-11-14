@@ -171,7 +171,7 @@ app.get('/besoins', async (req, res) => {
   const { sessId, formateurId } = req.query;
   // const besoins = await getAirtableRecords(table, "Grid view", "rempli='🟢'");
   const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
-  console.log("besoins", besoins, besoins.records.length);
+  // console.log("besoins", besoins, besoins.records.length);
   // Create a new Tabulator instance
   // Append the table to the response
   const type = besoins.records[0].Type
@@ -197,12 +197,68 @@ app.get('/besoins', async (req, res) => {
       other: 'projet_plus'
     }
   ];
-  var questions = type == "CG" ? arrCg : type == "Formassad" ? [] : [];
+  const arrFsh = [
+    {
+      intitule: 'Quelles difficultés rencontrez-vous sur le terrain ?',
+      fieldName: 'Quelles difficultés rencontrez-vous sur le terrain ?',
+    },
+    {
+      intitule: 'Avez-vous un cas concret pour lequel vous souhaiteriez des éclaircissements ?',
+      fieldName: 'Avez-vous un cas concret pour lequel vous souhaiteriez des éclaircissements ?',
+    },
+    {
+      intitule: 'Qu’attendez-vous de cette formation ?',
+      fieldName: 'Qu’attendez-vous de cette formation ?',
+    },
+    {
+      intitule: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
+      fieldName: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
+    },
+    // 'Veuillez évaluer vos connaissances sur la thématique ': 5,
+      // 'Veuillez évaluer vos compétences sur la thématique': 5,
+    {
+      intitule: 'Veuillez évaluer vos connaissances sur la thématique ',
+      fieldName: 'Veuillez évaluer vos connaissances sur la thématique ',
+      sur: 10
+    },
+    {
+      intitule: 'Veuillez évaluer vos compétences sur la thématique',
+      fieldName: 'Veuillez évaluer vos compétences sur la thématique',
+      sur: 10
+    },
+
+  ];
+  const arrFormassad = [
+    {
+      intitule: 'Quel poste occupez-vous au sein de la structure, quelles sont vos missions principales ?',
+      fieldName: 'Quel poste occupez-vous au sein de la structure, quelles sont vos missions principales ?',
+    },
+    {
+      intitule: 'Avez-vous déjà suivi une formation sur ce thème ou un thème en rapport ? Si oui laquelle',
+      fieldName: 'Avez-vous déjà suivi une formation sur ce thème ou un thème en rapport ? Si oui laquelle',
+    },
+    {
+      intitule: 'Quelles difficultés rencontrez-vous sur le terrain ?',
+      fieldName: 'Quelles difficultés rencontrez-vous sur le terrain ?',
+    },
+    {
+      intitule: 'Qu’attendez-vous de cette formation ?',
+      fieldName: 'Qu’attendez-vous de cette formation ?',
+    },
+    {
+      intitule: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
+      fieldName: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
+    },
+
+  ];
+  var questions = type == "CG" ? arrCg : type.includes("Formassad") ? arrFormassad : arrFsh;
   questions = [...questions, {
       intitule: 'Note personnelle à l’attention de l’intervenant',
       fieldName: 'Note personnelle à l’attention de l’intervenant',
   }]
   const besoinsRemplis = besoins.records.filter(besoin => besoin.rempli === '🟢');
+
+  console.log("besoinsRemplis", besoinsRemplis, besoinsRemplis.length);
 
   // for each of the questions, count the number of times each answer was given
   var answers = {};
