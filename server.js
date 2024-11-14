@@ -656,15 +656,16 @@ app.get('/catalogue', async (req, res) => {
     });
 
     console.log('Recap:', recap);
+    data.recap = recap;
     
     
     // Generate and send the report
-    // await generateAndDownloadReport(
-    //   GITHUBTEMPLATES + 'catalogue.docx', 
-    //   data, 
-    //   res,
-    //   'Catalogue des formations FSH ' + annee
-    // );
+    await generateAndDownloadReport(
+      GITHUBTEMPLATES + 'catalogue.docx', 
+      data, 
+      res,
+      'Catalogue des formations FSH ' + annee
+    );
     // res.status(200).json({ success: true, message: `Catalogue généré pour l'année ${annee}` });
     // res.render('index', { title: 'Catalogue', heading: `Catalogue : à partir de ${table}/${view}` });
   } catch (error) {
