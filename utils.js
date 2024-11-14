@@ -1020,11 +1020,6 @@ export const sendConfirmationToAllSession = async (sessId) => {
 			console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
 			return;
 		}
-		if (!(prenom && nom && mail && titre_fromprog && dates && fillout_recueil && du)) {
-			console.log(`Record ${inscriptionId} is missing necessary fields`);
-			return;
-		}
-	
 		let recueilLink = fillout_recueil;
 		if (!recueilLink) {
 			console.log(`Record ${inscriptionId} is missing recueil link. Creating one...`);
@@ -1042,13 +1037,18 @@ export const sendConfirmationToAllSession = async (sessId) => {
 				return;
 			}
 		}
+		if (!(prenom && nom && mail && titre_fromprog && dates && recueilLink && du)) {
+			console.log(`Record ${inscriptionId} is missing necessary fields`);
+			return;
+		}
+	
 
 		try {
 			// Send the convocation email
 			console.log(`Will send email with this data:`, {
 				record,
 				str_lieu, 
-				fillout_recueil: fillout_recueil || recueilLink,
+				fillout_recueil: recueilLink,
 				completionDateString, 
 				sessId
 			});
