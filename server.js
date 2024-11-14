@@ -12,8 +12,6 @@ import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, 
 import {createReport} from 'docx-templates';
 import { processImports } from './dups.js';
 import dotenv from 'dotenv';
-import { TabulatorFull as Tabulator } from 'tabulator-tables';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -23,11 +21,6 @@ app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
 // Get the directory name using import.meta.url
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Set the views directory
-app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
@@ -292,13 +285,65 @@ app.get('/besoins', async (req, res) => {
   });
   // sort the answers by count for each question
   answers = Object.fromEntries(Object.entries(answers).map(([key, value]) => [key, Object.fromEntries(Object.entries(value).sort((a, b) => b[1] - a[1]))]));
+  const template = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Besoins Data</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; }
+    .fiche-besoin { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; }
+    .filled { color: green; }
+    .not-filled { color: red; }
+    .question { font-weight: bold; }
+    .answer { color: black; }
+  </style>
+</head>
+<body>
+  <h1>Formation : <span>${titre}</span></h1>
+  <h2>Recueil des besoins</h2>
+  ${besoins.records.map(record => `
+    <div class="fiche-besoin">
+      <h3>Participant: ${record["FullName (from Participant.e) (from Inscrits)"]}</h3>
+      ${record["poste (from Inscrits)"] ? `<p><strong>Poste :</strong> ${record["poste (from Inscrits)"]}</p>` : ''}
+      
+      ${questions.map(question => {
+        if (record[question.fieldName]) {
+          return `
+            <div>
+              <p class="question">${question.intitule}</p>
+              <p class="answer">${record[question.fieldName]}${question.sur ? '/' + question.sur : ''}</p>
+              ${question.other && record[question.other] ? `<p><strong>+:</strong> ${record[question.other].replace(/\n/g, ' ')}</p>` : ''}
+            </div>
+          `;
+        }
+        return '';
+      }).join('')}
+    </div>
+  `).join('')}
   
-    res.render('formateur', { 
-    titre: besoins.records[0]["titre_fromprog (from Inscrits)"] + " " + besoins.records[0]["dates"],
-    questions,
-    besoins: {records:besoinsRemplis},
-    answers
-  });
+  <div class="stats">
+    <h3>Récapitulatif des besoins</h3>
+    ${Object.keys(answers).map(question => `
+      <div>
+        <p class="question"><strong>${question}</strong></p>
+        <ul>
+          ${Object.keys(answers[question]).map(answer => `
+            <li>${answer}: ${answers[question][answer]}</li>
+          `).join('')}
+        </ul>
+      </div>
+    `).join('')}
+  </div>
+</body>
+</html>
+`;
+
+res.send(template);  // Directly send the rendered HTML
+
+
 });
 
 // dynamycally create routes for each document
