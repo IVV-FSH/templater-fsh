@@ -22,7 +22,7 @@ app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
 app.set('view engine', 'ejs');
-app.set('views', './views'); // This is the directory for your EJS files
+app.set('views', path.join(__dirname, 'views'));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
