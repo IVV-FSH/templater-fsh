@@ -1131,7 +1131,7 @@ export const sendConfirmation = async (inscriptionId) => {
 			}
 		} catch (error) {
 			console.error(`Failed to create recueil for inscriptionId ${inscriptionId}:`, error);
-			return;
+			throw new Error(`Failed to create recueil for inscriptionId ${inscriptionId}: ${error}`); // Stop the function
 		}
 	}
 	if (!(prenom && nom && mail && titre_fromprog && dates && recueilLink && du)) {
