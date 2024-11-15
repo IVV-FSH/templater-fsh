@@ -955,6 +955,27 @@ halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-tabl
 	  } catch (error) {
 		console.error('Error sending mail:', error);
 	  }
+
+	// If there is a facture in attachment, send it by email to fsh.compta@asso-ags.org
+	if (attachments.length > 0) {
+		const comptaMailOptions = {
+			from: '"Formations FSH" <formation@sante-habitat.org>',
+			to: 'fsh.compta@asso-ags.org',
+			subject: `Facture pour ${prenom} ${nom} - ${titre_fromprog}`,
+			html: `<p>Bonjour,</p>
+				   <p>Veuillez trouver ci-joint la facture pour ${prenom} ${nom} concernant la formation ${titre_fromprog}.</p>
+				   <p>Bien cordialement,</p>
+				   <p>Formations FSH</p>`,
+			attachments
+		};
+
+		try {
+			await transporter.sendMail(comptaMailOptions);
+			console.log(`Facture email sent to fsh.compta@asso-ags.org`);
+		} catch (error) {
+			console.error('Error sending facture email to compta:', error);
+		}
+	}
 };
 
 // Function to send email to all eligible records for a specific session
@@ -1096,13 +1117,9 @@ export const sendConfirmation = async (inscriptionId) => {
 		console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
 		return;
 	}
-	if (!(prenom && nom && mail && titre_fromprog && dates && lieux && fillout_recueil && du)) {
-		console.log(`Record ${inscriptionId} is missing necessary fields`);
-		return;
-	}
-
 	let recueilLink = fillout_recueil;
 	if (!recueilLink) {
+		console.log(`Record ${inscriptionId} is missing recueil link. Creating one...`);
 		try {
 			const recueil = await createRecueil(inscriptionId);
 			if (recueil.fields && recueil.fields.fillout) {
@@ -1117,7 +1134,9 @@ export const sendConfirmation = async (inscriptionId) => {
 			return;
 		}
 	}
-	
+	if (!(prenom && nom && mail && titre_fromprog && dates && recueilLink && du)) {
+		throw new Error(`Record ${inscriptionId} is missing necessary fields among: prenom, nom, mail, titre_fromprog, dates, recueilLink, du`);
+	}
 	// Determine the location description based on the available data
 	let str_lieu = '';
 	if (parseInt(nb_adresses) == 1) {
