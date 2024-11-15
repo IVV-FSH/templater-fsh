@@ -427,7 +427,7 @@ export const documents = [
             data.nom = data.nom_sgtr || data.nom_dmdr || data.nom || "";
             data.prenom = data.prenom_sgtr || data.prenom_dmdr || data.prenom || "";
             data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                parseFloat(data.prixintra_fromsess),
+                parseFloat(data.total),
             ).replace(/\s/g, '\u202F');;
             // const demij = await getAirtableRecords("Demi-journées", "Grid view", `sessId="${data.recordid}"`);
             const stagiaires = await getAirtableRecords("Inscriptions", "Grid view", `AND(sessId="${sessId}",{Statut}="Enregistrée")`);
