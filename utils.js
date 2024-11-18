@@ -1095,6 +1095,81 @@ export const sendConfirmationToAllSession = async (sessId) => {
 	}
 };
 
+export const relanceBesoins = async (sessId) => {
+	const inscriptionsVides = await getAirtableRecords('Inscriptions', null, `AND({sessId} = '${sessId}', {Statut} = 'Enregistrée', {rempli_besoins} = "❌")`);
+	if (inscriptionsVides.records.length === 0) {
+		console.log('No records found');
+		return;
+	}
+	for(const insc of inscriptionsVides.records) {
+		const {prenom, nom, mail, titre_fromprog, fillout_recueil} = insc;
+		const transporter = nodemailer.createTransport({
+			host: 'smtp-declic-php5.alwaysdata.net',
+			port: 465,
+			secure: true,
+			auth: {
+				user: 'formation@sante-habitat.org',
+				pass: process.env.FSH_PASSWORD
+			}
+		});
+		const mailOptions = {
+			from: '"Formations FSH" <formation@sante-habitat.org>',
+			// to: mail,
+			to: 'formation@sante-habitat.org',
+			bcc: 'formation@sante-habitat.org',
+			replyTo: 'formation@sante-habitat.org',
+			subject: `Merci de remplir votre fiche de besoins pour la formation ${titre_fromprog}`,
+			html: mjml(`
+				<mjml>
+					<mj-head>
+						<mj-attributes>
+							<mj-class name="orange" color="#f5a157" />
+							<mj-all font-family="Open Sans, sans-serif" color="#000" />
+						</mj-attributes>
+						<mj-title>Relance pour remplir la fiche de besoins</mj-title>
+					</mj-head>
+					<mj-body>
+						<mj-text>
+							<p>Bonjour ${prenom} ${nom},</p>
+							<p>La formation  <em>${titre_fromprog}</em> approche et nous n'avons pas encore reçu votre fiche de besoins.</p>
+							<p>Nous vous prions de bien vouloir compléter la compléter au plus vite en cliquant sur le bouton ci-après :</p>
+						</mj-text>
+						<!-- Centered Button in Section and Column -->
+						<mj-section padding="0">
+							<mj-column width="100%">
+								<mj-button font-family="Open Sans" background-color="#f4913a" color="white" font-size="16px" border-radius="14px" href="${fillout_recueil}">
+									<a href="${fillout_recueil}" style="text-decoration:none;color:white;font-weight:bold;">Complétez votre fiche maintenant</a>
+								</mj-button>
+							</mj-column>
+						</mj-section>
+						<mj-text>
+							<p>En cas de difficulté, n'hésitez pas à nous contacter.</p>
+							<p>En vous remerciant par avance pour votre collaboration.</p>
+						</mj-text>
+						<!-- Signature -->
+						<mj-text font-family="Open Sans, sans-serif">
+							<p style="margin: 0; padding: 0;">Isadora Vuong Van</p>
+							<p style="margin: 0; padding: 0;">Pôle Formations</p>
+							<p style="margin: 0; padding: 0; font-weight:bold;">Fédération Santé Habitat</p>
+							<p style="margin: 0; padding: 0;">6 rue du Chemin Vert - Paris 11ème</p>
+							<p style="margin: 0; padding: 0;">Tél. 01 48 05 55 54 / 06 33 82 17 52</p>
+							<p style="margin: 0; padding: 0;"><a href="http://www.sante-habitat.org" style="color: #000;">www.sante-habitat.org</a></p>
+						</mj-text>
+					</mj-body>
+				</mjml>					
+			`),
+			alternatives: []
+		};
+
+		try {
+			await transporter.sendMail(mailOptions);
+			console.log(`Email sent to ${mail}`);
+		} catch (error) {
+			console.error('Error sending mail:', error);
+		}
+	}
+};
+
 // Function to send email for a single Inscription record
 export const sendConfirmation = async (inscriptionId) => {
 	// Retrieve a single record
