@@ -262,13 +262,13 @@ export const documents = [
                 );
                 data.nb_pax = data.nb_pax > 0 ? data.nb_pax : "A déterminer";
 
-                data.frais = [];
+                data.frais = null;
 
                 // TODO: ajouter les frais formateurs !!
                 try {
                     var fraisFormateurs = await getAirtableRecords("Frais formateur", "Grid view", `AND(sessId="${data.Session}",NOT(type="Intervention"))`);
                     console.log("fraisFormateurs", fraisFormateurs);
-                    var totalFraisFormateurs = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                    data.fraistotal = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                         parseFloat(data.frais_sansintervention),
                     );
     
