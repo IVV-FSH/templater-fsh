@@ -248,6 +248,10 @@ export const documents = [
             data.rue = data.rue_sgtr || data.rue_dmdr || data.rue || "";
             data.cp = data.cp_sgtr || data.cp_dmdr || data.cp || "";
             data.ville = data.ville_sgtr || data.ville_dmdr || data.ville || "";
+
+            data.prixformation = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                parseFloat(data.prixintra_fromsess),
+            );
         
             if(data.lieuxdemij_cumul.includes("En intra")) {
                 // dont make stagiaires liste.
@@ -257,7 +261,21 @@ export const documents = [
                     parseFloat(data.prixintra_fromsess),
                 );
                 data.nb_pax = data.nb_pax > 0 ? data.nb_pax : "A déterminer";
+
+                // TODO: ajouter les frais formateurs !!
+                var fraisFormateurs = await getAirtableRecords("Frais formateurs", "Grid view", `AND(sessId="${data.Session}",NOT(type="Intervention"))`);
+                var totalFraisFormateurs = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                    parseFloat(data.frais_sansintervention),
+                );
+
+                if(fraisFormateurs.records.length > 0) {
+                    data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                        parseFloat(data.prixintra_fromsess) + parseFloat(totalFraisFormateurs),
+                    );
+                }
+
             } else {
+                data.prixformation = "";
                 var total = 0.0;
             
                 var stagiaires = inscrits.records.map(inscrit => {
