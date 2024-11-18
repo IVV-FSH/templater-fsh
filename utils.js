@@ -220,7 +220,7 @@ export const getAirtableRecord = async (table, recordId) => {
 };
 export const getAirtableRecords = async (table, view = null, formula = null, sortField = null, sortDir = null) => {
 	try {
-	  let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${table}`;
+	  let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(table)}`;
 	  const params = [];
 	  if (formula) {
 		params.push(`filterByFormula=${formulaFilter(formula)}`);

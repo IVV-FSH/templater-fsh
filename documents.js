@@ -262,16 +262,23 @@ export const documents = [
                 );
                 data.nb_pax = data.nb_pax > 0 ? data.nb_pax : "A déterminer";
 
-                // TODO: ajouter les frais formateurs !!
-                var fraisFormateurs = await getAirtableRecords("Frais formateurs", "Grid view", `AND(sessId="${data.Session}",NOT(type="Intervention"))`);
-                var totalFraisFormateurs = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                    parseFloat(data.frais_sansintervention),
-                );
+                data.frais = [];
 
-                if(fraisFormateurs.records.length > 0) {
-                    data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
-                        parseFloat(data.prixintra_fromsess) + parseFloat(totalFraisFormateurs),
+                // TODO: ajouter les frais formateurs !!
+                try {
+                    var fraisFormateurs = await getAirtableRecords("Frais formateur", "Grid view", `AND(sessId="${data.Session}",NOT(type="Intervention"))`);
+                    console.log("fraisFormateurs", fraisFormateurs);
+                    var totalFraisFormateurs = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                        parseFloat(data.frais_sansintervention),
                     );
+    
+                    if(fraisFormateurs.records.length > 0) {
+                        data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                            parseFloat(data.prixintra_fromsess) + parseFloat(totalFraisFormateurs),
+                        );
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch frais formateurs', error);
                 }
 
             } else {
