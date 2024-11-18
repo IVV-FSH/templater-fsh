@@ -1096,9 +1096,14 @@ export const sendConfirmationToAllSession = async (sessId) => {
 };
 
 export const relanceBesoins = async (sessId) => {
-	const inscriptionsVides = await getAirtableRecords('Inscriptions', null, `AND({sessId} = '${sessId}', {Statut} = 'Enregistrée', {rempli_besoins} = "❌")`);
-	if (inscriptionsVides.records.length === 0) {
+	const inscriptions = await getAirtableRecords('Inscriptions', null, `AND({sessId} = '${sessId}', {Statut} = 'Enregistrée')`);
+	if (inscriptions.records.length === 0) {
 		console.log('No records found');
+		return;
+	}
+	const inscriptionsVides = inscriptions.records.filter(insc => insc.rempli_besoins == "❌");
+	if (inscriptionsVides.length === 0) {
+		console.log('Aucune inscription vide trouvée');
 		return;
 	}
 	for(const insc of inscriptionsVides.records) {
