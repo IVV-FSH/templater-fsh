@@ -179,7 +179,7 @@ if(besoins.records.length === 0) {
   const type = besoins.records[0].Type
   const arrCg = [
     {
-      intitule: 'Pour quelle(s)s raison(s) souhaitez-vous suivre cette formation ?',
+      intitule: 'Pour quelle(s) raison(s) souhaitez-vous suivre cette formation ?',
       fieldName: 'Pour quelle(s)s raison(s) souhaitez-vous suivre cette formation ?',
       other: 'raisons_autres'
     },
