@@ -252,6 +252,8 @@ export const documents = [
             data.prixformation = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                 parseFloat(data.prixintra_fromsess),
             );
+
+            data.stagiairestotal = "";
         
             if(data.lieuxdemij_cumul.includes("En intra")) {
                 // dont make stagiaires liste.
@@ -322,6 +324,7 @@ export const documents = [
                 data.montant = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                     parseFloat(total),
                 );
+                data.stagiairestotal = data.montant;
             }
             return data;
         }        
