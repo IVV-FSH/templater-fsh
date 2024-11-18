@@ -172,7 +172,7 @@ app.get('/besoins', async (req, res) => {
   // console.log("besoins", besoins, besoins.records.length);
   // Create a new Tabulator instance
   // Append the table to the response
-if(besoins.records.length === 0) {
+if(!besoins.records || (besoins.records && besoins.records.length === 0)) {
   res.send("Aucun besoin n'a été rempli pour cette session");
 
 }else {  
