@@ -166,6 +166,8 @@ export const documents = [
                     );
                 }
             }
+
+            data.discount = discount;
             
             // console.log("tarifs", tarifs)
             data.total = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(data.totalcalc));
