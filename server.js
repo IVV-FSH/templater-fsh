@@ -163,8 +163,19 @@ app.get('/confirmForSession', async (req, res) => {
   }
 });
 
+app.get('espace-formateur', async (req, res) => {
+  const { sessId, formateurId } = req.query;
+  const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
+  if(!besoins.records || (besoins.records && besoins.records.length === 0)) {
+    res.send("Aucun besoin n'a été rempli pour cette session");
+  } else {
+    const type = besoins.records[0].Type
+
+  }
+});
+
 app.get('/besoins', async (req, res) => {
-  // TODO: display results for formateurice
+  // TODO : moyens mis à disposition
   const table = "Recueil des besoins";
   const { sessId, formateurId } = req.query;
   // const besoins = await getAirtableRecords(table, "Grid view", "rempli='🟢'");

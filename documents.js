@@ -179,6 +179,10 @@ export const documents = [
                 data["today"] = new Date(data["date_doc"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris'});
             }
 
+            if(!data.jauge_max || data.jauge_max == 0 || data.jauge_max == "") {
+                data.jauge_max = "12";
+            }
+
             return data;
         },
         examples: [{recordId:"recWMivigueMuraHe", desc:"guilchard"},],
