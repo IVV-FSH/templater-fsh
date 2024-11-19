@@ -153,15 +153,23 @@ export const documents = [
             // } else {
             //     data['prixintra'] = NaN;
             // }
-            
-            data.prixintra = data.prix_special && data.prix_special != "" ? data.prix_special : data.prixintra_calc;
-            try {
-                data.prixintra = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.prixintra);
-            } catch (error) {
-                // console.error('Failed to format prixintra', error);
-                data['prixintra'] = NaN;
+
+            var discount = "";
+
+            if(parseFloat(data.prixintra_calc) < parseFloat(data.totalcalc)) {
+                if(data.rabais) {
+                    discount = `- ${data.rabais * 100} %`;
+                }
+                if(data.prix_special) {
+                    discount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
+                        (parseFloat(data.prix_special) - parseFloat(data.prixintra_calc))
+                    );
+                }
             }
+            
             // console.log("tarifs", tarifs)
+            data.total = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(data.totalcalc));
+
             return data;
         },
         examples: [{recordId:"recWMivigueMuraHe", desc:"guilchard"},],
