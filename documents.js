@@ -412,7 +412,7 @@ export const documents = [
                 return parseInt(localHour);
             };
             data['jrs'] = [...debutDates]
-            const journees = [...debutDates].map(date => {
+            var journees = [...debutDates].map(date => {
                 const demijForDate = demij.records.filter(d => new Date(d.debut).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }) === date).sort((a, b) => new Date(a.debut) - new Date(b.debut));
                 const matin = demijForDate[0];
                 const apresmidi = demijForDate[1];
@@ -422,6 +422,13 @@ export const documents = [
                     apresmidi: apresmidi ? `de ${new Date(apresmidi.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')} à ${new Date(apresmidi.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')}` : "",
                 }
             });
+            journees = journees.map(j => {
+                return {
+                    date: j.date,
+                    demij: [j.matin, j.apresmidi]
+                }
+            });
+            console.log(journees, data.Formateurice)
             data['journees'] = journees;
             data['stagiaires'] = stagiaires && stagiaires.records && stagiaires.records.length > 0 ? stagiaires.records.map(s => {
                 return {
@@ -434,6 +441,8 @@ export const documents = [
                 return 0;
             }) : [];
             // console.log("data", data)
+
+            data.formateurs = data.Formateurice.split('", "').map(f => f.replace(/"/g, '').split(",")[0]);
 
             return data;
 
