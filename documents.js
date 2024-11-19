@@ -154,7 +154,7 @@ export const documents = [
             //     data['prixintra'] = NaN;
             // }
             
-            data.prixintra = data.prix_special ? data.prix_special : data.prixintra_calc;
+            data.prixintra = data.prix_special && data.prix_special != "" ? data.prix_special : data.prixintra_calc;
             try {
                 data.prixintra = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.prixintra);
             } catch (error) {
