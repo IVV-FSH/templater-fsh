@@ -156,13 +156,16 @@ export const documents = [
 
             var discount = "";
 
-            if(parseFloat(data.prixintra_calc) < parseFloat(data.totalcalc)) {
+            console.log("data.prixintra_calc", data.prixintra_calc, "data.totalcalc", data.totalcalc);
+            if(parseFloat(data.prixintra_calc) > parseFloat(data.totalcalc)) {
                 if(data.rabais) {
                     discount = `- ${data.rabais * 100} %`;
+                    console.log('Discount applied:', discount);
                 } else if(data.prix_special) {
                     discount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                         (parseFloat(data.prix_special) - parseFloat(data.prixintra_calc))
                     );
+                    console.log('Special price discount applied:', discount);
                 }
             }
 
