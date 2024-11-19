@@ -135,22 +135,30 @@ export const documents = [
             // Tarifs: [ 'recVLy02tLFlINZOo', 'recoAZnkTqeEVujSD' ],
             console.log("data.annee_envisagee:", data.annee_envisagee);
 
-            let tarifs = [];
-            for (let i = 0; i < data.Tarifs.length; i++) {
-                const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
-                // console.log("tarif", tarif) 
-                tarifs.push(tarif);
-            }
-            data.tarifs = tarifs;
+            // let tarifs = [];
+            // for (let i = 0; i < data.Tarifs.length; i++) {
+            //     const tarif = await getAirtableRecord("Tarifs", data.Tarifs[i]);
+            //     // console.log("tarif", tarif) 
+            //     tarifs.push(tarif);
+            // }
+            // data.tarifs = tarifs;
 
-            let tarif = tarifs.length > 0 ? tarifs.filter(t => {
-                console.log("Comparing:", parseInt(t['Année']), "with", parseInt(data.annee_envisagee));
-                return parseInt(t['Année']) == parseInt(data.annee_envisagee);
-            })[0] : null;
+            // let tarif = tarifs.length > 0 ? tarifs.filter(t => {
+            //     console.log("Comparing:", parseInt(t['Année']), "with", parseInt(data.annee_envisagee));
+            //     return parseInt(t['Année']) == parseInt(data.annee_envisagee);
+            // })[0] : null;
 
-            if (tarif) {
-                data['prixintra'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(tarif["prix_intra"]);
-            } else {
+            // if (tarif) {
+            //     data['prixintra'] = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(tarif["prix_intra"]);
+            // } else {
+            //     data['prixintra'] = NaN;
+            // }
+            
+            data.prixintra = data.prix_special ? data.prix_special : data.prixintra_calc;
+            try {
+                data.prixintra = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.prixintra);
+            } catch (error) {
+                // console.error('Failed to format prixintra', error);
                 data['prixintra'] = NaN;
             }
             // console.log("tarifs", tarifs)
