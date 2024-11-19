@@ -1104,7 +1104,7 @@ async function generateAndDownloadReport(url, data, res, fileName = "") {
     const fileNameWithoutExt = originalFileName.replace(path.extname(originalFileName), '');
     let newTitle = fileName || fileNameWithoutExt;
 
-    var newFileName = `${getFrenchFormattedDate()} ${newTitle}`.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
+    var newFileName = `${getFrenchFormattedDate(false)} ${newTitle}`.replace(/[^a-zA-Z0-9-_.\s'éèêëàâîôùçãáÁÉÈÊËÀÂÎÔÙÇ]/g, '');
     var newFileName = newFileName.replace(/  /g, ' '); // Sanitize the filename
     // const newFileName = "file.docx"
     // Set the correct headers for file download and content type for .docx
