@@ -445,7 +445,6 @@ export const documents = [
             data.formateurs = data.Formateurice.split('", "').map(f => f.replace(/"/g, '').split(",")[0]);
 
             return data;
-
         },
         examples: [{recordId:"recXcDJ6nYYJYsVmV", desc:"SM14JV que aprem"},],
     },
