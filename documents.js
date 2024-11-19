@@ -159,8 +159,7 @@ export const documents = [
             if(parseFloat(data.prixintra_calc) < parseFloat(data.totalcalc)) {
                 if(data.rabais) {
                     discount = `- ${data.rabais * 100} %`;
-                }
-                if(data.prix_special) {
+                } else if(data.prix_special) {
                     discount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                         (parseFloat(data.prix_special) - parseFloat(data.prixintra_calc))
                     );
@@ -171,6 +170,7 @@ export const documents = [
             
             // console.log("tarifs", tarifs)
             data.total = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(data.totalcalc));
+            data.prixintra = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(data.prixintra_calc));
 
             return data;
         },
