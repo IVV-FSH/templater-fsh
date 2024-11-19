@@ -418,8 +418,8 @@ export const documents = [
                 const apresmidi = demijForDate[1];
                 return {
                     date: date,
-                    matin: matin ? `de ${new Date(matin.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')} à ${new Date(matin.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')}` : "",
-                    apresmidi: apresmidi ? `de ${new Date(apresmidi.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')} à ${new Date(apresmidi.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')}` : "",
+                    matin: matin ? `de ${new Date(matin.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')} à ${new Date(matin.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')}` : null,
+                    apresmidi: apresmidi ? `de ${new Date(apresmidi.debut).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')} à ${new Date(apresmidi.fin).toLocaleTimeString('fr-FR', { hour: 'numeric', minute: 'numeric', timeZone: 'Europe/Paris' }).replace(':', 'h')}` : null,
                 }
             });
             journees = journees.map(j => {
@@ -441,7 +441,6 @@ export const documents = [
                 return 0;
             }) : [];
             // console.log("data", data)
-
             data.formateurs = data.Formateurice.split('", "').map(f => f.replace(/"/g, '').split(",")[0]);
 
             return data;
