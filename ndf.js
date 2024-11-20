@@ -107,15 +107,21 @@ export default async function envoiNdf() {
 			const justificatifs = ndf['Justificatifs (photo/scan)'];
 			var attachments = [];
 			if (justificatifs && justificatifs.length > 0) {
-				justificatifs.forEach(justificatif => {
-					attachments.push({
-						filename: justificatif.filename,
-						size: justificatif.size,
-						type: justificatif.type,
-						content: justificatif.url,
-					});
+				justificatifs.forEach(async justificatif => {
+					try {
+						// Fetch the file content from the URL
+						const fileResponse = await axios.get(justificatif.url, { responseType: 'arraybuffer' });
+						attachments.push({
+							filename: justificatif.filename, // File name
+							content: Buffer.from(fileResponse.data), // File content as buffer
+							contentType: justificatif.type, // MIME type
+						});
+					} catch (error) {
+						console.error(`Failed to fetch attachment: ${justificatif.filename}`, error);
+					}
 				});
 			}
+			
 			total += parseFloat(ndf['Montant (€)']);
 			tableRows += `<tr>
 					<td>${Array.isArray(ndf.quiapaye) ? ndf.quiapaye.join(', ') : (ndf.quiapaye || '')}</td>
@@ -189,7 +195,7 @@ export default async function envoiNdf() {
 				</table>
 
 				<p>Merci par avance !</p>` + SIGNATURE_IVV,
-				// attachments: attachments
+				attachments: attachments
 			};
 			try {
 				await transporter.sendMail(mailOptions);
