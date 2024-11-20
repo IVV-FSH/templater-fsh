@@ -1,8 +1,7 @@
 import dotenv from 'dotenv';
-
 import axios from 'axios';
-
 import nodemailer from 'nodemailer';
+import { SIGNATURE_IVV } from './constants';
 
 dotenv.config();
 const AIRTABLE_API_KEY = process.env.AIRTABLE_TOKEN; // Get API key from environment variable
@@ -77,8 +76,9 @@ export const getAirtableRecords = async (table, view = null, formula = null, sor
 
 export default async function envoiNdf() {
     console.log('Envoi NDF');
-    const ndfs = await getAirtableRecords("Dépenses", "Main View", `AND({remboursé_compta} = 0, {Envoyé à compta}=0)`);
+    const ndfs = await getAirtableRecords("Dépenses", "Main View", `AND({remboursé_compta} = 0, {Envoyé à compta}=0, {Initiales (from Qui a payé?)}='IVV')`);
     if (ndfs.records.length > 0) {
+		const someHaveKm = ndfs.records.some(n => n["Nombre de kilomètres"]);
         const firstRecord = ndfs.records[0];
 		const nbRecords = ndfs.records.length;
 		if(nbRecords ==0) return;
@@ -107,8 +107,6 @@ export default async function envoiNdf() {
 			const justificatifs = ndf['Justificatifs (photo/scan)'];
 			var attachments = [];
 			if (justificatifs && justificatifs.length > 0) {
-				// const firstJustificatif = justificatifs[0];
-				// console.log(firstJustificatif.thumbnails.small);
 				justificatifs.forEach(justificatif => {
 					attachments.push({
 						filename: justificatif.filename,
@@ -120,13 +118,14 @@ export default async function envoiNdf() {
 			}
 			total += parseFloat(ndf['Montant (€)']);
 			tableRows += `<tr>
-				<td>${Array.isArray(ndf.quiapaye) ? ndf.quiapaye.join(', ') : (ndf.quiapaye || '')}</td>
-				<td>${ndf['Date de la dépense'] || ''}</td>
-				<td>${ndf['Description courte'] || ''}</td>
-				<td>${ndf['Montant (€)'] ? ndf['Montant (€)'].toString().replace(".", ",") + " €" : ""}</td>
-				<td>${justificatifs ? justificatifs.map(j => j.filename).join(', ') : ''}</td>
-				<td>${ndf['Remboursement par'] || ''}</td>
-				<td>${Array.isArray(ndf['RIB (from Qui a payé?)']) ? ndf['RIB (from Qui a payé?)'][0] : (ndf['RIB (from Qui a payé?)'] || '')}</td>
+					<td>${Array.isArray(ndf.quiapaye) ? ndf.quiapaye.join(', ') : (ndf.quiapaye || '')}</td>
+					<td>${ndf['Date de la dépense'] || ''}</td>
+					<td>${ndf['Description courte'] || ''}</td>
+					${someHaveKm ? `<td>${ndf['Nombre de kilomètres'] || ''}</td><td>${Array.isArray(ndf.puissance) ? ndf.puissance.join(', ') : (ndf.puissance || '')}</td>` : ''}
+					<td style="text-align: right;">${ndf['Montant (€)'] ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(ndf['Montant (€)'].replace(" ","").replace(",","."))) : ""}</td>
+					<td>${justificatifs ? justificatifs.map(j => `<a href="${j.url}">${j.filename}</a>`).join(' ') : ''}</td>
+					<td>${ndf['Remboursement par'] || ''}</td>
+					<td>${Array.isArray(ndf['RIB (from Qui a payé?)']) ? ndf['RIB (from Qui a payé?)'][0] : (ndf['RIB (from Qui a payé?)'] || '')}</td>
 				</tr>`;
 		}
 			const mailOptions = {
@@ -168,6 +167,9 @@ export default async function envoiNdf() {
 							<th>Dépense effectuée par</th>
 							<th>Date de la dépense</th>
 							<th>Description courte</th>
+							${
+								someHaveKm ? '<th>Nombre de kilomètres</th><th>Puissance (CV)</th>' : ''
+							}
 							<th>Montant</th>
 							<th>Justificatif(s)</th>
 							<th>Rembourser par</th>
@@ -175,21 +177,19 @@ export default async function envoiNdf() {
 						</tr>
 					</thead>
 					<tbody>
-					${tableRows}
+						${tableRows}
 					</tbody>
 					<tfoot>
 						<tr>
-							<td colspan="3" style="text-align: right; font-weight: bold;">Total</td>
+							<td colspan="${someHaveKm ? 5 : 3}" style="text-align: right; font-weight: bold;">Total</td>
 							<td style="text-align: right; font-weight: bold;">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(total)}</td>
 							<td colspan="3"></td>
 						</tr>
 					</tfoot>
 				</table>
-				<p>Justificatifs en pièce jointe</p>
 
-				<p>Merci par avance !</p>
-				<p>Isadora</p>`,
-				attachments: attachments
+				<p>Merci par avance !</p>` + SIGNATURE_IVV,
+				// attachments: attachments
 			};
 			try {
 				await transporter.sendMail(mailOptions);
