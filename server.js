@@ -172,8 +172,15 @@ app.get('/confirmForSession', async (req, res) => {
 
 app.get('/session', async (req, res) => {
   const { sessId, formateurId } = req.query;
+
+  const sessionData = await getAirtableRecord("Sessions", sessId);
+  const titre = sessionData["titre_fromprog"] || "";
+  const datesSession = sessionData["dates"] || "";
   const inscriptionsData = await getAirtableRecords("Inscriptions", "Grid view", `sessId="${sessId}"`, "nom", "asc");
   var inscritsHtml = "";
+  if(inscriptionsData.records.length === 0) {
+    res.send("Aucun inscrit pour cette session");
+  }
   inscriptionsData.records.forEach(inscrit => {
     inscritsHtml += `<tr>`;
     inscritsHtml += `<td>${inscrit["prenom"]} ${inscrit["nom"]}</td>`;
@@ -192,8 +199,6 @@ app.get('/session', async (req, res) => {
   <tbody>${inscritsHtml}</tbody>
   </table>`;
   const besoinsData = await getAirtableRecords("Recueil des besoins", "Grid view", `sessId="${sessId}"`, "nom (from Inscrits)", "asc");
-  const titre = besoinsData.records[0]["titre_fromprog (from Inscrits)"];
-  const datesSession = besoinsData.records[0]["dates"];
 
   const besoinsHtml = await getBesoins(besoinsData);
 
@@ -237,7 +242,6 @@ app.get('/session', async (req, res) => {
       .font-light { font-weight: lighter; }
 
       table {
-  width: 100%;
   border-collapse: collapse; /* Collapse borders */
 }
 
