@@ -316,7 +316,7 @@ th {
   <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscritsEnreg} inscrits)</span></h2>
 <div class="grid-container">${besoinsHtml.html}</div>
   <div class="stats">
-    <h3>Récapitulatif des besoins</h3>
+    ${besoinsHtml.recap ? "<h3>Récapitulatif des besoins</h3>" : ""}
     ${besoinsHtml.recap}
   </div>
     `

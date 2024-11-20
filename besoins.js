@@ -131,7 +131,7 @@ export async function getBesoins(besoinsData) {
     // console.log("Fetched besoins:", besoinsData);
     if(!besoinsData.records || besoinsData.records.length === 0) {
         console.log("No besoins found.");
-        return {html:""};
+        return {html:"", recap:""};
     }
     const type = besoinsData.records[0].Type;
     console.log("Determined type:", type);
