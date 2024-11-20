@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import axios from 'axios';
 import nodemailer from 'nodemailer';
-import { SIGNATURE_IVV } from './constants';
+import { SIGNATURE_IVV } from './constants.js';
 
 dotenv.config();
 const AIRTABLE_API_KEY = process.env.AIRTABLE_TOKEN; // Get API key from environment variable
@@ -236,4 +236,4 @@ export default async function envoiNdf() {
 }
 
 // run envoiNdf
-await envoiNdf();
+// await envoiNdf();

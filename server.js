@@ -13,6 +13,7 @@ import {createReport} from 'docx-templates';
 import { processImports } from './dups.js';
 import dotenv from 'dotenv';
 import envoiNdf from './ndf.js';
+import { getBesoins } from './besoins.js';
 
 dotenv.config();
 
@@ -169,202 +170,70 @@ app.get('/confirmForSession', async (req, res) => {
   }
 });
 
-app.get('espace-formateur', async (req, res) => {
+app.get('/session', async (req, res) => {
   const { sessId, formateurId } = req.query;
-  const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
-  if(!besoins.records || (besoins.records && besoins.records.length === 0)) {
-    res.send("Aucun besoin n'a été rempli pour cette session");
-  } else {
-    const type = besoins.records[0].Type
+  const inscriptionsData = await getAirtableRecords("Inscriptions", "Grid view", `sessId="${sessId}"`);
+  const besoinsData = await getAirtableRecords("Recueil des besoins", "Grid view", `sessId="${sessId}"`, "nom (from Inscrits)", "asc");
+  const titre = besoinsData.records[0]["titre_fromprog (from Inscrits)"];
+  const datesSession = besoinsData.records[0]["dates"];
 
-  }
-});
+  const besoinsHtml = await getBesoins(besoinsData);
 
-app.get('/besoins', async (req, res) => {
-  // TODO : moyens mis à disposition
-  const table = "Recueil des besoins";
-  const { sessId, formateurId } = req.query;
-  // const besoins = await getAirtableRecords(table, "Grid view", "rempli='🟢'");
-  const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
-  // console.log("besoins", besoins, besoins.records.length);
-  // Create a new Tabulator instance
-  // Append the table to the response
-if(!besoins.records || (besoins.records && besoins.records.length === 0)) {
-  res.send("Aucun besoin n'a été rempli pour cette session");
+  const nbTotalInscrits = inscriptionsData.records.filter(insc => insc.Statut == "Enregistrée").length;
+  const filledBesoins = besoinsData.records.filter(besoin => besoin.rempli=="🟢");
+  const nbFilledBesoins = filledBesoins.length;
 
-}else {  
-  const type = besoins.records[0].Type
-  const arrCg = [
-    {
-      intitule: 'Pour quelle(s) raison(s) souhaitez-vous suivre cette formation ?',
-      fieldName: 'Pour quelle(s)s raison(s) souhaitez-vous suivre cette formation ?',
-      other: 'raisons_autres'
-    },
-    {
-      intitule: 'Quelles sont vos attentes prioritaires en participant à cette formation ?',
-      fieldName: 'Quelles sont vos attentes prioritaires en participant à cette formation ?',
-      other: 'attentes_autres'
-    },
-    {
-      intitule: 'Quels sont les 3 critères les plus importants pour vous en assistant à cette formation ?',
-      fieldName: 'Quels sont les 3 critères les plus importants pour vous en assistant à cette formation ?',
-      other: 'criteres_autres'
-    },
-    {
-      intitule: 'A l’issue de cette formation, avez-vous un projet à court moyen ou long terme ?',
-      fieldName: 'A l’issue de cette formation, avez-vous un projet à court moyen ou long terme ? ',
-      other: 'projet_plus'
-    }
-  ];
-  const arrFsh = [
-    {
-      intitule: 'Quelles difficultés rencontrez-vous sur le terrain ?',
-      fieldName: 'Quelles difficultés rencontrez-vous sur le terrain ?',
-    },
-    {
-      intitule: 'Avez-vous un cas concret pour lequel vous souhaiteriez des éclaircissements ?',
-      fieldName: 'Avez-vous un cas concret pour lequel vous souhaiteriez des éclaircissements ?',
-    },
-    {
-      intitule: 'Qu’attendez-vous de cette formation ?',
-      fieldName: 'Qu’attendez-vous de cette formation ?',
-    },
-    {
-      intitule: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
-      fieldName: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
-    },
-    // 'Veuillez évaluer vos connaissances sur la thématique ': 5,
-      // 'Veuillez évaluer vos compétences sur la thématique': 5,
-    {
-      intitule: 'Veuillez évaluer vos connaissances sur la thématique ',
-      fieldName: 'Veuillez évaluer vos connaissances sur la thématique ',
-      sur: 10
-    },
-    {
-      intitule: 'Veuillez évaluer vos compétences sur la thématique',
-      fieldName: 'Veuillez évaluer vos compétences sur la thématique',
-      sur: 10
-    },
+  var resHtml = `
+      <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Besoins</title>
+    <style>
+      body { font-family: 'Segoe UI', sans-serif; }
+.fiche-besoin {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background-color: #fff; /* White background */
+  transition: box-shadow 0.3s ease; /* Smooth transition for hover effect */
+}
+        .filled { color: green; }
+      .not-filled { color: red; }
+      .question { font-weight: bold; }
+      .answer { color: black; }
+      .font-light { font-weight: lighter; }
+    </style>
+  </head>
+  <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
+  `
+  if(besoinsHtml === "") {
+    resHtml += `
+  <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscrits} inscrits)</span></h2>
+  <p>Aucun besoin n'a été rempli pour cette session</p>
+      `
+    } else {
 
-  ];
-  const arrFormassad = [
-    {
-      intitule: 'Quel poste occupez-vous au sein de la structure, quelles sont vos missions principales ?',
-      fieldName: 'Quel poste occupez-vous au sein de la structure, quelles sont vos missions principales ?',
-    },
-    {
-      intitule: 'Avez-vous déjà suivi une formation sur ce thème ou un thème en rapport ? Si oui laquelle',
-      fieldName: 'Avez-vous déjà suivi une formation sur ce thème ou un thème en rapport ? Si oui laquelle',
-    },
-    {
-      intitule: 'Quelles difficultés rencontrez-vous sur le terrain ?',
-      fieldName: 'Quelles difficultés rencontrez-vous sur le terrain ?',
-    },
-    {
-      intitule: 'Qu’attendez-vous de cette formation ?',
-      fieldName: 'Qu’attendez-vous de cette formation ?',
-    },
-    {
-      intitule: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
-      fieldName: 'Qu’en attendez-vous en priorité ? ex : objectifs, méthodes, outils, contenu des apports...',
-    },
-
-  ];
-  var questions = type == "CG" ? arrCg : type.includes("Formassad") ? arrFormassad : arrFsh;
-  questions = [...questions, {
-      intitule: 'Note personnelle à l’attention de l’intervenant',
-      fieldName: 'Note personnelle à l’attention de l’intervenant',
-  }]
-  const besoinsRemplis = besoins.records.filter(besoin => besoin.rempli === '🟢');
-
-  console.log("besoinsRemplis", besoinsRemplis, besoinsRemplis.length);
-
-  // for each of the questions, count the number of times each answer was given
-  var answers = {};
-  questions.forEach(question => {
-    question.reponses = {};
-    besoinsRemplis.forEach(besoin => {
-      const reponse = besoin[question.fieldName];
-      // if response is an array, count each element
-      if (Array.isArray(reponse)) {
-        reponse.forEach(r => {
-          if (question.reponses[r]) {
-            question.reponses[r]++;
-          } else {
-            question.reponses[r] = 1;
-          }
-        });
-      } else {
-        if (question.reponses[reponse]) {
-          question.reponses[reponse]++;
-        } else {
-          question.reponses[reponse] = 1;
-        }
-      }
-      answers[question.fieldName] = question.reponses;
-    });
-  });
-  // sort the answers by count for each question
-  answers = Object.fromEntries(Object.entries(answers).map(([key, value]) => [key, Object.fromEntries(Object.entries(value).sort((a, b) => b[1] - a[1]))]));
-  const template = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Besoins Data</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; }
-    .fiche-besoin { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; }
-    .filled { color: green; }
-    .not-filled { color: red; }
-    .question { font-weight: bold; }
-    .answer { color: black; }
-  </style>
-</head>
-<body>
-  <h1>Formation : <span>${titre}</span></h1>
-  <h2>Recueil des besoins</h2>
-  ${besoins.records.map(record => `
-    <div class="fiche-besoin">
-      <h3>Participant: ${record["FullName (from Participant.e) (from Inscrits)"]}</h3>
-      ${record["poste (from Inscrits)"] ? `<p><strong>Poste :</strong> ${record["poste (from Inscrits)"]}</p>` : ''}
-      
-      ${questions.map(question => {
-        if (record[question.fieldName]) {
-          return `
-            <div>
-              <p class="question">${question.intitule}</p>
-              <p class="answer">${record[question.fieldName]}${question.sur ? '/' + question.sur : ''}</p>
-              ${question.other && record[question.other] ? `<p><strong>+:</strong> ${record[question.other].replace(/\n/g, ' ')}</p>` : ''}
-            </div>
-          `;
-        }
-        return '';
-      }).join('')}
-    </div>
-  `).join('')}
-  
+  resHtml += `
+  <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscrits} inscrits)</span></h2>
+${besoinsHtml.html}
   <div class="stats">
     <h3>Récapitulatif des besoins</h3>
-    ${Object.keys(answers).map(question => `
-      <div>
-        <p class="question"><strong>${question}</strong></p>
-        <ul>
-          ${Object.keys(answers[question]).map(answer => `
-            <li>${answer}: ${answers[question][answer]}</li>
-          `).join('')}
-        </ul>
-      </div>
-    `).join('')}
   </div>
-</body>
-</html>
-`;
+    `
 
-res.send(template);  // Directly send the rendered HTML
-}
+    res.send(resHtml+"</html>");
+  }
+  // const besoins = await getAirtableRecords(table, "Grid view", `sessId="${sessId}"`, "id", "asc");
+  // if(!besoins.records || (besoins.records && besoins.records.length === 0)) {
+  //   res.send("Aucun besoin n'a été rempli pour cette session");
+  // } else {
+  //   const type = besoins.records[0].Type
 
+  // }
 });
 
 // dynamycally create routes for each document
