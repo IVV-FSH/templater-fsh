@@ -174,36 +174,75 @@ app.get('/session', async (req, res) => {
   const { sessId, formateurId } = req.query;
 
   const sessionData = await getAirtableRecord("Sessions", sessId);
+  var halfdaysHtml = null;
+	try {
+		const data = await getAirtableRecords("Demi-journées", null, `sessId='${sessId}'`);
+		if(data) {
+			// console.log('Half days:', data);
+			const halfdays = data.records
+			.sort((a, b) => new Date(a.debut) - new Date(b.debut))
+			.map(record => {
+				const params = {
+					date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone: 'Europe/Paris' }).format(new Date(record.debut)),
+					horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.fin))}`,
+					lieu: record.adresse
+				};
+				return `<tr>
+						<td>${params.date}</td>
+						<td>${params.horaires}</td>
+						<td>${params.lieu}</td>
+					</tr>`;
+			});
+			halfdaysHtml = `<table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Horaires</th>
+            <th>Lieu</th>
+        </tr>
+    </thead>
+    <tbody>`+halfdays.join('')+`    </tbody>
+</table>`.replace(/font-family:'Open Sans';/g, '');
+// halfdaysMjml = '<mj-table font-family="Open Sans" >' + halfdaysHtml + "</mj-table>";
+
+	// console.log(halfdaysMjml);
+		}
+	} catch(error) {
+		console.error('Failed to get half days', error);
+		// res.send({ success: false, error: 'Failed to get half days' });
+	}
+
   const titre = sessionData["titre_fromprog"] || "";
+  const lieu = sessionData["adrdemij_cumul"] || "";
   const datesSession = sessionData["dates"] || "";
   const inscriptionsData = await getAirtableRecords("Inscriptions", "Grid view", `sessId="${sessId}"`, "nom", "asc");
   var inscritsHtml = "";
-  if(!inscriptionsData.records || inscriptionsData.records.length === 0) {
-    res.send("Aucun inscrit pour cette session");
+  if(inscriptionsData.records && inscriptionsData.records.length > 0) {
+    inscriptionsData.records.forEach(inscrit => {
+      inscritsHtml += `<tr>`;
+      inscritsHtml += `<td>${inscrit["prenom"]} ${inscrit["nom"]}</td>`;
+      inscritsHtml += `<td>${inscrit["poste"]}</td>`;
+      inscritsHtml += `<td>${inscrit["entite"]}</td>`;
+      inscritsHtml += `</tr>`;
+    });
+    var inscritsHtml = `<table>
+    <thead>
+      <tr>
+        <th>Prénom Nom</th>
+        <th>Poste</th>
+        <th>Entité</th>
+      </tr>
+    </thead>
+    <tbody>${inscritsHtml}</tbody>
+    </table>`;
+
   }
-  inscriptionsData.records.forEach(inscrit => {
-    inscritsHtml += `<tr>`;
-    inscritsHtml += `<td>${inscrit["prenom"]} ${inscrit["nom"]}</td>`;
-    inscritsHtml += `<td>${inscrit["poste"]}</td>`;
-    inscritsHtml += `<td>${inscrit["entite"]}</td>`;
-    inscritsHtml += `</tr>`;
-  });
-  var inscritsHtml = `<table>
-  <thead>
-    <tr>
-      <th>Prénom Nom</th>
-      <th>Poste</th>
-      <th>Entité</th>
-    </tr>
-  </thead>
-  <tbody>${inscritsHtml}</tbody>
-  </table>`;
   const besoinsData = await getAirtableRecords("Recueil des besoins", "Grid view", `sessId="${sessId}"`, "nom (from Inscrits)", "asc");
 
   const besoinsHtml = await getBesoins(besoinsData);
 
   const nbTotalInscritsEnreg = inscriptionsData.records.filter(insc => insc.Statut == "Enregistrée").length;
-  const filledBesoins = besoinsData.records.filter(besoin => besoin.rempli=="🟢");
+  const filledBesoins = besoinsData.records ? besoinsData.records.filter(besoin => besoin.rempli=="🟢") : [];
   const nbFilledBesoins = filledBesoins.length;
 
   var resHtml = `
@@ -257,8 +296,12 @@ th {
     </style>
   </head>
   <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
+  <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.join(", ")}</p>
   `
-  if(inscriptionsData.records.length > 0) {
+  if(halfdaysHtml) {
+    resHtml += `<h2>Créneaux</h2>${halfdaysHtml}`;
+  }
+  if(inscriptionsData.records && inscriptionsData.records.length > 0) {
     resHtml += `<h2>Inscrits (${nbTotalInscritsEnreg})</h2>`;
     resHtml += inscritsHtml;
   } 
@@ -277,6 +320,7 @@ th {
     ${besoinsHtml.recap}
   </div>
     `
+    // console.log(resHtml);
 
     res.send(resHtml+"</html>");
   }

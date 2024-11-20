@@ -128,9 +128,10 @@ export async function getBesoins(besoinsData) {
     ];
     //   const { sessId, formateurId } = req.query;
     // console.log("Fetching besoins for session:", sessId);
-    console.log("Fetched besoins:", besoinsData);
+    // console.log("Fetched besoins:", besoinsData);
     if(!besoinsData.records || besoinsData.records.length === 0) {
-        return "";
+        console.log("No besoins found.");
+        return {html:""};
     }
     const type = besoinsData.records[0].Type;
     console.log("Determined type:", type);
