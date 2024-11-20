@@ -12,6 +12,7 @@ import { downloadDocxBuffer, makeGroupFacture, makeSessionDocuments, documents, 
 import {createReport} from 'docx-templates';
 import { processImports } from './dups.js';
 import dotenv from 'dotenv';
+import envoiNdf from './ndf.js';
 
 dotenv.config();
 
@@ -24,6 +25,11 @@ app.use(express.urlencoded({ extended: true })); // For parsing application/x-ww
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
+});
+
+app.get('/ndf', async (req, res) => {
+  await envoiNdf();
+  res.status(200).json({ success: true, message: 'NDFs sent successfully.' });
 });
 
 app.get('/duplicates', async (req, res) => {

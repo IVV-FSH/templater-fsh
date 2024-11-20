@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 	}
 });
 
-export const getAirtableRecords = async (table, view = null, formula = null, sortField = null, sortDir = null) => {
+const getAirtableRecords = async (table, view = null, formula = null, sortField = null, sortDir = null) => {
 	try {
 	  let url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(table)}`;
 	  const params = [];
