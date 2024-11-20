@@ -263,6 +263,24 @@ app.get('/session', async (req, res) => {
   background-color: #fff; /* White background */
   transition: box-shadow 0.3s ease; /* Smooth transition for hover effect */
 }
+  .headgrid-container {
+  display: grid;
+  grid-template-columns: 20% 80%; /* Two columns: 20% and 80% */
+  gap: 20px; /* Space between grid items */
+}
+
+.headgrid-container img {
+  max-width: 600px;
+  height: auto;
+  width: 100%; /* Make the image adapt to the column size */
+}
+
+@media (max-width: 768px) {
+  .headgrid-container {
+    grid-template-columns: 1fr; /* Single column on mobile */
+  }
+
+}
   .grid-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 columns */
@@ -295,8 +313,13 @@ th {
 }
     </style>
   </head>
-  <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
-  <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.join(", ")}</p>
+  <div class="headgrid-container">
+  <img src="https://github.com/IVV-FSH/templater-fsh/blob/main/assets/Logo%20FSH%20-%20transparent.png?raw=true" alt="Logo FSH" />
+  <div>
+    <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
+    <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.join(", ")}</p>
+  </div>
+  </div>
   `
   if(halfdaysHtml) {
     resHtml += `<h2>Créneaux</h2>${halfdaysHtml}`;
