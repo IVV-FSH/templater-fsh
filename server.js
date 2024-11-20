@@ -172,14 +172,32 @@ app.get('/confirmForSession', async (req, res) => {
 
 app.get('/session', async (req, res) => {
   const { sessId, formateurId } = req.query;
-  const inscriptionsData = await getAirtableRecords("Inscriptions", "Grid view", `sessId="${sessId}"`);
+  const inscriptionsData = await getAirtableRecords("Inscriptions", "Grid view", `sessId="${sessId}"`, "nom", "asc");
+  var inscritsHtml = "";
+  inscriptionsData.records.forEach(inscrit => {
+    inscritsHtml += `<tr>`;
+    inscritsHtml += `<td>${inscrit["prenom"]} ${inscrit["nom"]}</td>`;
+    inscritsHtml += `<td>${inscrit["poste"]}</td>`;
+    inscritsHtml += `<td>${inscrit["entite"]}</td>`;
+    inscritsHtml += `</tr>`;
+  });
+  var inscritsHtml = `<table>
+  <thead>
+    <tr>
+      <th>Prénom Nom</th>
+      <th>Poste</th>
+      <th>Entité</th>
+    </tr>
+  </thead>
+  <tbody>${inscritsHtml}</tbody>
+  </table>`;
   const besoinsData = await getAirtableRecords("Recueil des besoins", "Grid view", `sessId="${sessId}"`, "nom (from Inscrits)", "asc");
   const titre = besoinsData.records[0]["titre_fromprog (from Inscrits)"];
   const datesSession = besoinsData.records[0]["dates"];
 
   const besoinsHtml = await getBesoins(besoinsData);
 
-  const nbTotalInscrits = inscriptionsData.records.filter(insc => insc.Statut == "Enregistrée").length;
+  const nbTotalInscritsEnreg = inscriptionsData.records.filter(insc => insc.Statut == "Enregistrée").length;
   const filledBesoins = besoinsData.records.filter(besoin => besoin.rempli=="🟢");
   const nbFilledBesoins = filledBesoins.length;
 
@@ -189,7 +207,7 @@ app.get('/session', async (req, res) => {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Besoins</title>
+    <title>${titre} ${datesSession}</title>
     <style>
       body { font-family: 'Segoe UI', sans-serif; }
 .fiche-besoin {
@@ -217,22 +235,42 @@ app.get('/session', async (req, res) => {
       .question { font-weight: bold; }
       .answer { color: black; }
       .font-light { font-weight: lighter; }
+
+      table {
+  width: 100%;
+  border-collapse: collapse; /* Collapse borders */
+}
+
+th, td {
+  border: 1px solid #333; /* Add a border to table cells */
+  padding: 8px; /* Add padding to table cells */
+  text-align: left; /* Align text to the left */
+}
+
+th {
+  background-color: #f2f2f2; /* Add a background color to table headers */
+}
     </style>
   </head>
   <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
   `
+  if(inscriptionsData.records.length > 0) {
+    resHtml += `<h2>Inscrits (${nbTotalInscritsEnreg})</h2>`;
+    resHtml += inscritsHtml;
+  } 
   if(besoinsHtml === "") {
     resHtml += `
-  <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscrits} inscrits)</span></h2>
+  <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscritsEnreg} inscrits)</span></h2>
   <p>Aucun besoin n'a été rempli pour cette session</p>
       `
     } else {
 
   resHtml += `
-  <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscrits} inscrits)</span></h2>
+  <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscritsEnreg} inscrits)</span></h2>
 <div class="grid-container">${besoinsHtml.html}</div>
   <div class="stats">
     <h3>Récapitulatif des besoins</h3>
+    ${besoinsHtml.recap}
   </div>
     `
 

@@ -158,7 +158,11 @@ export async function getBesoins(besoinsData) {
     questions = [...questions, questionsAll[1]];
     var answersHtml = "";
 
-    besoinsData.records.forEach(besoin => {
+    var arrayRecap = [];
+    var recapHtml = "";
+    var answerCounters = {};
+
+    besoinsData.records.filter(b=> b.rempli=="🟢").forEach(besoin => {
         var answers = "";
 
         questions.forEach(question => {
@@ -180,10 +184,15 @@ export async function getBesoins(besoinsData) {
         ${answers}
         </div>`;
     });
+
+    
+
+
     return {
         html: answersHtml,
         type: type,
-        titre: besoinsData.records[0]["titre_fromprog (from Inscrits)"]
+        titre: besoinsData.records[0]["titre_fromprog (from Inscrits)"],
+        recap: recapHtml,
     };
 }
 
