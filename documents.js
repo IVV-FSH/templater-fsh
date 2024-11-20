@@ -111,6 +111,24 @@ export const documents = [
         ],
     },
     {
+        name: 'affiches', // OK + testé en ligne
+        multipleRecords: false,
+        titleForming: function(data) {
+            let newTitle = data["titre_fromprog"]
+            if(data["du"] && data["au"]) { newTitle+= `${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`}
+            return newTitle;
+            // return `${data["titre_fromprog"]} ${ymd(data["du"])}-${data["au"] && ymd(data["au"])}`;
+        },
+        template: 'affiches.docx',
+        table: 'Sessions',
+        queriedField: 'recordId',
+        examples: [
+            {recordId:"recvP7YK3HUSxWZqV", desc:"sans dates"},
+            {recordId:"recTgirR6imNqtFAs", desc:"avec dates, visio"},
+            {recordId:"rec8XSuWVObX1R6pW", desc:"ouverte pers accomp, siège"}
+        ],
+    },
+    {
         name: 'devis',
         multipleRecords: false,
         queriedField: 'recordId',
