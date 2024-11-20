@@ -129,7 +129,7 @@ export async function getBesoins(besoinsData) {
     //   const { sessId, formateurId } = req.query;
     // console.log("Fetching besoins for session:", sessId);
     console.log("Fetched besoins:", besoinsData);
-    if(besoinsData.records.length === 0) {
+    if(!besoinsData.records || besoinsData.records.length === 0) {
         return "";
     }
     const type = besoinsData.records[0].Type;

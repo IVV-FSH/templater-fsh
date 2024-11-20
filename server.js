@@ -178,7 +178,7 @@ app.get('/session', async (req, res) => {
   const datesSession = sessionData["dates"] || "";
   const inscriptionsData = await getAirtableRecords("Inscriptions", "Grid view", `sessId="${sessId}"`, "nom", "asc");
   var inscritsHtml = "";
-  if(inscriptionsData.records.length === 0) {
+  if(!inscriptionsData.records || inscriptionsData.records.length === 0) {
     res.send("Aucun inscrit pour cette session");
   }
   inscriptionsData.records.forEach(inscrit => {
