@@ -201,6 +201,17 @@ app.get('/session', async (req, res) => {
   background-color: #fff; /* White background */
   transition: box-shadow 0.3s ease; /* Smooth transition for hover effect */
 }
+  .grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  gap: 20px; /* Space between grid items */
+}
+
+@media (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+  }
+}
         .filled { color: green; }
       .not-filled { color: red; }
       .question { font-weight: bold; }
@@ -219,7 +230,7 @@ app.get('/session', async (req, res) => {
 
   resHtml += `
   <h2>Recueil des besoins <span class="font-light">(${nbFilledBesoins} remplis/${nbTotalInscrits} inscrits)</span></h2>
-${besoinsHtml.html}
+<div class="grid-container">${besoinsHtml.html}</div>
   <div class="stats">
     <h3>Récapitulatif des besoins</h3>
   </div>
