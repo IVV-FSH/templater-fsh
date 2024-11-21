@@ -297,9 +297,13 @@ export function processFieldsForDocx(data, markdownFields) {
 	markdownFields.forEach(field => {
 		if (data[field]) {
 			if (Array.isArray(data[field])) {
-				data[field] = marked(data[field].join('\n'));
-			} else if(typeof data[field] === 'string') {
-				data[field] = marked(data[field]);
+				// Preprocess the array content to handle line breaks
+				const processedContent = data[field].join('\n').replace(/\n(?!\n)/g, '\n\n');
+				data[field] = marked(processedContent);
+			} else if (typeof data[field] === 'string') {
+				// Preprocess the string content to handle line breaks
+				const processedContent = data[field].replace(/\n(?!\n)/g, '\n\n');
+				data[field] = marked(processedContent);
 			}
 		}
 	});
