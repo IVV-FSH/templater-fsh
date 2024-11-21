@@ -48,7 +48,7 @@ const moyen_paiement = paye.includes("Payé") ? 'Virement' : '';
 // Load HTML Template and Compile with Handlebars
 const template = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

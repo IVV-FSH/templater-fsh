@@ -128,7 +128,7 @@ export default async function envoiNdf() {
 					<td>${ndf['Date de la dépense'] || ''}</td>
 					<td>${ndf['Description courte'] || ''}</td>
 					${someHaveKm ? `<td>${ndf['Nombre de kilomètres'] || ''}</td><td>${Array.isArray(ndf.puissance) ? ndf.puissance.join(', ') : (ndf.puissance || '')}</td>` : ''}
-					<td style="text-align: right;">${ndf['Montant (€)'] ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(ndf['Montant (€)'].replace(" ","").replace(",","."))) : ""}</td>
+					<td style="text-align: right;">${ndf['Montant (€)'] ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(parseFloat(ndf['Montant (€)'].toString().replace(" ","").replace(",","."))) : ""}</td>
 					<td>${justificatifs ? justificatifs.map(j => `<a href="${j.url}">${j.filename}</a>`).join(' ') : ''}</td>
 					<td>${ndf['Remboursement par'] || ''}</td>
 					<td>${Array.isArray(ndf['RIB (from Qui a payé?)']) ? ndf['RIB (from Qui a payé?)'][0] : (ndf['RIB (from Qui a payé?)'] || '')}</td>

@@ -32,48 +32,58 @@ app.get('/mail-preconvention', async (req, res) => {
   const {idFact} = req.query;
   const record = await getAirtableRecord('Factures-Devis-Conventions', idFact);
   // const { titre, dates, Formateurice, prenom_dmdr, adresses_intra, nb_adresses } = record;
-  var contentHtml = ` <style>
-    body { font-family: 'Segoe UI', sans-serif; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #333;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-  </style>
-  <p>Bonjour ${record.prenom_dmdr},</p>
-  <p>À l’approche de la formation <strong>${record["titre_fromprog (from Session)"]}</strong> qui aura lieu dans vos locaux ${record["dates (from Session)"]}, je vous prie de bien vouloir me faire parvenir la liste des participants, avec les informations suivantes :</p>
-  <table>
-    <thead>
-      <tr>
-        <th>Nom</th>
-        <th>Prénom</th>
-        <th>Poste</th>
-        <th>E-mail</th>
-        <th>Structure (facultatif/ si applicable)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </tbody>
-  </table>
-  <p>Je vous prie aussi de bien vouloir remplir <a href="${record.fillout_misadispo}">ce formulaire de mise à disposition de matériel</a>.</p>
-  <p>Je pourrai alors vous faire parvenir la convention et les documents y afférents.</p>
-  <p>Je vous remercie vivement par avance,</p>
-`+ SIGNATURE_IVV_FORMATION;
+  var contentHtml = `       <!DOCTYPE html>
+  <html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail de confirmationa au demandeur</title>
+
+    <style>
+      body { font-family: 'Segoe UI', sans-serif; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th, td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+    <p>Pour <a href="mailto:${record.mail_dmdr}">${record.prenom_dmdr} ${record.nom_dmdr}</a></p>
+    <p>Bonjour${record.prenom_dmdr ? " " + record.prenom_dmdr : ""},</p>
+    <p>À l’approche de la formation <strong>${record["titre_fromprog (from Session)"]}</strong> qui aura lieu dans vos locaux ${record["dates (from Session)"]}, je vous prie de bien vouloir me faire parvenir la liste des participants, avec les informations suivantes :</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Prénom</th>
+          <th>Poste</th>
+          <th>E-mail</th>
+          <th>Structure (facultatif/ si applicable)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Je vous prie aussi de bien vouloir remplir <a href="${record.fillout_misadispo}">ce formulaire de mise à disposition de matériel</a>.</p>
+    <p>Je pourrai alors vous faire parvenir la convention et les documents y afférents.</p>
+    <p>Je vous remercie vivement par avance,</p>
+    ${SIGNATURE_IVV_FORMATION}
+  </html>
+`;
 
 res.send(contentHtml);
 })
@@ -297,7 +307,7 @@ app.get('/session', async (req, res) => {
 
   var resHtml = `
       <!DOCTYPE html>
-  <html lang="en">
+  <html lang="fr">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -1,17 +1,17 @@
 export const GITHUBREPO = "https://github.com/IVV-FSH/templater-fsh/";
 export const GITHUBTEMPLATES = `${GITHUBREPO}raw/refs/heads/main/templates/`;
 
-export const SIGNATURE_IVV = `<p style="font-family:'Segoe UI', sans-serif;">Isadora Vuong Van</p>
-<p style="font-family:'Segoe UI', sans-serif;">Assistante de direction</p>
-<p style="font-size:3pt; font-family:'Segoe UI', sans-serif;">&nbsp;</p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt; font-weight:bold;">Fédération Santé Habitat</p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt;">
+export const SIGNATURE_IVV = `<p style="font-family:'Segoe UI', sans-serif; margin: 0;font-size:larger; ">Isadora Vuong Van</p>
+<p style="font-family:'Segoe UI', sans-serif; margin: 0;font-size:larger; ">Assistante de direction</p>
+<p style="font-size:larger; font-family:'Segoe UI', sans-serif; margin: 0;">&nbsp;</p>
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; font-weight:bold; margin: 0;">Fédération Santé Habitat</p>
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; margin: 0;">
     6 rue du Chemin Vert - Paris 11<sup>ème</sup>
 </p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt; color:black;">
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; color:black; margin: 0;">
     Tél. 01 48 05 55 54 / 06 33 82 17 52
-</p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt; color:#e97132; font-weight:bold;">
+</p> 
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; color:#e97132; font-weight:bold; margin: 0;">
     <a href="http://www.sante-habitat.org/" target="_blank" style="color:#e97132;">
         www.sante-habitat.org
     </a>
@@ -22,17 +22,17 @@ export const SIGNATURE_IVV = `<p style="font-family:'Segoe UI', sans-serif;">Isa
          style="width:113px; height:42px; border:0;" 
     />
 </p>`;
-export const SIGNATURE_IVV_FORMATION = `<p style="font-family:'Segoe UI', sans-serif;">Isadora Vuong Van</p>
-<p style="font-family:'Segoe UI', sans-serif;">Pôle Formations</p>
-<p style="font-size:3pt; font-family:'Segoe UI', sans-serif;">&nbsp;</p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt; font-weight:bold;">Fédération Santé Habitat</p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt;">
+export const SIGNATURE_IVV_FORMATION = `<p style="font-family:'Segoe UI', sans-serif; margin: 0;font-size:larger; ">Isadora Vuong Van</p>
+<p style="font-family:'Segoe UI', sans-serif; margin: 0;font-size:larger; ">Pôle Formations</p>
+<p style="font-size:larger; font-family:'Segoe UI', sans-serif; margin: 0;">&nbsp;</p>
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; font-weight:bold; margin: 0;">Fédération Santé Habitat</p>
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; margin: 0;">
     6 rue du Chemin Vert - Paris 11<sup>ème</sup>
 </p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt; color:black;">
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; color:black; margin: 0;">
     Tél. 01 48 05 55 54 / 06 33 82 17 52
 </p>
-<p style="font-family:'Segoe UI', sans-serif; font-size:10pt; color:#e97132; font-weight:bold;">
+<p style="font-family:'Segoe UI', sans-serif; font-size:larger; color:#e97132; font-weight:bold; margin: 0;">
     <a href="http://www.sante-habitat.org/" target="_blank" style="color:#e97132;">
         www.sante-habitat.org
     </a>
