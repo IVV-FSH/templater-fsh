@@ -108,6 +108,7 @@ export default async function envoiNdf() {
 			var attachments = [];
 			if (justificatifs && justificatifs.length > 0) {
 				justificatifs.forEach(async justificatif => {
+					console.log(`Fetching attachment: ${justificatif.filename}`);
 					try {
 						// Fetch the file content from the URL
 						const fileResponse = await axios.get(justificatif.url, { responseType: 'arraybuffer' });
