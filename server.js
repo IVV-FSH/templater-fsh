@@ -78,7 +78,7 @@ app.get('/mail-preconvention', async (req, res) => {
     </style>
       <div class="flex-container">
     <p>Envoyer à : <a href="mailto:${record.mail_dmdr}">${record.mail_dmdr}</a></p>
-    <a href="/updateEnvoiDemandePax?sessionId=${record.sessionId}">Mettre à jour la date d'envoi</a>
+    <a href="/updateEnvoiDemandePax?sessionId=${record.sessId}">Mettre à jour la date d'envoi</a>
   </div>
   <div class="flex-container">
     <p>Confirmation et demande de liste de participants: ${record["titre_fromprog (from Session)"]}</p>
