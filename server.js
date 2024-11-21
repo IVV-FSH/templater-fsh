@@ -28,6 +28,19 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
+app.get('/updateEnvoiDemandePax', async (req, res) => {
+  const { sessionId } = req.query;
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0]; // Extract the date part in YYYY-MM-DD format
+  const updatedRecord = await updateAirtableRecord('Sessions', sessionId, { envoi_confirmation_demandelistepax: formattedDate });
+  if (updatedRecord) {
+    console.log('Date updated successfully:', updatedRecord.id);
+  } else {
+    console.error('Failed to update date.');
+  }
+  res.status(200).json({ success: true, message: 'Date updated successfully.' });
+});
+
 app.get('/mail-preconvention', async (req, res) => {
   const {idFact} = req.query;
   const record = await getAirtableRecord('Factures-Devis-Conventions', idFact);
@@ -54,8 +67,23 @@ app.get('/mail-preconvention', async (req, res) => {
       th {
         background-color: #f2f2f2;
       }
+        	.flex-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0; /* Light gray background */
+      padding: 10px;
+    }
+
     </style>
-    <p>Pour <a href="mailto:${record.mail_dmdr}">${record.prenom_dmdr} ${record.nom_dmdr}</a></p>
+      <div class="flex-container">
+    <p>Envoyer à : <a href="mailto:${record.mail_dmdr}">${record.mail_dmdr}</a></p>
+    <a href="/updateEnvoiDemandePax?sessionId=${record.sessionId}">Mettre à jour la date d'envoi</a>
+  </div>
+  <div class="flex-container">
+    <p>Convocation à la formation: ${titre_fromprog}</p>
+  </div>
+
     <p>Bonjour${record.prenom_dmdr ? " " + record.prenom_dmdr : ""},</p>
     <p>À l’approche de la formation <strong>${record["titre_fromprog (from Session)"]}</strong> qui aura lieu dans vos locaux ${record["dates (from Session)"]}, je vous prie de bien vouloir me faire parvenir la liste des participants, avec les informations suivantes :</p>
     <table>
