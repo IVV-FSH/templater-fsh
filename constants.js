@@ -15,13 +15,13 @@ export const SIGNATURE_IVV = `<p style="font-family:'Segoe UI', sans-serif; marg
     <a href="http://www.sante-habitat.org/" target="_blank" style="color:#e97132;">
         www.sante-habitat.org
     </a>
-</p>
-<p>
+</p>`;
+{/* <p>
     <img src="https://github.com/IVV-FSH/templater-fsh/blob/main/assets/Logo%20FSH%20-%20transparent.png?raw=true" 
          alt="Logo" 
          style="width:113px; height:42px; border:0;" 
     />
-</p>`;
+</p> */}
 export const SIGNATURE_IVV_FORMATION = `<p style="font-family:'Segoe UI', sans-serif; margin: 0;font-size:larger; ">Isadora Vuong Van</p>
 <p style="font-family:'Segoe UI', sans-serif; margin: 0;font-size:larger; ">Pôle Formations</p>
 <p style="font-size:larger; font-family:'Segoe UI', sans-serif; margin: 0;">&nbsp;</p>
@@ -36,10 +36,10 @@ export const SIGNATURE_IVV_FORMATION = `<p style="font-family:'Segoe UI', sans-s
     <a href="http://www.sante-habitat.org/" target="_blank" style="color:#e97132;">
         www.sante-habitat.org
     </a>
-</p>
-<p>
+</p>`;
+{/* <p>
     <img src="https://github.com/IVV-FSH/templater-fsh/blob/main/assets/Logo%20FSH%20-%20transparent.png?raw=true" 
          alt="Logo" 
          style="width:113px; height:42px; border:0;" 
     />
-</p>`;
+</p> */}
