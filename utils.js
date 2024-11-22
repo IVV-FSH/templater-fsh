@@ -1099,6 +1099,123 @@ export const sendConfirmationToAllSession = async (sessId) => {
 	}
 };
 
+// Function to send email to all eligible records for a specific session
+export const sendReminderBesoinsToAllSession = async (sessId) => {
+	// Fetch records from Airtable with conditions (only records without envoi_convocation)
+	const { records } = await getAirtableRecords('Inscriptions', null, `AND({sessId} = '${sessId}', {Statut} = 'Enregistrée', NOT({envoi_convocation} = ""))`);
+	if (records.length === 0) {
+		console.log('No records found');
+		return;
+	}
+
+	const rec1 = records[0];
+	let str_lieu = '';
+	if (parseInt(rec1.nb_adresses) == 1) {
+		// console.log(`Record ${inscriptionId} has one address`);
+		if (rec1.lieux.includes("isioconf") || rec1.lieux.join("").includes("isioconf")) {
+		  str_lieu = "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		} else if (rec1.lieux.includes("iège") || rec1.lieux.includes("iège")) {
+		  str_lieu = "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		} else if (rec1.lieux.includes("intra") || rec1.lieux.includes("intra")) {
+		  str_lieu = `à l'adresse : ${rec1.adresses_intra}`;
+		}
+	  } else if (parseInt(rec1.nb_adresses) > 1) {
+		var leslieux = rec1.lieux.map((lieu, index) => {
+		  if (lieu.includes("isioconf")) {
+			return "en visioconférence (le lien de connexion vous sera envoyé prochainement)";
+		  } else if (lieu.includes("iège")) {
+			return "au siège de la FSH, 6 rue du Chemin vert, 75011 Paris";
+		  } else if (lieu.includes("intra")) {
+			return `à l'adresse : ${rec1.adresses_intra}`;
+		  }
+		});
+		str_lieu = leslieux.join(" et ");
+
+	  }
+  
+
+	// Calculate the completion date string
+	const completionDate = new Date(rec1.du);
+	completionDate.setDate(completionDate.getDate() - 15);
+	
+	const today = new Date();
+	while (completionDate < today) {
+		completionDate.setDate(completionDate.getDate() + 1);
+	}
+	
+	const completionDateString = completionDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+
+	for (const record of records) {
+		// const { inscriptionId } = record;
+		// await sendConfirmation(inscriptionId);
+		const { envoi_convocation, 
+			prenom, nom, mail, 
+			titre_fromprog, 
+			fillout_recueil, du,
+			dates, 
+			sessId,
+			inscriptionId
+		} = record;
+	
+		if (envoi_convocation) {
+			console.log(`Record ${prenom} ${nom} already has envoi_convocation`);
+			return;
+		}
+		let recueilLink = fillout_recueil;
+		if (!recueilLink) {
+			console.log(`Record ${inscriptionId} is missing recueil link. Creating one...`);
+			try {
+				const recueil = await createRecueil(inscriptionId);
+				if (recueil.fields && recueil.fields.fillout) {
+					recueilLink = recueil.fields.fillout; // Use the 'fillout' field from the created record
+					console.log(`Created recueil with fillout link: ${recueilLink}`);
+				} else {
+					recueilLink = "https://forms.fillout.com/t/1wNMoFGDTYus?id=" + recueil.id; // Use the recueilId for the link
+					console.log(`Created recueil, but 'fillout' field is missing. Using default link: ${recueilLink}`);
+				}
+			} catch (error) {
+				console.error(`Failed to create recueil for inscriptionId ${inscriptionId}:`, error);
+				return;
+			}
+		}
+		if (!(prenom && nom && mail && titre_fromprog && dates && recueilLink && du)) {
+			console.log(`Record ${inscriptionId} is missing necessary fields`);
+			continue;
+		}
+	
+
+		try {
+			// Send the convocation email
+			console.log(`Will send email with this data:`, {
+				record,
+				str_lieu, 
+				fillout_recueil: recueilLink,
+				completionDateString, 
+				sessId
+			});
+			
+			// await sendConvocation(
+			// 	record,
+			// 	str_lieu,
+			// 	recueilLink,
+			// 	completionDateString,
+			// )
+				
+	
+			// Update the record with the current datetime
+			const currentDateTime = new Date().toISOString().split('T')[0]; // Extract the date part in YYYY-MM-DD format
+			await updateAirtableRecord('Inscriptions', inscriptionId, { envoi_convocation: currentDateTime });
+			console.log(`Updated record ${inscriptionId} with envoi_convocation: ${currentDateTime}`);
+	
+		} catch (error) {
+			console.error(`Failed to send email to ${mail} or update Airtable record:`, error);
+		}
+	
+		
+	}
+};
+
 export const relanceBesoins = async (sessId) => {
 	const inscriptions = await getAirtableRecords('Inscriptions', null, `AND({sessId} = '${sessId}', {Statut} = 'Enregistrée')`);
 	if (inscriptions.records.length === 0) {

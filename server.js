@@ -258,6 +258,17 @@ app.get('/confirmForSession', async (req, res) => {
   }
 });
 
+app.get('/rappelFichesBesoin', async (req, res) => {
+  const { sessionId } = req.query;
+  try {
+    // await sendConfirmationToAllSession(sessionId);
+    res.status(200).json({ success: true, message: 'Confirmations sent successfully.' });
+  } catch (error) {
+    console.error('Error sending confirmations:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/session', async (req, res) => {
   const { sessId, formateurId } = req.query;
 

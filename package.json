@@ -29,6 +29,7 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.16",
     "puppeteer": "^23.7.1",
+    "qrcode": "^1.5.4",
     "stream": "^0.0.3",
     "string-similarity": "^4.0.4",
     "tabulator-tables": "^6.3.0"
