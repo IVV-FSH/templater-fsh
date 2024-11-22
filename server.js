@@ -366,23 +366,25 @@ app.get('/session', async (req, res) => {
   grid-template-columns: 20% 80%; /* Two columns: 20% and 80% */
   gap: 20px; /* Space between grid items */
 }
-  .flex-container {
-      display: flex;
-      align-items: center;
-      background-color: #f0f0f0; /* Light gray background */
-      gap: 8px; /* Space between items */
-    }
-    .location-icon {
-      width: 1em; /* Adjust width to match text height */
-      height: 1em; /* Adjust height to match text height */
-      vertical-align: middle; /* Align icon with text */
-    }
 
 .headgrid-container img {
   max-width: 600px;
   height: auto;
   width: 100%; /* Make the image adapt to the column size */
 }
+  .flex-container {
+      display: flex;
+      align-items: center;
+      gap: 8px; /* Space between items */
+    }
+      .location:hover {
+      background-color: #f5a157; /* Light gray background */
+      }
+    .location-icon {
+      width: 1em; /* Adjust width to match text height */
+      height: 1em; /* Adjust height to match text height */
+      vertical-align: middle; /* Align icon with text */
+    }
 
 @media (max-width: 768px) {
   .headgrid-container {
@@ -418,7 +420,7 @@ th, td {
 }
 
 th {
-  background-color: #f2f2f2; /* Add a background color to table headers */
+  background-color: #f5a157; /* Add a background color to table headers */
 }
     </style>
   </head>
@@ -428,11 +430,19 @@ th {
     <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
     <p class="flex-container"><span>Lieu${lieu.length>1?"(x)":""} : </span>${lieu.map(l => {
       if (l.includes("iège")) {
-        return `<a href="https://www.google.com/maps/search/6 rue du chemin vert 75011 paris" target="_blank">${l}
-        <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--!Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/></svg>
+        return `<a class="location" href="https://www.google.com/maps/search/6 rue du chemin vert 75011 paris" target="_blank">
+        <svg class="location-icon" style="color:black; fill:black;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+        <path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/>
+        </svg>
+        ${l}
         </a>`
       } else if(!l.includes("intra") && !l.toLowerCase().includes('visio')) {
-        return `<a href="https://www.google.com/maps/search/${l}" target="_blank">${l}</a>`
+        return `<a class="location" href="https://www.google.com/maps/search/${l}" target="_blank">
+        <svg class="location-icon" style="color:black; fill:black;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+        <path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z"/>
+        </svg>
+        ${l}
+        </a>`
       } else {
         return l;
       }
