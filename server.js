@@ -416,7 +416,13 @@ th {
   <div>
     <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
     <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.map(l => {
-      return `<a href="https://www.google.com/maps/search/${l}" target="_blank">${l}</a>`
+      if (l.includes("iège")) {
+        return `<a href="https://www.google.com/maps/search/6 rue du chemin vert 75011 paris" target="_blank">${l}</a>`
+      } else if(l != "En intra" && l != "En visioconférence") {
+        return `<a href="https://www.google.com/maps/search/${l}" target="_blank">${l}</a>`
+      } else {
+        return l;
+      }
     }).join(", ")}</p>
     ${typeof sessionData["Formateurice"] == "string" && "<p>Formateur·ice : " + sessionData["Formateurice"].replace(/"/g,"") + "</p>"}
   </div>
