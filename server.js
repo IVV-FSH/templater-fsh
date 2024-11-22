@@ -416,7 +416,7 @@ th {
   <div>
     <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
     <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.join(", ")}</p>
-    <p>Formateur·ice : ${sessionData["Formateurice"].replace(/"/g,"")}</p>
+    ${typeof sessionData["Formateurice"] == "string" && "<p>Formateur·ice : " + sessionData["Formateurice"].replace(/"/g,"") + "</p>"}
   </div>
   </div>
   `
