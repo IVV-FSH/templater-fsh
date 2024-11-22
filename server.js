@@ -415,7 +415,9 @@ th {
   <img src="https://github.com/IVV-FSH/templater-fsh/blob/main/assets/Logo%20FSH%20-%20transparent.png?raw=true" alt="Logo FSH" />
   <div>
     <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
-    <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.join(", ")}</p>
+    <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.map(l => {
+      return `<a href="https://www.google.com/maps/search/${l}" target="_blank">${l}</a>`
+    }).join(", ")}</p>
     ${typeof sessionData["Formateurice"] == "string" && "<p>Formateur·ice : " + sessionData["Formateurice"].replace(/"/g,"") + "</p>"}
   </div>
   </div>
