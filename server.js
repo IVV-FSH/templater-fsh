@@ -55,7 +55,6 @@ app.get('/mail-preconvention', async (req, res) => {
     <style>
       body { font-family: 'Segoe UI', sans-serif; }
       table {
-        width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
       }
@@ -417,6 +416,7 @@ th {
   <div>
     <h1>Formation : <span>${titre}</span>  <span class="font-light">${datesSession}</span></h1>
     <p>Lieu${lieu.length>1?"(x)":""} : ${lieu.join(", ")}</p>
+    <p>Formateur·ice : ${sessionData["Formateurice"].replace(/"/g,"")}</p>
   </div>
   </div>
   `
