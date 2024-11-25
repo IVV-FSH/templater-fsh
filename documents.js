@@ -311,7 +311,7 @@ export const documents = [
                 );
                 data.nb_pax = data.nb_pax > 0 ? data.nb_pax : "A déterminer";
 
-                data.frais = null;
+                data.frais = [];
 
                 // TODO: ajouter les frais formateurs !!
                 try {
@@ -330,7 +330,7 @@ export const documents = [
                     data.frais = fraisFormateurs.records.map(frais => {
                         return {
                             description: `${frais["Désignation"]} (${frais["type"]})`,
-                            date: new Date(frais["Date"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Paris'}),
+                            date: frais["Date"] ? new Date(frais["Date"]).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Paris'}) : "",
                             montant: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(
                                 parseFloat(frais.Montant),
                             ),
