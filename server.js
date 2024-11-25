@@ -459,7 +459,7 @@ th {
     ${typeof sessionData["Formateurice"] == "string" && "<p>Formateur·ice : " + sessionData["Formateurice"].replace(/"/g,"") + "</p>"}
   </div>
   </div>
-  <a href="${sessionData["cptrenduformateur_fillout"]}">Remplir le compte-rendu de fin de formation</a>
+  <a class="btn" href="${sessionData["cptrenduformateur_fillout"]}">Remplir le compte-rendu de fin de formation</a>
   `
 
   if(halfdaysHtml) {
