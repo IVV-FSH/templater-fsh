@@ -301,6 +301,7 @@ export const documents = [
             );
 
             data.stagiairestotal = "";
+            data.frais = [];
         
             if(data.lieuxdemij_cumul.includes("En intra")) {
                 // dont make stagiaires liste.
@@ -311,7 +312,6 @@ export const documents = [
                 );
                 data.nb_pax = data.nb_pax > 0 ? data.nb_pax : "A déterminer";
 
-                data.frais = [];
 
                 // TODO: ajouter les frais formateurs !!
                 try {
