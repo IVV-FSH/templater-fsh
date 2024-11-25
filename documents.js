@@ -302,6 +302,7 @@ export const documents = [
 
             data.stagiairestotal = "";
             data.frais = [];
+            data.fraistotal = "";
         
             if(data.lieuxdemij_cumul.includes("En intra")) {
                 // dont make stagiaires liste.
