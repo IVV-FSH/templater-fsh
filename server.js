@@ -352,6 +352,14 @@ app.get('/session', async (req, res) => {
     <title>${titre} ${datesSession}</title>
     <style>
       body { font-family: 'Segoe UI', sans-serif; }
+      .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #f5a157;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      }
 .fiche-besoin {
   margin-bottom: 20px;
   padding: 15px;
@@ -451,7 +459,9 @@ th {
     ${typeof sessionData["Formateurice"] == "string" && "<p>Formateur·ice : " + sessionData["Formateurice"].replace(/"/g,"") + "</p>"}
   </div>
   </div>
+  <a href="${sessionData["cptrenduformateur_fillout"]}">Remplir le compte-rendu de fin de formation</a>
   `
+
   if(halfdaysHtml) {
     resHtml += `<h2>Créneaux</h2>${halfdaysHtml}`;
   }
