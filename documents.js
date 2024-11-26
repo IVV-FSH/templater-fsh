@@ -490,6 +490,7 @@ export const documents = [
             }) : [];
             // console.log("data", data)
             data.formateurs = data.Formateurice.split('", "').map(f => f.replace(/"/g, '').split(",")[0]);
+            data.formateurice = data.Formateurice[0].replace(/"/g, '').split(",")[0];
 
             return data;
         },
