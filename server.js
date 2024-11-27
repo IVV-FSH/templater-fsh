@@ -285,17 +285,17 @@ app.get('/session', async (req, res) => {
 					date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone: 'Europe/Paris' }).format(new Date(record.debut)),
 					horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.fin))}`,
 					lieu: record.adresse,
-          visio: record.lien_visio || ""
+          // visio: record.lien_visio || ""
 				};
 				return `<tr>
 						<td>${params.date}</td>
 						<td>${params.horaires}</td>
 						<td>${params.lieu}</td>
-            ${
-              visio ? `<td>${params.visio}</td>` : ""
-            }
 					</tr>`;
 			});
+            // ${
+            //   visio ? `<td>${params.visio}</td>` : ""
+            // }
 			halfdaysHtml = `<table>
     <thead>
         <tr>
