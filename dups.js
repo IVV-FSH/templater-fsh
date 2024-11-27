@@ -161,7 +161,7 @@ export async function processImports() {
     });
 };
 // Run the script
-await processImports().catch(console.error);
+// await processImports().catch(console.error);
 
 // Function to identify potential duplicates
 async function findPotentialDuplicates() {
