@@ -292,7 +292,7 @@ app.get('/session', async (req, res) => {
 						<td>${params.horaires}</td>
 						<td>${params.lieu}</td>
             ${
-              visio ? `<td>${params.visio}</td>` : ""
+              params.lieu.includes("isio") ? `<td>${params.visio}</td>` : ""
             }
 					</tr>`;
 			});
