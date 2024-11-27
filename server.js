@@ -283,12 +283,16 @@ app.get('/session', async (req, res) => {
 				const params = {
 					date: new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone: 'Europe/Paris' }).format(new Date(record.debut)),
 					horaires: `${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.debut))} - ${new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(record.fin))}`,
-					lieu: record.adresse
+					lieu: record.adresse,
+          visio: record.lien_visio || ""
 				};
 				return `<tr>
 						<td>${params.date}</td>
 						<td>${params.horaires}</td>
 						<td>${params.lieu}</td>
+            ${
+              params.lieu.includes("isio") ? `<td>${params.visio}</td>` : ""
+            }
 					</tr>`;
 			});
 			halfdaysHtml = `<table>
@@ -297,6 +301,9 @@ app.get('/session', async (req, res) => {
             <th>Date</th>
             <th>Horaires</th>
             <th>Lieu</th>
+            ${
+              params.lieu.includes("isio") ? "<td>Lien de visioconférence</td>" : ""
+            }
         </tr>
     </thead>
     <tbody>`+halfdays.join('')+`    </tbody>
@@ -1298,145 +1305,3 @@ async function generateReportBuffer(url, data) {
     throw new Error(`Error generating report buffer: ${error.message}`);
   }
 }
-
-/**
- * Creates a zip archive from multiple file buffers and sends the zip to the client for download.
- * 
- * @async
- * @function createZipArchive
- * 
- * @param {Array<{ fileName: string, buffer: Buffer }>} files - An array of objects representing the files to be added to the zip archive. Each object should have a `fileName` (string) and a `buffer` (Buffer).
- * @param {object} res - The Express.js response object used to stream the zip file as a download to the client.
- * @param {string} [zipFileName="reports.zip"] - The name of the zip file to be sent for download (default: "reports.zip").
- * 
- * @returns {Promise<void>} - Returns a Promise that resolves when the zip archive is successfully created and sent.
- * 
- * @throws {Error} - Throws an error if creating the zip archive or streaming it to the response fails.
- */
-async function createZipArchive(files, res, zipFileName = "reports.zip") {
-  try {
-    // Create a zip archive in memory
-    const archive = archiver('zip', { zlib: { level: 9 } }); // Maximum compression
-
-    // Prepare the response headers for sending the zip
-    res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
-    res.setHeader('Content-Type', 'application/zip');
-
-    // Pipe the archive's output to the response
-    archive.pipe(res);
-
-    // Add each file buffer to the archive
-    for (const { fileName, buffer } of files) {
-      // Log the buffer to check its content
-      if (!buffer || !(buffer instanceof Buffer)) {
-        throw new Error(`Invalid buffer for file: ${fileName}`);
-      }
-
-      // Append the buffer to the zip archive
-      archive.append(buffer, { name: fileName });
-    }
-
-    // Finalize the archive
-    await archive.finalize();
-
-    console.log('Zip archive created and sent.');
-  } catch (error) {
-    console.error(`Error creating zip archive: ${error.message}`);
-    throw new Error(`Error creating zip archive: ${error.message}`);
-  }
-}
-
-
-
-async function generateAndSendZipReport2(url, data, res, fileName = "") {
-  try {
-    console.log('Generating report...');
-    
-    // Fetch the template and generate the report buffer
-    const template = await fetchTemplate(url);
-    const buffer = await generateReport({output: 'buffer', template, data});
-
-    if (!Buffer.isBuffer(buffer)) {
-      throw new Error('Generated document is not a valid Buffer.');
-    }
-
-    // Create a zip stream
-    const zipStream = new PassThrough();
-    const archive = archiver('zip', { zlib: { level: 9 } });
-
-    // Set the appropriate headers for downloading the zip file
-    res.setHeader('Content-Disposition', `attachment; filename="${getFrenchFormattedDate()} ${fileName || 'report'}.zip"`);
-    res.setHeader('Content-Type', 'application/zip');
-
-    // Pipe the archive to the response
-    archive.pipe(zipStream);
-    archive.append(buffer, { name: `${fileName || 'report'}.docx` });
-    archive.finalize();
-
-    // Pipe the zip stream to the response
-    zipStream.pipe(res);
-
-    console.log('Zip report generated and sent as a download.');
-  } catch (error) {
-    console.error('Error generating zip report:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
-
-/**
- * Uploads the generated report to Vercel Blob Storage and returns the download URL.
- *
- * @async
- * @function uploadReportToBlobStorage
- * 
- * @param {string} fileName - The name of the file (including the extension) that will be stored in Blob Storage.
- * @param {Buffer} buffer - The generated report buffer that will be uploaded.
- * 
- * @returns {Promise<string>} - Returns the URL of the uploaded file.
- * 
- * @throws {Error} - Throws an error if uploading the file to Blob Storage fails.
- * 
- * @example
- * const downloadUrl = await uploadReportToBlobStorage('report.docx', reportBuffer);
- */
-async function uploadReportToBlobStorage(fileName, buffer) {
-  try {
-    const { url } = await put(fileName, buffer, { access: 'public' });
-    console.log(`File uploaded to Blob Storage: ${url}`);
-    return url;
-  } catch (error) {
-    throw new Error(`Error uploading report to Blob Storage: ${error.message}`);
-  }
-}
-
-
-// Start the server
-const server = app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server is running on port http://localhost:${process.env.PORT || 3000}/`);
-  console.log("TESTS FACTURE")
-  console.log(`Impayée : http://localhost:${process.env.PORT || 3000}/facture?recordId=rechdhSdMTxoB8J1P`);
-  console.log(`Rabais : http://localhost:${process.env.PORT || 3000}/facture?recordId=recFYDogCDybfujfd`);
-  console.log(`Accomp : http://localhost:${process.env.PORT || 3000}/facture?recordId=recvrbZmRuUCgHrFK`);
-  console.log(`Payée : http://localhost:${process.env.PORT || 3000}/facture?recordId=recLM3WRAiRYNPZ52`);
-  for (const doc of documents) {
-    console.log(doc.name.toUpperCase())
-    if(doc.examples) {
-      doc.examples.forEach(example => {
-        console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}?recordId=${example.recordId}`, example.desc);
-      });
-    } else {
-    console.log(`http://localhost:${process.env.PORT || 3000}/make/${doc.name}`);
-    }
-  }
-  console.log("Documents session ------")
-  for (const doc of 
-    [
-      {recordId:"recXcDJ6nYYJYsVmV", desc:"SM14JV"}
-    ]
-  ) {
-    console.log(`http://localhost:${process.env.PORT || 3000}/factures_sess?sessionId=${doc.recordId}`, doc.desc);
-  }
-  console.log("TESTS SESSION")
-  console.log(`http://localhost:${process.env.PORT || 3000}/test`);
-});
-
