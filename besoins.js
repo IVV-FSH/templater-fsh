@@ -204,7 +204,7 @@ export async function getBesoins(besoinsData) {
         });
 
         answersHtml += `<div class="fiche-besoin">
-        <h3>Apprenant.e: ${besoin["prenom (from Inscrits)"][0]} ${besoin["nom (from Inscrits)"][0]}${besoin["poste (from Inscrits)"][0] ? `, <span class="font-light">${besoin["poste (from Inscrits)"][0]}` : ""}</span></h3>
+        <h3>Apprenant.e: ${besoin["prenom (from Inscrits)"]?.[0] || ""} ${besoin["nom (from Inscrits)"]?.[0] || ""}${besoin["poste (from Inscrits)"]?.[0] ? `, <span class="font-light">${besoin["poste (from Inscrits)"]?.[0]}` : ""}</span></h3>
         ${answers}
         </div>`;
     });
