@@ -277,7 +277,6 @@ app.get('/session', async (req, res) => {
 		const data = await getAirtableRecords("Demi-journées", null, `sessId='${sessId}'`);
 		if(data) {
 			// console.log('Half days:', data);
-      const visio = data.records.some(record => record.adresse.includes("isio"));
 			const halfdays = data.records
 			.sort((a, b) => new Date(a.debut) - new Date(b.debut))
 			.map(record => {
@@ -303,7 +302,7 @@ app.get('/session', async (req, res) => {
             <th>Horaires</th>
             <th>Lieu</th>
             ${
-              visio ? "<td>Lien de visioconférence</td>" : ""
+              params.lieu.includes("isio") ? "<td>Lien de visioconférence</td>" : ""
             }
         </tr>
     </thead>
